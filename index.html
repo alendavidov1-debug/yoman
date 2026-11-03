@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="7aebeb8197";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="c797edb579";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -1971,6 +1971,7 @@ document.addEventListener("click", async ev => {
   if (t.id === "exportCsv") return exportCsv();
   if (t.id === "bkExport") { t.disabled = true; try { await exportBackup(); } finally { t.disabled = false; } return; }
   if (t.id === "bkImport") return importBackup();
+  if (t.id === "upChk") { t.disabled = true; await checkUpdate(true); t.disabled = false; return; }
   if (t.id === "apiSave") { const v = $("#apiKey").value.trim(); if (!/^sk-ant-[\w-]{20,}$/.test(v)) { toast("זה לא נראה כמו מפתח API (מתחיל ב-sk-ant-)"); return; } store.set("apiKey", v); S.sample = pwaSample(v); S.sampleLim = null; S.bkOpen = true; render(); toast("המפתח נשמר. המאמן פעיל"); return; }
   if (t.id === "apiDel") { store.set("apiKey", ""); S.sample = null; S.bkOpen = true; render(); toast("המפתח הוסר"); return; }
   if (ds.pk === "close") return closePicker();
@@ -2354,8 +2355,26 @@ async function bootPwa() {
   render();
   try { await setupUser(null, db, { isOwner: async () => false }); } catch {}
   store.set("meName", myName()); render();
+  setTimeout(() => checkUpdate(), 4000);
   return db;
 }
+/* ---------- updates (PWA): new versions arrive from the yoman repo via GitHub Pages ---------- */
+let upLast = 0;
+async function checkUpdate(manual) {
+  if (!S.pwa || !window.__APPVER) return;
+  if (!manual && Date.now() - upLast < 120000) return; upLast = Date.now();
+  try {
+    const r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" }); const v = (await r.json()).v;
+    if (v && v !== window.__APPVER) {
+      S.newVer = v;
+      if (manual || !S.draft) { toast("מעדכן לגרסה חדשה…"); try { await (await navigator.serviceWorker?.getRegistration())?.update(); } catch {} setTimeout(() => location.reload(), 700); }
+      else { S.bkOpen = S.bkOpen; render(); toast("יש גרסה חדשה. תתעדכן בסוף האימון"); }
+      return;
+    }
+    if (manual) toast("יש לך את הגרסה האחרונה");
+  } catch { if (manual) toast("אין חיבור לאינטרנט לבדיקה"); }
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
 /* ---------- full backup (JSON): export from any version, import into any version ---------- */
 const toDataUrl = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 function pickFile(accept) { return new Promise(res => { const f = document.createElement("input"); f.type = "file"; f.accept = accept; f.style.display = "none"; f.onchange = () => { res(f.files[0] || null); f.remove(); }; document.body.append(f); f.click(); }); }
@@ -2396,6 +2415,7 @@ function backupBlock() {
     <div class="list pad" style="display:grid;gap:12px">
       <div class="small muted">${S.pwa ? `הנתונים נשמרים במכשיר הזה בלבד${S.persisted ? ", באחסון קבוע" : ""}. גיבוי אחרון: ${last ? new Date(last).toLocaleDateString("he-IL") : "עוד לא"}. כדאי לשמור גיבוי ב-iCloud פעם בשבוע.` : "קובץ גיבוי מלא: כל הנתונים והתמונות. משמש להעברה לאפליקציה המותקנת."}</div>
       <div class="row"><button class="btn primary" id="bkExport">ייצוא גיבוי</button><button class="btn" id="bkImport">ייבוא מגיבוי</button></div>
+      ${S.pwa ? `<div class="row sb"><span class="small muted">גרסה ${esc(String(window.__APPVER || "").slice(0, 7))}${S.newVer ? " · יש גרסה חדשה" : ""}</span><button class="btn" id="upChk">${S.newVer ? "עדכון עכשיו" : "בדיקת עדכון"}</button></div>` : ""}
       ${S.pwa ? `<label class="f">מפתח Anthropic API (מאמן AI וחישוב אוכל)<input id="apiKey" dir="ltr" type="password" autocomplete="off" spellcheck="false" placeholder="${key ? "המפתח שמור · הדבק חדש להחלפה" : "sk-ant-…"}"></label>
       <div class="row"><button class="btn" id="apiSave">שמירת מפתח</button>${key ? `<button class="btn del" id="apiDel">הסרת המפתח</button>` : ""}</div>` : ""}
     </div></details>`;
