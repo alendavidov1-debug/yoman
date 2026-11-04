@@ -1311,12 +1311,10 @@ function ssCard(D, i0) { // superset: one card, each set = one row per exercise 
   const G = ssGroup(D, i0), cur = G.includes(curIdx(D)) ? curIdx(D) : -1, fin = G.every(k => D.exercises[k].log.every(s => s.done));
   const M = G.map(k => { const ex = D.exercises[k], last = lastSessionFor(ex.name), best = bestBefore(ex.name, D.start || Date.now()), w = [], R = [];
     ex.log.forEach((s, j) => { if (s.t === "w") w.push(j); else if (s.t === "d" && R.length) R[R.length - 1].push(j); else R.push([j]); }); return { k, ex, last, best, w, R }; });
-  const nR = Math.max(...M.map(m => m.R.length)), row = (m, j, n) => setRow(m.ex, m.k, j, m.last, m.best, SSL[n]);
+  const nR = Math.max(...M.map(m => m.R.length)), row = (m, j, n) => setRow(m.ex, m.k, j, m.last, m.best);
   return `<div class="ex ssx ${fin ? "fin" : cur >= 0 ? "cur" : ""}"><span class="sstag">סופר סט · ${G.length} תרגילים ברצף, מנוחה אחרי הסבב</span>${cur >= 0 ? `<span class="excur"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>נוכחי: ${SSL[G.indexOf(cur)]}</span>` : fin ? `<span class="excur ok">${IC.check}הושלם</span>` : ""}
-    ${M.map((m, n) => exHead(m.ex, m.k, SSL[n])).join('<div class="sssep"></div>')}
-    <div class="settbl"><div class="sr h"><span class="i">סט</span><span>קודם</span><span style="text-align:center">ק״ג</span><span style="text-align:center">חזרות</span><span></span></div>
-    ${M.map((m, n) => m.w.map(j => row(m, j, n)).join("")).join("")}
-    ${Array.from({ length: nR }, (_, r) => `<div class="ssround">${M.map((m, n) => (m.R[r] || []).map(j => row(m, j, n)).join("")).join("")}</div>`).join("")}</div>
+    ${M.map((m, n) => `${exHead(m.ex, m.k, SSL[n])}<div class="settbl"><div class="sr h"><span class="i">סט</span><span>קודם</span><span style="text-align:center">ק״ג</span><span style="text-align:center">${SEC.has(m.ex.name) ? "שניות" : "חזרות"}</span><span></span></div>
+    ${m.ex.log.map((s, j) => row(m, j, n)).join("")}</div>`).join('<div class="sssep"></div>')}
     ${cur >= 0 ? setBtns(cur, D.exercises[cur].log.findIndex(s => !s.done)) : ""}
     <div class="row" style="justify-content:space-between"><span class="row" style="gap:4px"><button class="btn link" data-ssadd="${i0}">+ סט</button>${cur >= 0 ? `<button class="btn link" data-adddrop="${cur}">+ דרופ</button>` : ""}<button class="btn link del" data-ssdel="${i0}">− סט</button></span></div></div>`;
 }
