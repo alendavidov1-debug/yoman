@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="c797edb579";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="b0c85f3c54";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -528,6 +528,12 @@ body.wkOn .exthumb{width:56px;height:56px;border-radius:14px;background:#fff}
 body.wkOn .sr.h{color:#9d9497;letter-spacing:.04em}body.wkOn .sr{border-radius:12px}body.wkOn .sr input{background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:12px;font-weight:700}
 body.wkOn .sr.done{background:rgba(21,128,61,.14)}body.wkOn .sr.done input{background:transparent;border-color:transparent}
 body.wkOn .chk{width:38px;height:38px;border-radius:19px;background:transparent;border:1.5px solid rgba(255,255,255,.28);color:#d8d2d4;justify-self:center}body.wkOn .sr.done .chk{background:#22c55e;border-color:#22c55e;color:#0f0b0d}
+.wucard{display:grid;gap:10px;padding:14px;border:1px solid var(--line);border-inline-start:3px solid var(--carb)}.wucard.mini{padding:8px 12px;gap:0}.wucard .row.sb{justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.wuopts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wuopts .btn{display:grid;gap:2px;justify-items:center;min-height:62px;padding:8px 6px;text-align:center}.wuopts .btn span{font-size:.72rem;opacity:.75;font-weight:400}
+.setgo{width:100%;min-height:44px;font-weight:600}.setgo.on{display:flex;align-items:center;justify-content:center;gap:8px}.setgo .dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.25}}
+body.wkOn .setgo:not(.on){background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:14px}body.wkOn .setgo.on{border-radius:14px}
+.wulist{display:grid;gap:4px}.wustep{display:flex;align-items:center;gap:10px;padding:4px 0}.wustep .grow{flex:1;min-width:0}.wustep.done .grow{opacity:.5;text-decoration:line-through}.wustep.done .chk{background:#22c55e;border-color:#22c55e;color:#fff}
+body.wkOn .wucard{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-inline-start:3px solid #ffd27a;border-radius:18px}body.wkOn .wuopts .btn:not(.primary){background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12)}body.wkOn .wuopts .btn{border-radius:14px}
 body.wkOn .stype{color:#e9e4e6;background:rgba(255,255,255,.06);border-radius:10px;min-height:36px}body.wkOn .stype.w{color:#ffd27a}body.wkOn .stype.d{color:#9ec5ff}body.wkOn .stype.f{color:#ff8a84}
 body.wkOn .ex .btn.link,body.wkOn .ex .btn.del{color:#ff8a84}body.wkOn .ex .row.exact{border-color:rgba(255,255,255,.08)!important}
 body.wkOn #wAddEx,body.wkOn #cancelW{background:rgba(255,255,255,.06);color:#fff;border:1px dashed rgba(255,255,255,.2);border-radius:16px}body.wkOn #cancelW{color:#ff8a84;border-style:solid}
@@ -1092,7 +1098,7 @@ function focusView() { // one exercise, big numbers, rest inside the screen, the
   if (i < 0) return `<div class="focus">${hdr}<div class="fmain"><div class="fcard fdonec"><span class="okc">${IC.check}</span><b>כל הסטים בוצעו</b><span class="fmut n">${mins} דק׳ · ${n} תרגילים</span></div><div class="ftools"><button id="wAddEx">+ תרגיל</button><button class="fx" data-wdiscard="1">ביטול האימון</button></div></div><div class="ffoot"><button class="fgo" id="finishW2">סיום ושמירת האימון</button></div></div>`;
   const ex = exs[i]; let j = ex.log.findIndex(s => !s.done); const allDone = j < 0; if (allDone) j = ex.log.length - 1;
   const s = ex.log[j];
-  if (!allDone) { if (s.kg === "") s.kg = String((s.t !== "w" && carry(ex, j, "kg")) ?? ex.sug?.kg ?? ""); if (s.reps === "" && !ex.amrap) s.reps = String((s.t !== "w" && carry(ex, j, "reps")) ?? (ex.sug?.reps || ex.repMin)); }
+  if (!allDone) { if (s.kg === "") s.kg = String((s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""); if (s.reps === "" && !ex.amrap) s.reps = String((s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin)); }
   const last = lastSessionFor(ex.name), p = s.t === "w" ? null : last?.sets[ex.log.slice(0, j).filter(work).length], unit = SEC.has(ex.name) ? "שניות" : "חזרות";
   const kg = num(s.kg) || 0, nextUp = ex.sug?.hint || (ex.repMax && kg ? `${ex.sets} × ${ex.repMax} היום = עלייה ל-${r1(kg + (ex.inc || 2.5))} ק״ג בפעם הבאה` : "");
   const resting = !allDone && restEnd > Date.now() && ex.log.some(x => x.done), lbl = `סט ${j + 1} מתוך ${ex.log.length}${j === ex.log.length - 1 ? " · אחרון" : ""}${s.t ? ` · ${STYPE[s.t][1]}` : ""}`;
@@ -1115,7 +1121,7 @@ function focusView() { // one exercise, big numbers, rest inside the screen, the
       <div class="fdone n">${ex.log.map((x, k) => x.done ? `<button data-done="${i}-${k}" aria-label="ביטול סט ${k + 1}">סט ${k + 1} · <bdi dir="ltr">${x.kg}×${x.reps}</bdi>${IC.check}</button>` : "").join("")}</div>
       ${body}
       <div class="ftools"><button data-addset="${i}">+ סט</button><button data-delset="${i}" ${ex.log.length > 1 ? "" : "disabled"}>− סט</button><button data-wswap="${i}">החלפה</button><button data-wdel="${i}">הסרת תרגיל</button><button id="wAddEx">+ תרגיל</button><button class="fx" data-wdiscard="1">ביטול האימון</button></div></div>
-    <div class="ffoot">${allDone ? `<button class="fgo" data-fnav="1">${exs[i + 1] ? "לתרגיל הבא" : "סיום התרגילים"}</button>` : resting ? `<button class="fgo wh" data-rest="x">דילוג · לסט הבא</button>` : `<button class="fgo" data-done="${i}-${j}">סיים סט</button>`}<span class="fmut">${exs[i + 1] ? `הבא: ${esc(exs[i + 1].name)}` : "תרגיל אחרון"}</span></div></div>`;
+    <div class="ffoot">${allDone ? `<button class="fgo" data-fnav="1">${exs[i + 1] ? "לתרגיל הבא" : "סיום התרגילים"}</button>` : resting ? `<button class="fgo wh" data-rest="x">דילוג · לסט הבא</button>` : D.run && D.run.i === i && D.run.j === j ? `<button class="fgo" data-setend="1">סיום סט · ${clock(D.run.t0)}</button>` : `<button class="fgo" data-setgo="${i}-${j}">▶ התחלת סט</button><button class="btn link small" style="color:#a9a1a4" data-done="${i}-${j}">סימון כבוצע בלי טיימר</button>`}<span class="fmut">${exs[i + 1] ? `הבא: ${esc(exs[i + 1].name)}` : "תרגיל אחרון"}</span></div></div>`;
 }
 function progCards() { // body: one weight card (weekly average, pace, goal, forecast) + strength and consistency tiles
   const wa = weekAvgs(), rate = weeklyRate(), tr = trendSeries(), p = S.profile || {}, g = p.goalWeight, w = S.weights.length ? avg7(S.weights[S.weights.length - 1].date) : null, pct = goalPct(p);
@@ -1339,6 +1345,7 @@ function activeWorkout() {
     <div class="wkhead">${mbtn()}<div class="wkt"><h1>${(D.editId ? "עריכה: " : "") + esc(D.dayName)}</h1><span class="n">${mins} דק׳ · ${pct}% · ${done}/${all} סטים</span></div><button class="wkfin" id="finishW" aria-label="${D.editId ? "שמירה" : "סיום האימון"}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4M6 4h11l-2 4 2 4H6"/></svg><span>${D.editId ? "שמירה" : "סיום"}</span></button></div>
     <div class="wkseg">${D.exercises.map(e => { const n = e.log.length, d = e.log.filter(x => x.done).length; return `<i><b style="width:${n ? Math.round(d / n * 100) : 0}%"></b></i>`; }).join("")}</div>
     <div class="row sb wkmode"><span class="small n">${D.exercises.filter(e => e.log.length && e.log.every(x => x.done)).length}/${D.exercises.length} תרגילים</span></div>
+    ${warmupCard(D)}
     ${S.endAsk ? `<div class="list pad" style="display:grid;gap:10px;border-inline-start:3px solid var(--accent)"><div><b>לא נרשמו סטים באימון הזה.</b><div class="small muted">כדי לשמור, לחץ ✓ ליד הסטים שעשית. אפשר גם לבטל את האימון בלי לשמור.</div></div>
       <div class="row"><button class="btn primary" data-wall="1">עשיתי הכל לפי התוכנית, לשמור</button><button class="btn del" data-wdiscard="1">ביטול האימון</button><button class="btn" data-endask="0">חזרה לאימון</button></div></div>` : ""}
     ${D.exercises.map((ex, i) => { const last = lastSessionFor(ex.name), best = bestBefore(ex.name, D.start || Date.now()), fin = ex.log.length && ex.log.every(s => s.done), cur = !fin && i === D.exercises.findIndex(x => !x.log.every(s => s.done));
@@ -1349,9 +1356,10 @@ function activeWorkout() {
         <div class="settbl"><div class="sr h"><span class="i">סט</span><span>קודם</span><span style="text-align:center">ק״ג</span><span style="text-align:center">${SEC.has(ex.name) ? "שניות" : "חזרות"}</span><span></span></div>
         ${ex.log.map((s, j) => { const p = s.t === "w" ? null : last?.sets[ex.log.slice(0, j).filter(work).length], isPR = s.done && s.t !== "w" && best.e && e1rm(num(s.kg) || 0, parseInt(s.reps) || 0) > best.e + 0.1;
           return `<div class="sr ${s.done ? "done" : ""}"><button class="stype ${s.t || ""} n" data-stype="${i}-${j}" aria-label="סוג סט">${STYPE[s.t || ""]?.[0] || j + 1}</button><span class="prev n">${isPR ? `<b class="prb">שיא חדש</b>` : ""}${p ? ltr(`${p.kg}×${p.reps}`) : "—"}</span>
-          <input id="kg-${i}-${j}" class="n" inputmode="decimal" aria-label="ק״ג" placeholder="${(s.t !== "w" && carry(ex, j, "kg")) ?? ex.sug?.kg ?? ""}" value="${s.kg ?? ""}" data-f="kg" data-i="${i}" data-j="${j}">
-          <input id="rp-${i}-${j}" class="n" inputmode="numeric" aria-label="חזרות" placeholder="${ex.amrap ? "max" : (s.t !== "w" && carry(ex, j, "reps")) ?? (ex.sug?.reps || ex.repMin)}" value="${s.reps ?? ""}" data-f="reps" data-i="${i}" data-j="${j}">
+          <input id="kg-${i}-${j}" class="n" inputmode="decimal" aria-label="ק״ג" placeholder="${(s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""}" value="${s.kg ?? ""}" data-f="kg" data-i="${i}" data-j="${j}">
+          <input id="rp-${i}-${j}" class="n" inputmode="numeric" aria-label="חזרות" placeholder="${ex.amrap ? "max" : (s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin)}" value="${s.reps ?? ""}" data-f="reps" data-i="${i}" data-j="${j}">
           <button class="chk" aria-label="סט בוצע" data-done="${i}-${j}">✓</button></div>`; }).join("")}</div>
+        ${cur ? setBtns(i, ex.log.findIndex(s => !s.done)) : ""}
         <div class="row" style="justify-content:space-between"><span class="row" style="gap:4px"><button class="btn link" data-addset="${i}">+ סט</button>${ex.log.length > 1 ? `<button class="btn link del" data-delset="${i}">− סט</button>` : ""}</span>
           <span id="pl-${i}">${ex.barbell ? plates(num(ex.log[0]?.kg) ?? num(ex.sug?.kg) ?? 0) : ""}</span></div></div>`; }).join("")}
     <button class="btn" id="wAddEx">+ הוספת תרגיל לאימון הזה</button>
@@ -1369,8 +1377,9 @@ function startWorkout(id) {
 }
 const carry = (ex, j, f) => { for (let k = j - 1; k >= 0; k--) if (ex.log[k][f] !== "" && ex.log[k].t !== "w") return ex.log[k][f]; return null; }; // last value typed in this exercise
 function toggleSet(i, j) {
-  const ex = S.draft.exercises[i], s = ex.log[j];
-  if (!s.done) { if (s.kg === "") s.kg = (s.t !== "w" && carry(ex, j, "kg")) ?? ex.sug?.kg ?? ""; if (s.reps === "" && !ex.amrap) s.reps = (s.t !== "w" && carry(ex, j, "reps")) ?? (ex.sug?.reps || ex.repMin); } // confirm the placeholder values, like Hevy
+  const ex = S.draft.exercises[i], s = ex.log[j], R = S.draft.run;
+  if (R && R.i === i && R.j === j) { S.draft.run = null; if (!s.done) { const sec = Math.round((Date.now() - R.t0) / 1000); s.sec = sec; if (SEC.has(ex.name) && s.reps === "") s.reps = String(sec); } }
+  if (!s.done) { if (s.kg === "") s.kg = (s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""; if (s.reps === "" && !ex.amrap) s.reps = (s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin); } // confirm the placeholder values, like Hevy
   s.done = !s.done; store.set("draft", S.draft);
   const nx = ex.log[j + 1];
   if (s.done && nx?.t !== "d") startRest(s.t === "w" ? 60 : ex.rest || 120); // like Hevy: no rest before a drop set, short rest after a warm-up
@@ -1384,7 +1393,7 @@ async function finishWorkout(btn) {
 }
 async function finishWorkout1() {
   const D = S.draft; if (!D) return;
-  const exercises = D.exercises.map(e => ({ name: e.name, sets: e.log.filter(s => s.done || (D.editId && s.reps !== "")).map(s => ({ kg: num(s.kg) ?? 0, reps: parseInt(s.reps) || 0, ...(s.t ? { t: s.t } : {}) })).filter(s => s.reps) })).filter(e => e.sets.length);
+  const exercises = D.exercises.map(e => ({ name: e.name, sets: e.log.filter(s => s.done || (D.editId && s.reps !== "")).map(s => ({ kg: num(s.kg) ?? 0, reps: parseInt(s.reps) || 0, ...(s.t ? { t: s.t } : {}), ...(s.sec ? { sec: s.sec } : {}) })).filter(s => s.reps) })).filter(e => e.sets.length);
   if (!exercises.length) { S.endAsk = true; render(); scrollTo({ top: 0 }); return; }
   const now = Date.now(), minutes = Math.round((now - (D.start || now)) / 60000);
   const prs = []; exercises.forEach(e => { const b = bestBefore(e.name, now); if (!b.e) return;
@@ -1392,7 +1401,7 @@ async function finishWorkout1() {
     if (kg > b.kg) prs.push({ name: e.name, kind: "kg", kg, prev: b.kg }); else if (e1 > b.e + 0.1) prs.push({ name: e.name, kind: "e1", e: e1, prev: b.e }); });
   const volume = exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + st.kg * st.reps, 0), 0);
   const prevW = [...S.workouts].reverse().find(w => w.dayId === D.dayId);
-  const prevVolume = prevW ? prevW.exercises.reduce((a, e) => a + e.sets.reduce((b, st) => b + (st.kg||0) * (st.reps||0), 0), 0) : 0;
+  const prevVolume = prevW ? prevW.exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + (st.kg||0) * (st.reps||0), 0), 0) : 0;
   const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, exercises, minutes, ts: now }));
   if (await (D.editId ? (x => save("workouts/" + D.editId, x)) : (x => addTo("workouts", x)))(doc)) {
     S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.length, 0), volume, prevVolume, prs, pain: D.pain ?? null };
@@ -1402,10 +1411,56 @@ async function finishWorkout1() {
     S.draft = null; S.pickDay = null; store.set("draft", null); stopRest(); render(); scrollTo({ top: 0 }); }
 }
 const painColor = v => v == null ? "var(--muted)" : v <= 2 ? "var(--ok)" : v <= 4 ? "var(--carb)" : "var(--bad)";
-function warmups(kg) { // bar ×10, then 40/60/80% of the working weight, rounded to 2.5 kg
-  if (!(kg > 30)) return "";
-  const r = x => Math.max(20, Math.round(x / 2.5) * 2.5);
-  return [`20×10`, `${r(kg * .4)}×5`, `${r(kg * .6)}×3`, `${r(kg * .8)}×1`].filter((v, i, a) => a.indexOf(v) === i).join(" · ");
+/* ---- warm-up: general (pre-workout routine) or per exercise (ramp-up sets) ---- */
+const UPPER = new Set(["chest", "back", "shoulders", "biceps", "triceps", "forearms"]), LOWER = new Set(["quads", "glutes", "calves"]);
+const exGroups = name => { const x = EX_INDEX[name]; return x ? [...new Set(x.p.map(k => MUSCLES[k]?.[1]).filter(Boolean))] : []; };
+function wuSteps(D) { // general warm-up adapted to the day's muscles: 5 min easy cardio, then dynamic moves for what you train
+  const g = new Set(D.exercises.flatMap(e => exGroups(e.name))), up = [...g].some(k => UPPER.has(k)), lo = [...g].some(k => LOWER.has(k)), any = !up && !lo;
+  return [["c", "קרדיו קל: אופניים, הליכון בשיפוע או חתירה", "5 דק׳", 300, true],
+    ["cc", "חתול-פרה על שש", "8 חזרות", 0, true],
+    ["sh", "סיבובי כתפיים וזרועות קדימה ואחורה", "30 שנ׳", 30, up || any],
+    ["pa", "פתיחת גומייה מול החזה (או פתיחת ידיים)", "15 חזרות", 0, up || any],
+    ["pu", "שכיבות סמיכה על הקיר או על הברכיים", "10 חזרות", 0, g.has("chest") || g.has("triceps")],
+    ["sc", "משיכת שכמות בתלייה על מתח או בפולי", "10 חזרות", 0, g.has("back")],
+    ["sq", "סקוואט במשקל גוף", "10 חזרות", 0, lo || any],
+    ["ls", "נדנוד רגל קדימה-אחורה ולצדדים", "10 לכל רגל", 0, lo],
+    ["gb", "גשר ישבן", "12 חזרות", 0, g.has("glutes") || g.has("quads")],
+    ["lu", "מכרע אחורי לסירוגין", "6 לכל רגל", 0, lo]].filter(x => x[4]).map(([id, t, a, sec]) => ({ id, t, a, sec }));
+}
+function wuSets(ex, warmed) { // ramp-up sets from the working weight; a muscle already warmed by an earlier exercise gets one feeder set
+  if (SEC.has(ex.name)) return [];
+  const kg = num(ex.sug?.kg) ?? num(ex.startKg); if (!(kg > 0)) return warmed ? [] : [{ kg: "", reps: "10", done: false, t: "w", wa: 1 }]; // no working weight yet: one light set, weight typed by feel
+  const bar = ex.barbell || EX_INDEX[ex.name]?.b, step = bar || kg >= 20 ? 2.5 : 1, r = x => Math.round(x / step) * step;
+  const pr = (x, reps) => ({ kg: r(x), reps });
+  let L;
+  if (warmed) L = kg >= 10 ? [pr(kg * .6, 5)] : [];
+  else if (bar && kg >= 40) L = [{ kg: 20, reps: 10 }, pr(kg * .4, 5), pr(kg * .6, 3), pr(kg * .8, 2)];
+  else if (bar && kg > 20) L = [{ kg: 20, reps: 10 }, pr(kg * .7, 5)];
+  else if (kg >= 10) L = [pr(kg * .5, 8), pr(kg * .75, 4)];
+  else L = [pr(kg * .5, 10)];
+  const seen = new Set();
+  return L.filter(x => x.kg > 0 && x.kg < kg && !seen.has(x.kg) && seen.add(x.kg)).map(x => ({ kg: String(x.kg), reps: String(x.reps), done: false, t: "w", wa: 1 }));
+}
+function addWuSets(D) {
+  const warmed = new Set(); let n = 0;
+  D.exercises.forEach(ex => { if (ex.log.some(s => s.wa)) { exGroups(ex.name).forEach(k => warmed.add(k)); return; }
+    const gs = exGroups(ex.name), w = gs.length && gs.every(k => warmed.has(k)), L = wuSets(ex, w);
+    gs.forEach(k => warmed.add(k)); if (L.length) { ex.log.unshift(...L); n += L.length; } });
+  D.wuEx = 1; return n;
+}
+function removeWuSets(D) { D.exercises.forEach(ex => { ex.log = ex.log.filter(s => !(s.wa && !s.done)); if (!ex.log.length) ex.log.push({ kg: "", reps: "", done: false }); }); D.wuEx = 0; }
+function warmupCard(D) {
+  if (D.editId) return "";
+  const nW = D.exercises.reduce((a, e) => a + e.log.filter(s => s.wa).length, 0);
+  if (!D.wuSeen) return D.exercises.some(e => e.log.some(s => s.done)) ? "" : `<div class="wucard"><div><b>חימום</b><div class="small muted">רוצה להתחמם לפני שמתחילים?</div></div>
+    <div class="wuopts"><button class="btn primary" data-wu="gen"><b>חימום כללי</b><span>${wuSteps(D).length} תרגילים · ~8 דק׳</span></button><button class="btn" data-wu="ex"><b>חימום פר תרגיל</b><span>סטי חימום מדורגים</span></button></div>
+    <button class="btn link small" data-wu="skip">בלי חימום</button></div>`;
+  const exLine = D.wuEx ? `<span class="small muted n">${nW} סטי חימום נוספו (ח)</span><button class="btn link small" data-wu="exoff">הסרה</button>` : `<button class="btn link small" data-wu="ex">+ סטי חימום לתרגילים</button>`;
+  if (D.wuGen === 1) { const st = wuSteps(D), dn = D.wuDone || [];
+    return `<div class="wucard"><div class="row sb"><b>חימום כללי · ${clock(D.wuT0 || Date.now())}</b><span class="small muted n">${st.filter(x => dn.includes(x.id)).length}/${st.length}</span></div>
+      <div class="wulist">${st.map(x => `<div class="wustep ${dn.includes(x.id) ? "done" : ""}"><button class="chk" aria-label="בוצע" data-wustep="${x.id}">✓</button><div class="grow"><div>${esc(x.t)}</div><div class="small muted n">${x.a}</div></div>${x.sec && !dn.includes(x.id) ? `<button class="btn small" data-wutime="${x.sec}">טיימר</button>` : ""}</div>`).join("")}</div>
+      <div class="row sb">${exLine}<button class="btn primary" data-wu="gendone">סיום חימום</button></div></div>`; }
+  return `<div class="wucard mini"><div class="row sb"><span class="small n">${D.wuGen === 2 ? `<span style="color:var(--ok)">✓</span> חימום כללי בוצע${D.wuMin ? ` · ${D.wuMin} דק׳` : ""}` : `<button class="btn link small" style="padding:0" data-wu="gen">+ חימום כללי</button>`}</span><span class="row" style="gap:6px">${exLine}</span></div></div>`;
 }
 function bestBefore(name, beforeTs) {
   let e = 0, kg = 0;
@@ -1460,6 +1515,17 @@ function strengthTable() {
       <div class="item"><div class="grow s n">${ch.length} אימונים · הסט הכבד האחרון ${ch[ch.length-1].top.kg}×${ch[ch.length-1].top.reps}</div></div></div>` : ""}</div>` : "";
 }
 let restEnd = 0, restI = null, actx = null;
+const mmss = ms => { const t = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; };
+const clock = t0 => `<span class="n" data-t0="${t0}">${mmss(Date.now() - t0)}</span>`; // live count-up, ticked below
+setInterval(() => document.querySelectorAll("[data-t0]").forEach(el => { el.textContent = mmss(Date.now() - +el.dataset.t0); }), 1000);
+function startSet(i, j) { // set timer: runs until "סיום סט", then the rest timer starts by itself
+  const D = S.draft, s = D?.exercises[i]?.log[j]; if (!s || s.done) return;
+  restEnd = 0; stopRest(); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.(); } catch {}
+  D.run = { i, j, t0: Date.now() }; store.set("draft", D); render();
+}
+function endSet() { const R = S.draft?.run; if (!R) return; const s = S.draft.exercises[R.i]?.log[R.j]; if (!s) { S.draft.run = null; return render(); } if (!s.done) toggleSet(R.i, R.j); else { S.draft.run = null; store.set("draft", S.draft); render(); } }
+const setBtns = (i, j) => { const R = S.draft?.run, on = R && R.i === i && R.j === j, s = S.draft.exercises[i].log[j];
+  return on ? `<button class="btn primary setgo on" data-setend="1"><span class="dot"></span>סט ${j + 1} רץ ${clock(R.t0)} · סיום סט</button>` : `<button class="btn setgo" data-setgo="${i}-${j}">▶ התחלת סט ${j + 1}${s.t === "w" ? " (חימום)" : ""}</button>`; };
 function beep() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); [0, .25].forEach(t => { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(actx.destination);
   g.gain.setValueAtTime(.25, actx.currentTime + t); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + t + .2); o.start(actx.currentTime + t); o.stop(actx.currentTime + t + .2); }); } catch {} }
 function startRest(sec) { S.restTot = sec; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.(); } catch {} restEnd = Date.now() + sec * 1000; clearInterval(restI); restI = setInterval(tickRest, 250); tickRest(); }
@@ -2004,6 +2070,15 @@ document.addEventListener("click", async ev => {
   if (ds.pdel) { if (!ds.sure) { ds.sure = 1; t.textContent = "בטוח?"; return; } await remove("plans/" + ds.pdel); toast("התוכנית נמחקה"); return; }
   if (ds.demo) { S.picker = { mode: "view", cat: "chest", q: "", prev: ds.demo }; return renderSheet(); }
   if (ds.pickday) { S.pickDay = ds.pickday; render(); return; }
+  if (ds.wu && S.draft) { const D = S.draft, v = ds.wu; D.wuSeen = 1;
+    if (v === "gen") { D.wuGen = 1; D.wuDone = D.wuDone || []; D.wuT0 = D.wuT0 || Date.now(); } else if (v === "gendone") { D.wuGen = 2; D.wuMin = Math.round((Date.now() - (D.wuT0 || Date.now())) / 60000); if (restEnd > Date.now()) { restEnd = 0; stopRest(); } }
+    else if (v === "ex") { const n = addWuSets(D); toast(n ? `נוספו ${n} סטי חימום` : "אין תרגילים לחימום");
+      if (n && D.wuGen !== 1 && !D.run) { const i = D.exercises.findIndex(e => e.log.some(s => s.wa && !s.done)); if (i >= 0) { store.set("draft", D); return startSet(i, D.exercises[i].log.findIndex(s => s.wa && !s.done)); } } } else if (v === "exoff") removeWuSets(D);
+    store.set("draft", D); render(); return; }
+  if (ds.wustep && S.draft) { const L = S.draft.wuDone = S.draft.wuDone || [], k = L.indexOf(ds.wustep); k < 0 ? L.push(ds.wustep) : L.splice(k, 1); store.set("draft", S.draft); render(); return; }
+  if (ds.wutime) { startRest(+ds.wutime); return; }
+  if (ds.setgo && S.draft) { const [i, j] = ds.setgo.split("-").map(Number); startSet(i, j); return; }
+  if (ds.setend) { try { navigator.vibrate?.(25); } catch {} endSet(); return; }
   if (ds.delset) { const ex = S.draft.exercises[+ds.delset]; if (ex.log.length > 1) ex.log.pop(); store.set("draft", S.draft); render(); return; }
   if (ds.addset) { const ex = S.draft.exercises[+ds.addset]; ex.log.push({ kg: ex.log[ex.log.length-1]?.kg ?? "", reps: "", done: false }); store.set("draft", S.draft); render(); return; }
   if (ds.rest) { if (S.focus) setTimeout(render, 0); ds.rest === "x" ? (restEnd = 0, stopRest()) : (restEnd = Math.max(Date.now(), Math.max(restEnd, Date.now()) + (ds.rest === "-30" ? -30000 : 30000)), clearInterval(restI), restI = setInterval(tickRest, 250), tickRest()); return; }
