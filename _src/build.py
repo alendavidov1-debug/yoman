@@ -14,18 +14,18 @@ fonts = re.sub(r"url\(fonts/(rubik-\w+\.woff2)\)", r"url(fonts/\1)", fonts)
 pb = body.replace('<link rel="preconnect" href="https://fonts.googleapis.com">\n', '')
 pb = pb.replace('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">', '<style>' + fonts + '</style>')
 assert 'googleapis' not in pb
-pb = pb.replace('<title>יומן מתאמן</title>\n', '').replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '')
+pb = pb.replace('<title>One Way Up</title>\n', '').replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '')
 files = sorted([os.path.join(dp, f)[2:] for dp, _, fs in os.walk('.') if not dp.startswith(('./.git', './_src')) for f in fs if f not in ('index.html', 'sw.js', '.nojekyll', 'version.json', 'README.md')])
 ver = hashlib.sha1((pb + json.dumps(files)).encode()).hexdigest()[:10]
 head = f'''<!doctype html>
 <html lang="he" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>יומן מתאמן</title>
+<title>One Way Up</title>
 <meta name="theme-color" content="#17181b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="יומן מתאמן">
+<meta name="apple-mobile-web-app-title" content="One Way Up">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
@@ -36,7 +36,7 @@ head = f'''<!doctype html>
 </head><body>
 '''
 open('index.html', 'w').write(head + pb + '\n</body></html>\n')
-manifest = {"name": "יומן מתאמן", "short_name": "יומן מתאמן", "lang": "he", "dir": "rtl", "start_url": "./", "scope": "./", "display": "standalone", "orientation": "portrait", "background_color": "#17181b", "theme_color": "#17181b", "id": "./",
+manifest = {"name": "One Way Up", "short_name": "One Way Up", "lang": "he", "dir": "rtl", "start_url": "./", "scope": "./", "display": "standalone", "orientation": "portrait", "background_color": "#17181b", "theme_color": "#17181b", "id": "./",
   "icons": [{"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"}, {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}
 open('manifest.webmanifest', 'w').write(json.dumps(manifest, ensure_ascii=False, indent=1))
 shell = ["./", "index.html", "manifest.webmanifest", "fonts/rubik-hebrew.woff2", "fonts/rubik-latin.woff2", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"]
