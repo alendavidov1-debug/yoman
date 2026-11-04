@@ -1990,20 +1990,28 @@ function coachContext() {
 תוכנית האימונים:\n${plan}
 סטים בשבוע לפי שריר (עיקרי=1, משני=½): ${weeklySets().map(x => `${x.t} ${r1(x.n)} [${x.subs.map(sb => `${sb.t} ${r1(sb.n)}`).join("; ")}]`).join(" | ")}
 אימונים אחרונים:\n${recentW || "עוד אין"}
+${S.draft ? `אימון פתוח עכשיו (${S.draft.dayName || ""}, התחיל לפני ${Math.round((Date.now() - (S.draft.start || Date.now())) / 60000)} דק'): ${S.draft.exercises.map(e => `${e.name} ${e.log.filter(x => x.done).map(x => `${x.kg}x${x.reps}${x.t ? `(${x.t})` : ""}${x.rir != null ? ` RIR${x.rir}` : ""}`).join(",") || "עוד לא"}`).join("; ")}
+` : ""}שיאים (1RM משוער הכי גבוה): ${prList()}
+מנוחה בין סטים בהגדרות: ${CFG("restWork")} שניות. סה"כ אימונים שנרשמו: ${S.workouts.length}${S.workouts[0] ? ` מאז ${S.workouts[0].date}` : ""}.
 היקפים אחרונים (ס"מ): ${(() => { const m = S.measures[S.measures.length-1]; return m ? MEAS.filter(([k]) => m[k]).map(([k, t]) => `${t} ${m[k]}`).join(", ") + (navyBF(m) ? `; אחוז שומן (שיטת הצי) ${r1(navyBF(m))}%` : "") : "אין"; })()}`;
 }
+function prList() { const b = {}; S.workouts.forEach(w => (w.exercises || []).forEach(x => x.sets.filter(work).forEach(st => { const e = e1rm(st.kg || 0, st.reps || 0); if (e && (!b[x.name] || e > b[x.name].e)) b[x.name] = { e, s: `${st.kg}x${st.reps}`, d: w.date }; })));
+  return Object.entries(b).map(([n, v]) => `${n} ${v.s} (${v.d})`).join("; ") || "אין"; }
 const PLAN_Q = "תבקר את תוכנית האימונים שלי כמו מאמן מהשורה הראשונה: נפח שבועי לכל שריר (הנתונים למטה), תדירות, בחירת תרגילים, סדר, טווחי חזרות, התקדמות, והתאמה לחיטוב. תן ציון 1–10, את 3 הבעיות החשובות ביותר ומה בדיוק להחליף.";
 const COACH_RULES = `אתה מאמן כוח, היפרטרופיה ותזונה ברמה העולמית, מבוסס מחקר (Helms, Israetel, Nuckols, Schoenfeld, Aragon), ופיזיותרפיסט ספורט. המתאמן בחיטוב ורוצה להעלות משקלים.
 עקרונות: 10–20 סטים קשים לשריר בשבוע, תדירות 2 בשבוע, 0–3 חזרות ברזרבה, התקדמות כפולה (מגיעים לראש טווח החזרות בכל הסטים ← מעלים משקל 2.5 ק"ג במוט / 1–2 ק"ג בדאמבל), שמירה על עצימות בחיטוב, ירידה של 0.5–1% ממשקל הגוף בשבוע לפי ממוצע שבועי ולא לפי שקילה בודדת, בשבועיים הראשונים חלק מהירידה הוא מים ולא משנים קלוריות, 1.6–2.2 גרם חלבון לק"ג, שינוי קלוריות בצעדים של 100–200, דילואוד כשהביצועים יורדים שבועיים.
 יחס: אכפת לך ממנו באמת, כמו מאמן אישי שמכיר אותו חודשים. שים לב לנתונים שלו (שינה, אימונים שהוחמצו, שיאים, משקל, כאב) והתייחס אליהם ביוזמתך כשזה רלוונטי. כשהוא מצליח, פרגן בקצרה ובאופן ספציפי ("85 ק"ג על 8, זה שיא"). כשקשה לו או שהוא מפספס, בלי שיפוטיות ובלי נאום: הבנה קצרה ואז צעד אחד קטן להמשך. זכור מה הוא סיפר קודם בשיחה וחזור אליו. אל תהיה מתקתק, בלי קלישאות ("אתה תותח", "המשך כך").
-סגנון: עברית, גוף שני, כמו מאמן אמיתי בווטסאפ. קצר: 1–2 משפטים, עד 30 מילים. רק התשובה עצמה, בלי הסברים, בלי נימוקים ובלי עצות נוספות שלא ביקשו, אלא אם ביקש במפורש פירוט. בלי הקדמות, בלי לחזור על השאלה, בלי סיכום. שאלה בסוף רק כשבאמת חשוב לך לדעת איך הוא מרגיש או מה קרה, ואז שאלה אחת קצרה. בלי כותרות, בלי רשימות ארוכות, בלי אימוג'י. מספרים עם יחידות ("120 גרם", "72.5 ק"ג"). אם שואלים שאלה עובדתית, תשובה ישירה קודם.
+סגנון: עברית, גוף שני, כמו מאמן אמיתי בווטסאפ. התאם את האורך לשאלה: שאלה פשוטה = 1–2 משפטים. שאלה של "למה", "איך", ניתוח, השוואה, תוכנית או בעיה = תשובה מלאה ומדויקת (עד כ-200 מילים), עם המספרים שלו ונקודות קצרות אם זה עוזר. בלי עצות נוספות שלא ביקשו. בלי הקדמות, בלי לחזור על השאלה, בלי סיכום. שאלה בסוף רק כשבאמת חשוב לך לדעת איך הוא מרגיש או מה קרה, ואז שאלה אחת קצרה. בלי כותרות, בלי רשימות ארוכות, בלי אימוג'י. מספרים עם יחידות ("120 גרם", "72.5 ק"ג"). אם שואלים שאלה עובדתית, תשובה ישירה קודם.
 - יש לך כלים שמשנים את האפליקציה בפועל ובזמן אמת. כשהמתאמן מבקש שינוי (תוכנית, תרגיל, סטים/חזרות, משקל עבודה, תפריט, מטרה, יעד קלוריות) או מבקש לרשום אוכל/משקל: בצע מיד עם הכלי, בלי לשאול "לעשות?", ואז כתוב רק "בוצע:" ומה שינית בכמה מילים. כשאתה ממליץ על שינוי ביוזמתך, שאל קודם.
 - אל תמציא שינוי שלא ביצעת. אם כלי החזיר שגיאה, אמור את זה.
 - רישום אוכל: חשב ערכים לפי ערכים תזונתיים סטנדרטיים (הגרמים הם משקל אחרי בישול, אלא אם נאמר "לפני בישול"), והוסף 5 גרם שמן אם נאמר שבושל בשמן. התחשב בכל מילות התיאור: גודל (קטן/גדול/גדול מאוד) משנה את משקל היחידה, מטוגן/בציפוי/ברוטב מעלים קלוריות ושומן.
 - שמות תרגילים: כשמוסיפים תרגיל חדש, העדף שמות מהקטלוג (רשימה למטה), בדיוק כפי שהם כתובים. תרגילים שכבר בתוכנית שמור בשם שלהם.
 - התבסס על הנתונים האמיתיים למטה וצטט מהם מספרים כשזה רלוונטי. אם חסר מידע כדי לענות טוב, שאל שאלה אחת.
 - כאב: שאל איפה, מתי ועוצמה 0–10. סימני אזהרה (נימול, נפיחות, כאב לילי, כאב חד, החמרה) = להפסיק ולהיבדק פנים אל פנים. אל תאבחן בוודאות.
-- אם המתאמן טועה, תגיד את זה בפשטות ובכבוד.`;
+- אם המתאמן טועה, תגיד את זה בפשטות ובכבוד.
+- אתה יודע לענות על כל שאלה, גם מחוץ לכושר (מדע, בריאות, בישול, כל נושא אחר). ענה עליה כמו מומחה, בלי להפנות למקום אחר.
+- לפני שאתה עונה על שאלה על הנתונים שלו (היסטוריה של תרגיל, אימון מסוים, אוכל ביום מסוים, מגמת משקל), השתמש בכלי הקריאה (get_exercise_history, get_workouts, get_food_log, get_weights) כדי לראות את הנתונים המלאים ולא רק את התקציר. אל תנחש מספרים.
+- חשוב צעד אחר צעד בשקט לפני שאתה עונה על שאלה מורכבת, ובדוק שהחישוב נכון (קלוריות, נפח, אחוזים, 1RM לפי אפלי: משקל × (1 + חזרות/30)).`;
 function howCtx(text) { if (!text) return ""; const hits = Object.keys(HOW).filter(n => text.includes(n)).slice(0, 2);
   return hits.map(n => { const h = HOW[n], m = EX_INDEX[n]; return `\n\nכרטיס הטכניקה שהמתאמן רואה באפליקציה עבור "${n}" (תהיה עקבי איתו, ותקן אם משהו בו לא מדויק):\nשרירים עיקריים: ${(m?.p || []).map(mLabel).join(", ")}; משניים: ${(m?.s || []).map(mLabel).join(", ")}\nמנח: ${h.s}\nביצוע: ${h.st.join(" ")}\nנשימה: ${h.b}\nטעויות: ${h.m.join("; ")}`; }).join("");
 }
@@ -2015,6 +2023,18 @@ function findDay(plan, d) { const i = Number.isInteger(+d) && plan.days[+d] ? +d
 async function coachChange(fn, msg) { if (!S.coachUndo) S.coachUndo = { plan: clonePlan(), profile: { ...(S.profile || {}) }, menu: S.menu ? JSON.parse(JSON.stringify(S.menu)) : null };
   const plan = clonePlan(); const out = fn(plan); if (!(await savePlan(plan, msg))) throw new Error("השמירה נכשלה"); S.coachChanged = true; return out; }
 const EX_SCHEMA = { type: "array", items: { type: "object", properties: { name: { type: "string" }, sets: { type: "integer" }, repMin: { type: "integer" }, repMax: { type: "integer" }, rest: { type: "integer", description: "מנוחה בשניות" }, note: { type: "string", description: "הערה קצרה, אופציונלי" }, startKg: { type: "number", description: "משקל עבודה בק\"ג, אופציונלי" }, amrap: { type: "boolean", description: "סטים עד מקסימום חזרות" } }, required: ["name", "sets", "repMin", "repMax"] } };
+const wSets = sets => (sets || []).map(s => `${s.kg}x${s.reps}${s.t ? `(${s.t === "w" ? "חימום" : s.t === "d" ? "דרופ" : "כשל"})` : ""}${s.rir != null ? ` RIR${s.rir}` : ""}`).join(", ");
+const COACH_READ = [
+  { name: "get_exercise_history", description: "כל ההיסטוריה של תרגיל: לכל אימון תאריך וסטים (ק\"ג x חזרות, סוג סט, חזרות ברזרבה). מחפש גם לפי חלק מהשם.", inputSchema: { type: "object", properties: { exercise: { type: "string" }, limit: { type: "integer", description: "כמה אימונים אחרונים, ברירת מחדל 20" } }, required: ["exercise"] },
+    execute: async i => { const q = String(i.exercise || "").trim(), names = [...new Set(S.workouts.flatMap(w => (w.exercises || []).map(x => x.name)))], hit = names.filter(n => n === q).length ? [q] : names.filter(n => n.includes(q) || q.includes(n));
+      if (!hit.length) return { found: false, names }; return hit.slice(0, 3).map(n => ({ exercise: n, sessions: S.workouts.filter(w => (w.exercises || []).some(x => x.name === n)).slice(-(+i.limit || 20)).map(w => ({ date: w.date, sets: wSets(w.exercises.find(x => x.name === n).sets) })) })); } },
+  { name: "get_workouts", description: "אימונים מלאים בטווח תאריכים (כל התרגילים והסטים, דקות, כאב, הערה).", inputSchema: { type: "object", properties: { from: { type: "string", description: "YYYY-MM-DD" }, to: { type: "string" } } },
+    execute: async i => S.workouts.filter(w => (!i.from || w.date >= i.from) && (!i.to || w.date <= i.to)).slice(-30).map(w => ({ date: w.date, day: w.dayName, minutes: w.minutes, pain: w.pain, note: w.note, exercises: (w.exercises || []).map(x => `${x.name}: ${wSets(x.sets)}`) })) },
+  { name: "get_food_log", description: "כל מה שנרשם ביומן האוכל ביום מסוים, עם סך הכל מול היעד.", inputSchema: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD, ברירת מחדל היום" } } },
+    execute: async i => { const d = i.date || today(), t = dayTotals(d), T = targets(); return { date: d, items: S.food.filter(f => f.date === d).map(f => `${f.meal}: ${f.name} ${f.kcal} קק"ל, ${f.p}ח ${f.c}פ ${f.f}ש`), total: { kcal: Math.round(t.kcal), p: Math.round(t.p), c: Math.round(t.c || 0), f: Math.round(t.f || 0) }, target: T }; } },
+  { name: "get_weights", description: "שקילות בוקר בימים האחרונים וממוצע 7 ימים.", inputSchema: { type: "object", properties: { days: { type: "integer", description: "ברירת מחדל 60" } } },
+    execute: async i => { const from = addDays(today(), -(+i.days || 60)); return S.weights.filter(w => w.date >= from).map(w => ({ date: w.date, kg: w.kg, avg7: r1(avg7(w.date) || w.kg) })); } },
+];
 const COACH_TOOLS = [
   { name: "set_day_exercises", description: "מחליף את כל רשימת התרגילים של יום אימון אחד בתוכנית (לפי הסדר). שלח את הרשימה המלאה של היום אחרי השינוי, כולל תרגילים שלא השתנו. מחזיר את היום המעודכן.",
     inputSchema: { type: "object", properties: { day: { type: "string", description: "מספר היום (0 הוא הראשון) או השם המדויק שלו" }, name: { type: "string", description: "שם חדש ליום, אופציונלי" }, exercises: EX_SCHEMA }, required: ["day", "exercises"] },
@@ -2072,8 +2092,9 @@ async function ask(text) {
     S.chatAbort = new AbortController(); const timer = setTimeout(() => S.chatAbort?.abort(), 120000);
     const opts = { cache: false, signal: S.chatAbort.signal, onText: u => { S.chatStream = u.text; const b = document.querySelector(".chat > .msg:last-child"); if (b && S.tab === "coach") { b.textContent = u.text; chatBottom(); } } };
     if (img?.blob) opts.images = [img.blob];
-    opts.modelTier = "quick"; // alen: answers must be very fast
-    S.sampleLim ??= await S.sample.limits?.().catch(() => null); if (S.sampleLim?.tools) opts.tools = COACH_TOOLS;
+    const simple = !img && (text || "").length < 60 && !/למה|איך|נתח|ניתוח|תכנית|תוכנית|השווה|השוואה|מה דעתך|תסביר|הסבר|כמה|היסטורי|התקדמ|שבוע|חודש|תבנה|תכין/.test(text || "");
+    if (simple) opts.modelTier = "quick"; // simple = fast model, anything that needs thinking = the strong model
+    S.sampleLim ??= await S.sample.limits?.().catch(() => null); if (S.sampleLim?.tools) opts.tools = [...COACH_READ, ...COACH_TOOLS];
     S.coachUndo = null; S.coachChanged = false;
     let r; try { r = await S.sample(merged, opts); } finally { clearTimeout(timer); }
     const reply = { role: "coach", text: r.text.trim(), ts: Date.now(), ...(S.coachChanged ? { changed: true } : {}) };
