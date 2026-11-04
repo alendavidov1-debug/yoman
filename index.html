@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="0650c78e03";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="2fa362b4b9";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -532,6 +532,7 @@ body.wkOn .chk{width:38px;height:38px;border-radius:19px;background:transparent;
 .wuopts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wuopts .btn{display:grid;gap:2px;justify-items:center;min-height:62px;padding:8px 6px;text-align:center}.wuopts .btn span{font-size:.72rem;opacity:.75;font-weight:400}
 .setgo{width:100%;min-height:44px;font-weight:600}.setgo.on{display:flex;align-items:center;justify-content:center;gap:8px}.setgo .dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.25}}
 body.wkOn .setgo:not(.on){background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:14px}body.wkOn .setgo.on{border-radius:14px}
+.rirask{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px;font-size:.78rem;color:var(--muted)}.rirask span{flex-basis:100%}.rirask button{flex:1;min-height:36px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:700 .9rem var(--font)}body.wkOn .rirask button{background:rgba(255,255,255,.07);color:#fff;border-color:rgba(255,255,255,.14)}.rirtag{font-size:.72rem;color:#9ec5ff;padding:0 4px 4px;text-align:start}.restbar .in{flex-wrap:wrap}.rnext{flex-basis:100%;text-align:center;opacity:.8;font-weight:500;padding-bottom:4px}.rnext:empty{display:none}
 .wulist{display:grid;gap:4px}.sstl{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#6ea8ff;color:#0b1020;font-size:.8rem;margin-inline-end:4px}.sssep{height:1px;background:var(--line);margin:2px 0}.ssround{display:grid;gap:3px;padding:4px 0;border-top:1px dashed rgba(158,197,255,.25)}.ssround:first-child{border-top:0}.sr.drop{margin-inline-start:22px;margin-top:-2px;transform-origin:right;opacity:.95}.sr.drop input{min-height:30px!important;font-size:.85rem!important}.sr.drop .chk{width:28px!important;height:28px!important}.sr.drop .prev{visibility:hidden}.dsub{font-size:.75rem!important;color:#9ec5ff!important;background:none!important;white-space:nowrap}.dsub span{opacity:.6;font-size:.7rem}body.wkOn .sr.drop{border-inline-start:2px solid rgba(158,197,255,.5);border-radius:0 10px 10px 0;padding-inline-start:4px}.stmenu{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}.stmenu button{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:6px 12px;font:600 .8rem var(--font);min-height:34px}.stmenu button.on{background:var(--accent);border-color:var(--accent);color:#fff}body.wkOn .stmenu button{background:rgba(255,255,255,.07);color:#fff;border-color:rgba(255,255,255,.14)}body.wkOn .stmenu button.on{background:#e10600}.sstag{font-size:.72rem;font-weight:600;color:#9ec5ff}.ex.ssx{border-inline-start:3px solid #6ea8ff!important}.cfgrow input{width:78px;text-align:center;font-weight:600}.ptbl{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;font-size:.8rem;margin-top:8px}.ptbl .h{color:var(--muted);font-size:.7rem}.prow .r b{font-weight:700}.wustep{display:flex;align-items:center;gap:10px;padding:4px 0}.wustep .grow{flex:1;min-width:0}.wustep.done .grow{opacity:.5;text-decoration:line-through}.wustep.done .chk{background:#22c55e;border-color:#22c55e;color:#fff}
 body.wkOn .wucard{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-inline-start:3px solid #ffd27a;border-radius:18px}body.wkOn .wuopts .btn:not(.primary){background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12)}body.wkOn .wuopts .btn{border-radius:14px}
 body.wkOn .stype{color:#e9e4e6;background:rgba(255,255,255,.06);border-radius:10px;min-height:36px}body.wkOn .stype.w{color:#ffd27a}body.wkOn .stype.d{color:#9ec5ff}body.wkOn .stype.f{color:#ff8a84}
@@ -619,9 +620,10 @@ const ICON = {
 };
 const TABS = [["today","היום"],["train","אימון"],["food","תזונה"],["goals","מטרות"],["coach","מאמן AI"],["settings","הגדרות"]];
 // numbers alen can change in הגדרות (saved in settings/profile → cfg)
-const CFG_DEF = { restWork: 105, restWarm: 60, restStep: 30, alertBeeps: 4, cardioMin: 5, barKg: 20, barReps: 10, b1: 40, b1r: 5, b2: 60, b2r: 3, b3: 80, b3r: 2, d1: 50, d1r: 8, d2: 75, d2r: 4, fdP: 60, fdR: 5, noWtReps: 10 };
+const CFG_DEF = { restWork: 105, restWarm: 60, restStep: 30, alertBeeps: 4, cardioMin: 5, barKg: 20, barReps: 10, b1: 40, b1r: 5, b2: 60, b2r: 3, b3: 80, b3r: 2, d1: 50, d1r: 8, d2: 75, d2r: 4, fdP: 60, fdR: 5, noWtReps: 10, askRir: 1, smartNext: 1, countdown: 1, wakeLock: 1 };
 const CFG = k => { const v = num(S.profile?.cfg?.[k]); return v != null && v >= 0 ? v : CFG_DEF[k]; };
-const CFG_UI = [["טיימר מנוחה", [["restWork", "מנוחה אחרי סט עבודה", "שניות"], ["restWarm", "מנוחה אחרי סט חימום", "שניות"], ["restStep", "קפיצה בכפתורי ± בטיימר", "שניות"], ["alertBeeps", "מספר צפצופים בסוף המנוחה", "פעמים"]]],
+const CFG_UI = [["טיימר מנוחה", [["restWork", "מנוחה אחרי סט עבודה", "שניות"], ["restWarm", "מנוחה אחרי סט חימום", "שניות"], ["restStep", "קפיצה בכפתורי ± בטיימר", "שניות"], ["alertBeeps", "מספר צפצופים בסוף המנוחה", "פעמים"], ["countdown", "ספירה 3-2-1 בסוף המנוחה", "1 פעיל · 0 כבוי"], ["wakeLock", "המסך נשאר דולק באימון", "1 פעיל · 0 כבוי"]]],
+  ["מאמן בזמן אימון", [["askRir", "שאלה כמה חזרות נשארו אחרי כל סט", "1 פעיל · 0 כבוי"], ["smartNext", "הצעת משקל לסט הבא לפי הסט שעשית", "1 פעיל · 0 כבוי"]]],
   ["חימום כללי", [["cardioMin", "קרדיו קל בתחילת החימום", "דקות"]]],
   ["סטי חימום בתרגילי מוט", [["barKg", "משקל המוט", "ק״ג"], ["barReps", "חזרות עם מוט ריק", "חזרות"], ["b1", "סט 1", "% ממשקל העבודה"], ["b1r", "סט 1", "חזרות"], ["b2", "סט 2", "% ממשקל העבודה"], ["b2r", "סט 2", "חזרות"], ["b3", "סט 3", "% ממשקל העבודה"], ["b3r", "סט 3", "חזרות"]]],
   ["סטי חימום בדאמבלים ומכונות", [["d1", "סט 1", "% ממשקל העבודה"], ["d1r", "סט 1", "חזרות"], ["d2", "סט 2", "% ממשקל העבודה"], ["d2r", "סט 2", "חזרות"]]],
@@ -702,7 +704,8 @@ function suggest(ex) {
   if (!last) return { kg: ex.startKg ?? "", reps: ex.amrap ? "" : ex.repMin, hint: "" };
   const top = Math.max(...last.sets.map(s => s.kg || 0));
   const work = last.sets.filter(s => (s.kg || 0) === top);
-  if (work.length >= ex.sets && work.every(s => s.reps >= ex.repMax)) { const kg = r1(top + (ex.inc || 2.5)); return { kg, reps: ex.repMin, hint: `↑ עלייה ל-${kg} ק״ג` }; }
+  const rs = work.filter(s => s.rir != null), easy = rs.length && rs.reduce((a, s) => a + s.rir, 0) / rs.length >= 3;
+  if (work.length >= ex.sets && work.every(s => s.reps >= ex.repMax)) { const kg = r1(top + (ex.inc || 2.5) * (easy ? 2 : 1)); return { kg, reps: ex.repMin, hint: `↑ עלייה ל-${kg} ק״ג` }; }
   return { kg: top, reps: Math.min(ex.repMax, Math.min(...work.map(s => s.reps)) + 1), hint: "" };
 }
 function nextDay() {
@@ -752,7 +755,7 @@ function toast(msg, undo) { const t = $("#toast"), sp = t.firstElementChild; sp.
 /* ---------- shell ---------- */
 function chatBottom() { const go = () => scrollTo(0, document.documentElement.scrollHeight); go(); requestAnimationFrame(go); setTimeout(go, 120); }
 function render() {
-  applyAliases();
+  applyAliases(); if (S.draft) wakeOn(); else if (wlock) wakeOff();
   $("#tabs").innerHTML = TABS.map(([id, t]) => `<button data-tab="${id}" ${S.tab === id ? 'aria-current="page"' : ""}>${ICON[id]}<span>${t}</span>${id === "train" && S.draft ? '<span class="dot">פתוח</span>' : ""}${id === "coach" && S.coachUnread ? '<span class="dot">הודעה</span>' : ""}</button>`).join("") + (S.guest ? `<div class="dnote">מצב אורח: הנתונים נשמרים רק במכשיר הזה. כדי לשמור בחשבון ולהשתמש במאמן AI, התחבר ל-Claude ורענן.</div>` : "");
   const a = document.activeElement, id = a?.id, val = a?.value, pos = a?.selectionStart;
   if (S.noUser) { $("#view").innerHTML = `<div class="stack">${head("כניסה")}<div class="list pad" style="display:grid;gap:8px"><b>צריך להיות מחובר כדי לשמור נתונים</b><span class="small muted">התחבר בחלון הזה ורענן את הדף.</span></div></div>`; return; }
@@ -1397,8 +1400,31 @@ function setRow(ex, i, j, last, best, tag = "") { const s = ex.log[j]; const p =
           return `<div class="sr ${s.done ? "done" : ""}${s.t === "d" ? " drop" : ""}">${s.t === "d" ? `<button class="stype d n dsub" data-deldrop="${i}-${j}" aria-label="הסרת דרופ">↳ <span>✕</span></button>` : `<button class="stype ${s.t || ""} n" data-stype="${i}-${j}" aria-label="סוג סט">${s.t === "w" ? "ח" : tag ? `${mainNo(ex.log, j)}${tag}` : mainNo(ex.log, j)}</button>`}<span class="prev n">${isPR ? `<b class="prb">שיא חדש</b>` : ""}${p ? ltr(`${p.kg}×${p.reps}`) : "—"}</span>
           <input id="kg-${i}-${j}" class="n" inputmode="decimal" aria-label="ק״ג" placeholder="${(s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""}" value="${s.kg ?? ""}" data-f="kg" data-i="${i}" data-j="${j}">
           <input id="rp-${i}-${j}" class="n" inputmode="numeric" aria-label="חזרות" placeholder="${ex.amrap ? "max" : (s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin)}" value="${s.reps ?? ""}" data-f="reps" data-i="${i}" data-j="${j}">
-          <button class="chk" aria-label="סט בוצע" data-done="${i}-${j}">✓</button></div>${S.stMenu === `${i}-${j}` ? `<div class="stmenu" role="group" aria-label="סוג הסט">${[["", "רגיל"], ["w", "חימום"], ["f", "עד כשל"], ["d", "דרופ"]].map(([k, l]) => `<button class="${k} ${(s.t || "") === k ? "on" : ""}" data-stset="${i}-${j}-${k}">${l}</button>`).join("")}<button data-ss="${i}">סופר סט</button></div>` : ""}`; }
+          <button class="chk" aria-label="סט בוצע" data-done="${i}-${j}">✓</button></div>${S.rirAsk === `${i}-${j}` && s.done ? `<div class="rirask" role="group" aria-label="כמה חזרות נשארו"><span>כמה חזרות נשארו לך?</span>${[0, 1, 2, 3, 4].map(v => `<button data-rir="${i}-${j}-${v}">${v === 4 ? `<bdi dir="ltr">4+</bdi>` : v}</button>`).join("")}</div>` : s.done && s.rir != null && s.t !== "w" ? `<div class="rirtag n">נשארו ${s.rir >= 4 ? `<bdi dir="ltr">4+</bdi>` : s.rir}${ex.tip?.j === j ? ` · ${ex.tip.txt}` : ""}</div>` : ex.tip?.j === j && s.done ? `<div class="rirtag n">${ex.tip.txt}</div>` : ""}${S.stMenu === `${i}-${j}` ? `<div class="stmenu" role="group" aria-label="סוג הסט">${[["", "רגיל"], ["w", "חימום"], ["f", "עד כשל"], ["d", "דרופ"]].map(([k, l]) => `<button class="${k} ${(s.t || "") === k ? "on" : ""}" data-stset="${i}-${j}-${k}">${l}</button>`).join("")}<button data-ss="${i}">סופר סט</button></div>` : ""}`; }
 const SSL = ["א", "ב", "ג", "ד"];
+const roundKg = (kg, inc) => { const st = inc >= 2.5 ? 1.25 : .5; return Math.round(kg / st) * st; };
+function nextTip(i, j) { // like a coach next to you: adjust the next set's weight from what you just did (reps vs the target range + reps left)
+  const D = S.draft, ex = D.exercises[i], s = ex.log[j]; if (!CFG("smartNext") || SEC.has(ex.name) || ex.amrap) return;
+  const kg = num(s.kg), reps = parseInt(s.reps), rir = s.rir, inc = ex.inc || 2.5; if (!kg || !reps) return;
+  const nj = ex.log.findIndex((x, k) => k > j && !x.done && x.t !== "w" && x.t !== "d"); if (nj < 0) { ex.tip = null; return; }
+  let to = null, why = "";
+  if (s.t !== "f" && reps >= ex.repMax + 2 || reps >= ex.repMax && (rir ?? 2) >= 2 || rir >= 4 && reps >= ex.repMin) { to = roundKg(kg + inc, inc); why = "עלייה"; }
+  else if (reps < ex.repMin - 1 || reps < ex.repMin && rir === 0) { to = Math.max(0, roundKg(kg * .9, inc)); why = "הורדה"; }
+  const n = ex.log[nj];
+  if (to == null || to === kg) { if (n.auto) { n.kg = ""; delete n.auto; } ex.tip = { j, txt: "סט הבא: אותו משקל" }; return; }
+  if (n.kg === "" || n.auto) { n.kg = String(to); n.auto = 1; }
+  ex.tip = { j, txt: `סט הבא: ${to} ק״ג (${why})` };
+}
+function nextLabel() { // what comes after the rest, shown in the rest bar
+  const D = S.draft; if (!D) return ""; const i = curIdx(D), ex = D.exercises[i]; if (!ex) return "";
+  const j = ex.log.findIndex(x => !x.done); if (j < 0) return ""; const s = ex.log[j];
+  const kg = s.kg || (s.t !== "w" ? carry(ex, j, "kg") : null) || ex.sug?.kg || "", rp = s.reps || (s.t !== "w" ? carry(ex, j, "reps") : null) || ex.sug?.reps || ex.repMin || "";
+  return `הבא: ${esc(dn(ex.name))} · ${s.t === "w" ? "חימום" : s.t === "d" ? "דרופ" : "סט " + mainNo(ex.log, j)}${kg ? ` · <bdi dir="ltr">${kg}×${rp}</bdi>` : ""}`;
+}
+let wlock = null;
+async function wakeOn() { if (!CFG("wakeLock") || !S.draft || wlock || document.hidden) return; try { wlock = await navigator.wakeLock?.request("screen"); wlock?.addEventListener("release", () => { wlock = null; }); } catch { wlock = null; } }
+function wakeOff() { try { wlock?.release(); } catch {} wlock = null; }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) wakeOn(); });
 function ssCard(D, i0) { // superset: one card, each set = one row per exercise under one set number
   const G = ssGroup(D, i0), cur = G.includes(curIdx(D)) ? curIdx(D) : -1, fin = G.every(k => D.exercises[k].log.every(s => s.done));
   const M = G.map(k => { const ex = D.exercises[k], last = lastSessionFor(ex.name), best = bestBefore(ex.name, D.start || Date.now()), w = [], R = [];
@@ -1449,7 +1475,9 @@ function toggleSet(i, j) {
   const ex = S.draft.exercises[i], s = ex.log[j], R = S.draft.run;
   if (R && R.i === i && R.j === j) { S.draft.run = null; if (!s.done) { const sec = Math.round((Date.now() - R.t0) / 1000); s.sec = sec; if (SEC.has(ex.name) && s.reps === "") s.reps = String(sec); } }
   if (!s.done) { if (s.kg === "") s.kg = (s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""; if (s.reps === "" && !ex.amrap) s.reps = (s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin); } // confirm the placeholder values, like Hevy
-  s.done = !s.done; store.set("draft", S.draft);
+  s.done = !s.done; if (!s.done) { delete s.rir; if (ex.tip?.j === j) ex.tip = null; S.rirAsk = null; }
+  if (s.done && s.t !== "w" && s.t !== "d") { if (CFG("askRir") && !SEC.has(ex.name)) S.rirAsk = `${i}-${j}`; nextTip(i, j); }
+  store.set("draft", S.draft);
   const nx = ex.log[j + 1];
   const ssNext = s.done && s.t !== "w" && ex.ss && ssGroup(S.draft, i).some(k => k > i && S.draft.exercises[k].log.some(x => !x.done && x.t !== "w"));
   if (s.done && nx?.t !== "d" && !ssNext) startRest(s.t === "w" ? CFG("restWarm") : REST());
@@ -1464,7 +1492,7 @@ async function finishWorkout(btn) {
 }
 async function finishWorkout1() {
   const D = S.draft; if (!D) return;
-  const exercises = D.exercises.map(e => ({ name: e.name, ...(e.ss ? { ss: e.ss } : {}), sets: e.log.filter(s => s.done || (D.editId && s.reps !== "")).map(s => ({ kg: num(s.kg) ?? 0, reps: parseInt(s.reps) || 0, ...(s.t ? { t: s.t } : {}), ...(s.sec ? { sec: s.sec } : {}) })).filter(s => s.reps) })).filter(e => e.sets.length);
+  const exercises = D.exercises.map(e => ({ name: e.name, ...(e.ss ? { ss: e.ss } : {}), sets: e.log.filter(s => s.done || (D.editId && s.reps !== "")).map(s => ({ kg: num(s.kg) ?? 0, reps: parseInt(s.reps) || 0, ...(s.t ? { t: s.t } : {}), ...(s.sec ? { sec: s.sec } : {}), ...(s.rir != null ? { rir: s.rir } : {}) })).filter(s => s.reps) })).filter(e => e.sets.length);
   if (!exercises.length) { S.endAsk = true; render(); scrollTo({ top: 0 }); return; }
   const now = Date.now(), minutes = Math.round((now - (D.start || now)) / 60000);
   const prs = []; exercises.forEach(e => { const b = bestBefore(e.name, now); if (!b.e) return;
@@ -1610,6 +1638,7 @@ function startSet(i, j) { // set timer: runs until "סיום סט", then the res
 function endSet() { const R = S.draft?.run; if (!R) return; const s = S.draft.exercises[R.i]?.log[R.j]; if (!s) { S.draft.run = null; return render(); } if (!s.done) toggleSet(R.i, R.j); else { S.draft.run = null; store.set("draft", S.draft); render(); } }
 const setBtns = (i, j) => { const R = S.draft?.run, on = R && R.i === i && R.j === j, s = S.draft.exercises[i].log[j];
   return on ? `<button class="btn primary setgo on" data-setend="1"><span class="dot"></span>${s.t === "d" ? "דרופ" : s.t === "w" ? "חימום" : `סט ${mainNo(S.draft.exercises[i].log, j)}`} רץ ${clock(R.t0)} · סיום</button>` : `<button class="btn setgo" data-setgo="${i}-${j}">▶ ${s.t === "d" ? `התחלת דרופ (סט ${ownerNo(S.draft.exercises[i].log, j)})` : s.t === "w" ? "התחלת סט חימום" : `התחלת סט ${mainNo(S.draft.exercises[i].log, j)}`}</button>`; };
+function tick() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 660; o.type = "sine"; o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(.2, actx.currentTime); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .12); o.start(); o.stop(actx.currentTime + .12); } catch {} }
 function beep() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); [0, .25].forEach(t => { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 988; o.type = "square"; o.connect(g); g.connect(actx.destination);
   g.gain.setValueAtTime(.25, actx.currentTime + t); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + t + .2); o.start(actx.currentTime + t); o.stop(actx.currentTime + t + .2); }); } catch {} }
 const REST = () => CFG("restWork"); // alen: rest between working sets is 1:45 by default, editable in הגדרות
@@ -1617,7 +1646,7 @@ let restGo = null;
 function startRest(sec) { S.restTot = sec; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.(); } catch {} clearInterval(restGo); restEnd = Date.now() + sec * 1000; clearInterval(restI); restBuild(); restI = setInterval(tickRest, 250); tickRest(); }
 function stopRest() { clearInterval(restI); clearInterval(restGo); restGo = null; const r = $("#rest"); r.hidden = true; r.classList.remove("go"); }
 function restBuild() { const r = $("#rest"); r.classList.remove("go"); r.hidden = false;
-  r.innerHTML = `<div class="in"><button class="btn rskip" data-rest="x">דילוג</button><span class="n rtime"></span><button class="btn rpm" data-rest="-30"><bdi dir="ltr">−${CFG("restStep")}</bdi></button><button class="btn rpm" data-rest="30"><bdi dir="ltr">+${CFG("restStep")}</bdi></button><i class="rprog"><b></b></i></div>`; }
+  r.innerHTML = `<div class="in"><button class="btn rskip" data-rest="x">דילוג</button><span class="n rtime"></span><button class="btn rpm" data-rest="-30"><bdi dir="ltr">−${CFG("restStep")}</bdi></button><button class="btn rpm" data-rest="30"><bdi dir="ltr">+${CFG("restStep")}</bdi></button><i class="rprog"><b></b></i><span class="rnext small">${nextLabel()}</span></div>`; }
 function restAct(v) { // skip / ±30, from a dedicated listener so every tap counts
   if (v === "x" || v === "go") { restEnd = 0; stopRest(); }
   else { restEnd = Math.max(Date.now(), restEnd) + (v === "-30" ? -1 : 1) * CFG("restStep") * 1000; if (restEnd <= Date.now() + 500) { restEnd = 0; stopRest(); } else { S.restTot = Math.max(S.restTot || 0, Math.round((restEnd - Date.now()) / 1000)); if (!restI || $("#rest").classList.contains("go")) { clearInterval(restGo); restGo = null; restBuild(); clearInterval(restI); restI = setInterval(tickRest, 250); } tickRest(); } }
@@ -1626,7 +1655,10 @@ function restAct(v) { // skip / ±30, from a dedicated listener so every tap cou
 function tickRest() {
   const left = Math.max(0, Math.round((restEnd - Date.now()) / 1000)), r = $("#rest"); if (!r.querySelector(".rtime")) restBuild(); S.restTot = Math.max(S.restTot || 0, left);
   const ft = $("#frTxt"); if (ft) { ft.textContent = `${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`; $("#frRing")?.setAttribute("stroke-dasharray", `${(left / S.restTot * 452.4).toFixed(1)} 452.4`); if (!left) setTimeout(render, 0); }
-  r.querySelector(".rtime").textContent = `${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`; r.querySelector(".rprog b").style.width = Math.round(left / (S.restTot || 1) * 100) + "%";
+  r.querySelector(".rtime").textContent = `${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`; { const nx = r.querySelector(".rnext"), h = nextLabel(); if (nx && nx.dataset.h !== h) { nx.dataset.h = h; nx.innerHTML = h; } }
+  r.querySelector(".rprog b").style.width = Math.round(left / (S.restTot || 1) * 100) + "%";
+  if (CFG("countdown") && left > 0 && left <= 3 && S.cdLast !== left && restEnd - Date.now() < 3600) { S.cdLast = left; tick(); }
+  if (left > 3) S.cdLast = null;
   if (!left) { clearInterval(restI); restI = null; restAlert(); }
 }
 function restAlert() { // rest is over: loud, visible, and it stays until you tap or start the set
@@ -2158,6 +2190,7 @@ document.addEventListener("click", async ev => {
   if (ds.seg) { const [k, v] = ds.seg.split(":"); S[k] = v; store.set(k, v); render(); return; }
   if (ds.start) { if (S.draft) { toast("יש אימון פתוח"); S.tab = "train"; render(); return; } startWorkout(ds.start); return; }
   if (ds.resume) { S.tab = "train"; S.trainSeg = "now"; store.set("tab", "train"); render(); scrollTo({ top: 0 }); return; }
+  if (ds.rir) { const [i, j, v] = ds.rir.split("-").map(Number), s = S.draft?.exercises[i]?.log[j]; if (!s) return; s.rir = v; S.rirAsk = null; nextTip(i, j); store.set("draft", S.draft); render(); return; }
   if (ds.done) { try { navigator.vibrate?.(25); } catch {} const [i, j] = ds.done.split("-").map(Number); toggleSet(i, j); if (S.focus && S.draft?.exercises[i]?.log.every(x => x.done)) { S.fx = null; render(); } return; }
   if (ds.exm) { S.exMetric = ds.exm; return renderSheet(); }
   if (ds.noteclose) { document.activeElement?.blur?.(); S.noteOpen = null; render(); return; }
@@ -2343,7 +2376,7 @@ document.addEventListener("input", ev => {
   if (ds.addk && S.add) { S.add[ds.addk] = el.value; const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); return; }
   if (ds.nutin) { clearTimeout(S.nutT); S.nutT = setTimeout(() => nutFill(ds.nutin, el.value), 250); return; }
   if (el.id === "chatIn") { el.style.height = "auto"; el.style.height = Math.min(140, el.scrollHeight) + "px"; return; }
-  if (ds.f && S.draft) { const ex = S.draft.exercises[+ds.i]; ex.log[+ds.j][ds.f] = el.value; store.set("draft", S.draft);
+  if (ds.f && S.draft) { const ex = S.draft.exercises[+ds.i]; ex.log[+ds.j][ds.f] = el.value; if (ds.f === "kg") delete ex.log[+ds.j].auto; store.set("draft", S.draft);
     for (let k = +ds.j + 1; k < ex.log.length; k++) { const inp = document.getElementById((ds.f === "kg" ? "kg-" : "rp-") + ds.i + "-" + k); if (inp && ex.log[k].t !== "w" && ex.log[k][ds.f] === "") inp.placeholder = carry(ex, k, ds.f) ?? (ds.f === "kg" ? ex.sug?.kg ?? "" : ex.amrap ? "max" : ex.sug?.reps || ex.repMin); }
     if (ds.f === "kg" && +ds.j === 0 && ex.barbell) { const p = document.getElementById("pl-" + ds.i); if (p) p.innerHTML = plates(num(el.value) ?? 0); } return; }
   if (el.id === "wPain" && S.draft) { S.draft.pain = +el.value; store.set("draft", S.draft); const v = $("#painV"); v.textContent = el.value + "/10"; v.style.color = painColor(+el.value); return; }
