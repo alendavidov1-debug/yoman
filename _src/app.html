@@ -929,7 +929,7 @@ function exEditor(e, di, ei, count) {
   const id = `${di}-${ei}`;
   return `<div class="pad eedit" style="display:grid;gap:8px;background:var(--soft)">
     <div class="row" style="flex-wrap:nowrap;align-items:center">${thumb(e.name)}<div style="flex:1;min-width:0"><input id="ee-name" value="${esc(e.name)}" placeholder="שם התרגיל" style="width:100%"></div></div>
-    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn small" style="flex:1" data-pkedit="${id}">החלפה מהרשימה</button>${demoImg(e.name) ? `<button class="btn small" style="flex:1" data-wprev="${esc(e.name)}">הדגמה</button>` : ""}</div>
+    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn small" style="flex:1" data-pkedit="${id}">החלפה מהרשימה</button></div>
     <div class="ecomp">
       <label>סטים<input id="ee-sets" inputmode="numeric" value="${e.sets}"></label>
       <label class="rr">חזרות<span><input id="ee-repMin" inputmode="numeric" value="${e.repMin}" aria-label="חזרות מ"><b>–</b><input id="ee-repMax" inputmode="numeric" value="${e.repMax}" aria-label="חזרות עד"></span></label>

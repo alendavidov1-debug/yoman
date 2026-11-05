@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="22b842ad02";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="25855f23f1";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -1021,7 +1021,7 @@ function exEditor(e, di, ei, count) {
   const id = `${di}-${ei}`;
   return `<div class="pad eedit" style="display:grid;gap:8px;background:var(--soft)">
     <div class="row" style="flex-wrap:nowrap;align-items:center">${thumb(e.name)}<div style="flex:1;min-width:0"><input id="ee-name" value="${esc(e.name)}" placeholder="שם התרגיל" style="width:100%"></div></div>
-    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn small" style="flex:1" data-pkedit="${id}">החלפה מהרשימה</button>${demoImg(e.name) ? `<button class="btn small" style="flex:1" data-wprev="${esc(e.name)}">הדגמה</button>` : ""}</div>
+    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn small" style="flex:1" data-pkedit="${id}">החלפה מהרשימה</button></div>
     <div class="ecomp">
       <label>סטים<input id="ee-sets" inputmode="numeric" value="${e.sets}"></label>
       <label class="rr">חזרות<span><input id="ee-repMin" inputmode="numeric" value="${e.repMin}" aria-label="חזרות מ"><b>–</b><input id="ee-repMax" inputmode="numeric" value="${e.repMax}" aria-label="חזרות עד"></span></label>
