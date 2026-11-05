@@ -1059,7 +1059,7 @@ function vToday() {
   const hab = dailyState(today()), hn = hab.filter(x => x.v === "y" || x.v === "rest").length;
   const wk = addDays(today(), -now.getDay()), plan = {};
   return `<div class="stack">
-    <div class="top tall">${mbtn()}<div><div class="brand">יום ${DOW[now.getDay()]} · ${fmtDate(today())}</div><h1>${greet}${nm ? `, ${esc(nm)}` : ""}</h1></div></div>
+    <div class="top tall">${mbtn()}<div><h1>${greet}${nm ? `, ${esc(nm)}` : ""}</h1></div></div>
     <div class="tcard hero1">${wc}</div>
     <button class="tcard nring" data-tab="food" aria-label="תזונה היום"><svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="44" fill="none" stroke="#eceef0" stroke-width="10"/><circle cx="52" cy="52" r="44" fill="none" stroke="${left != null && left < 0 ? "#8f0400" : "#e10600"}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(pct * C).toFixed(1)} ${C}" transform="rotate(-90 52 52)"/><text x="52" y="52" text-anchor="middle" font-size="24" font-weight="800" fill="#17181b">${left == null ? "—" : Math.abs(left).toLocaleString("he-IL")}</text><text x="52" y="70" text-anchor="middle" font-size="11" fill="#5c6168">${left != null && left < 0 ? "מעל היעד" : "נותרו קק״ל"}</text></svg>
       <div class="grow" style="display:grid;gap:10px">${bar("חלבון", tot.p, T?.protein, "#17181b")}${bar("פחמימה", tot.c, T?.carbs, "#7c828a")}${bar("שומן", tot.f, T?.fat, "#ff5a52")}</div></button>
