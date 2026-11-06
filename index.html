@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="ed3779cd50";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="1afb83f50f";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -609,6 +609,13 @@ button.cfgrow:not(:first-child),.cfgrow+.cfgrow{border-top:1px solid var(--line)
 .cxp{display:grid;gap:6px}.cxp .cbar{height:14px;border-radius:7px;position:relative}.cxp .cbar i{border-radius:7px;background:linear-gradient(90deg,#ffb020,#ff3b30 60%,#e10600)}.cxp .cbar s{position:absolute;inset:0;display:grid;place-items:center;text-decoration:none;font-size:.68rem;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .cfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .bknudge{flex-direction:row!important;justify-content:space-between;align-items:center;font-size:.88rem;color:var(--muted)}.bknudge b{color:var(--accent);white-space:nowrap}
+.cstory{border-radius:12px;background:rgba(255,255,255,.06);padding:10px 12px}.cstory summary{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:.85rem;cursor:pointer;list-style:none}.cstory .cmore{color:#ff8a84;font-weight:600;white-space:nowrap}.cstory[open] .cmore{visibility:hidden}
+.cstory .cnow{margin:6px 0 0;font-size:.88rem;line-height:1.55;color:#e9e4e6;font-style:italic}.cstory ol{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:6px;font-size:.82rem;color:#cfc9cb}.cstory ol b{color:#fff}.cstory li.lk{color:#8d8689;list-style:none;margin-inline-start:-20px}
+.sculpt{background:radial-gradient(130% 120% at 85% 0%,#3b2f12 0%,#17181b 60%)!important}.sculpt .tl{color:#ffcf5a}.sculpt .chex{background:linear-gradient(160deg,#ffd34d,#b07a00);color:#1d1606}.sculpt .cst.here i{background:#c48a00;border-color:#ffd34d;box-shadow:0 0 0 6px rgba(255,200,60,.2)}.sculpt .cst.here span,.sculpt .cstory .cmore{color:#ffcf5a}
+.sstars{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.sstars i{font-style:normal;text-align:center;font-size:1.2rem;color:rgba(255,255,255,.18);background:rgba(255,255,255,.06);border-radius:8px;padding:2px 0}.sstars i.on{color:#ffd34d;background:rgba(255,211,77,.14)}
+.crec{display:grid;justify-items:center;text-align:center;gap:6px;padding:6px 0 2px}.crec>b{font-size:2.6rem;font-weight:900;line-height:1;letter-spacing:-.02em}.crec>b small{font-size:.9rem;font-weight:600;color:#b9b3b5}.crec .cbar{width:100%}
+.cbar.big{height:22px;border-radius:11px;position:relative}.cbar.big i{border-radius:11px;background:linear-gradient(90deg,#ffb020,#ff3b30 60%,#e10600)}.cbar.big s{position:absolute;inset:0;display:grid;place-items:center;text-decoration:none;font-size:.75rem;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.ctoday{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.ctoday span{font-size:.8rem;font-weight:600;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.07);color:#cfc9cb}.ctoday span.on{background:rgba(255,211,77,.16);color:#ffd34d}
 /* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
 :root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
 body:not(.wkOn):not(.dk){background:#f3f4f6}
@@ -1253,6 +1260,9 @@ function bkNudge() { // data lives only on this phone: a quiet reminder on Home 
   if (!dirty || (last && Date.now() - last < 7 * 864e5)) return ""; const d = last ? Math.floor((Date.now() - last) / 864e5) : null;
   return `<button class="tcard bknudge" data-bknow="1"><span>💾 ${d == null ? "עוד לא גיבית את הנתונים" : `הגיבוי האחרון לפני ${d} ימים`}</span><b>גיבוי עכשיו</b></button>`;
 }
+const STORY = ["יצאת מעמק ה'מחר אתחיל'. התרמיל קל, והדרך אחת: למעלה.", "שתית מים קרים. הגוף נזכר שהוא יודע לעבוד.", "בין העצים פגשת את ההרגל. הוא הלך לידך בשקט.", "הבטת אחורה. העמק כבר קטן ממה שזכרת.", "כל סלע שהרמת הפך למדרגה. הידיים כבר לא רועדות.", "בחושך שמעת רק את הנשימה. סט אחרי סט, יצאת לאור.", "המים נפלו למטה, ואתה עלית. כיוון אחד.", "השומר שאל מה הבאת. הראית לו את היומן, והשער נפתח.", "על החומות למדת: לא נכנעים באמצע הדרך.", "רוח מהים. הכתפיים רחבות יותר, הצעד בטוח.", "כאן רבים נשברים. אתה רק הוספת עוד 2.5 ק״ג.", "מהפסגה העגולה ראית את כל הדרך. היא כולה שלך.", "הלילה קר, אבל האש בפנים חמה מתמיד.", "קרב קטן עם העייפות. ניצחת בנקודות.", "שלג ראשון על הכתפיים. אתה כבר לא מי שיצא מהעמק.", "העננים מתחתיך. כאן שקט, ורק הברזל מדבר.", "ההר הלבן בוחן סבלנות. סבלנות היא כוח שלא רואים.", "חוד חד, אחיזה מדויקת. טכניקה מנצחת אגו.", "אפריקה מתחת לרגליים. השמש עולה בשבילך.", "האוויר דליל, הרצון סמיך.", "סערה שלושה ימים. ביום הרביעי היית שם, באימון.", "ההר הפראי. מי שמגיע לכאן כבר לא סופר אימונים, אלא שנים.", "גג העולם. הסתכלת למטה וחייכת: One Way Up.", "אין עוד הר. יש רק אתה, והשאלה מה הלאה."];
+const storyBox = (lvl, names, texts, unit) => `<details class="cstory"><summary><span>📖 פרק ${lvl + 1}: ${esc(names(lvl))}</span><span class="cmore">כל הסיפור ›</span></summary><p class="cnow">${esc(texts[lvl % texts.length])}</p>
+  <ol>${Array.from({ length: Math.min(lvl + 2, 60) }, (_, k) => k <= lvl ? `<li><b>${esc(names(k))}</b> ${esc(texts[k % texts.length])}</li>` : `<li class="lk">🔒 פרק ${k + 1} נפתח ב${unit(k)}</li>`).join("")}</ol></details>`;
 const STOP_IC = ["⛺", "💧", "🌲", "🔭", "🪨", "🦇", "🌊", "⛩️", "🏰", "🌿", "🌄", "⛰️", "🏞️", "🗿", "🏔️", "☁️", "❄️", "🗻", "🦁", "🦅", "🐻", "💀", "🏆", "🚀"];
 const lifeVol = () => S.workouts.reduce((a, w) => a + (w.exercises || []).reduce((b, e) => b + (e.sets || []).filter(work).reduce((c, x) => c + (x.kg || 0) * (x.reps || 0), 0), 0), 0);
 const STOPS = ["נקודת היציאה", "המעיין", "חורשת האורנים", "תצפית העמק", "גבעת הסלעים", "מערת הנטיפים", "המפל", "שער ההר", "מצדה", "הכרמל", "הגלבוע", "הר תבור", "הר מירון", "קרן חטין", "החרמון", "מעל העננים", "מון בלאן", "המטרהורן", "קילימנג׳רו", "אקונקגואה", "דנאלי", "K2", "האוורסט", "החלל"], STEP = 2500;
@@ -1266,10 +1276,29 @@ function climbCard() { // "One Way Up": every kg you lift (weight × reps) moves
   const kg = v => Math.round(v).toLocaleString("he-IL");
   const ic = k => STOP_IC[k % STOP_IC.length];
   return `<div class="tcard climb"><div class="row sb" style="flex-wrap:nowrap"><div class="clvl"><span class="chex n">${at + 1}</span><span><span class="tl">רמה ${at + 1} · המסע למעלה</span><b>${ic(at)} ${esc(nm(at))}</b></span></div><span class="small n cmuted" style="text-align:end">${kg(tot)}<br>ק״ג סה״כ</span></div>
-    <div class="ctrail">${ks.map(k => `<div class="cst ${k < at ? "past" : k === at ? "here" : "lock"}"><i>${k === at ? "🧗" : ic(k)}${k > at ? `<em>🔒</em>` : ""}</i><b>${esc(nm(k))}</b><span class="n">${k === at ? "אתה כאן" : k < at ? "נפתח ✓" : `${kg(k * STEP)} ק״ג`}</span></div>`).join("")}</div>
-    <div class="cxp"><div class="row sb"><span class="small"><b>XP</b> לרמה ${at + 2}: ${ic(at + 1)} ${esc(nm(at + 1))}</span><b class="n">עוד ${kg(need)} ק״ג</b></div><div class="cbar"><i style="width:${pc}%"></i><s class="n">${pc}%</s></div></div>
-    <div class="cfoot small cmuted"><span>🏅 <b class="n">${at}</b> תחנות נפתחו</span><span>${D ? `🔥 באימון הזה: <b class="n">${kg(live)} ק״ג</b>` : per ? `⚡ אימון ממוצע = <b class="n">${per}</b> ${per === 1 ? "רמה" : "רמות"}` : `⚡ רמה כל <b class="n">${kg(STEP)}</b> ק״ג`}</span></div>
-    <div class="small cmuted" style="opacity:.75">כל סט נספר: משקל × חזרות.</div></div>`;
+    ${(() => { const vs = S.workouts.map(w => (w.exercises || []).reduce((b, e) => b + vol(e), 0)), rec = vs.length ? Math.max(...vs) : 0, cur = D ? live : 0, pcr = rec ? Math.min(100, Math.round(cur / rec * 100)) : 0, broke = D && rec && cur > rec;
+      return `<div class="crec"><span class="small cmuted">${broke ? "🏆 שברת את השיא!" : "🎯 שיא הנפח שלך באימון"}</span><b class="n">${rec ? kg(broke ? cur : rec) : "—"} <small>ק״ג</small></b>
+      ${D ? `<div class="cbar big"><i style="width:${broke ? 100 : pcr}%"></i><s class="n">היום ${kg(cur)}${rec && !broke ? ` · עוד ${kg(rec - cur)} לשבור` : ""}</s></div>` : `<span class="small cmuted">${rec ? "האימון הבא: לשבור אותו" : "האימון הראשון יקבע את השיא"}</span>`}</div>`; })()}
+    ${storyBox(at, nm, STORY, k => `־${kg(k * STEP)} ק״ג`)}
+    <div class="cxp"><div class="row sb"><span class="small cmuted">לרמה ${at + 2}: ${ic(at + 1)} ${esc(nm(at + 1))}</span><span class="small n cmuted">עוד ${kg(need)} ק״ג</span></div><div class="cbar"><i style="width:${pc}%"></i></div></div></div>`;
+}
+const SC_ST = ["גוש השיש", "המכה הראשונה", "קווי המתאר", "הסרת העודף", "הכתפיים", "קו המותן", "פרטי השריר", "הליטוש", "אור הגלריה", "יצירת מופת"], SC_IC = ["🪨", "🔨", "✏️", "🪓", "💪", "📐", "🔎", "✨", "💡", "🗿"], SC_STEP = 6;
+const SC_TXT = ["בסדנה עומד גוש שיש גס. בתוכו מחכה הגרסה החדה שלך.", "מכה ראשונה. שבב קטן נופל. ככה זה מתחיל.", "הפסל משרטט קווים. כבר אפשר לנחש כתפיים.", "חיטוב זה לא להוסיף. זה להסיר את מה שמיותר.", "צורה ראשונה. האור נשבר אחרת על השיש.", "האזמל עדין יותר עכשיו. כל יום נכון מוריד עוד שכבה.", "רואים סיבים. רואים עבודה.", "אבן חול, מים וסבלנות. השיש מתחיל לזהור.", "מישהו נכנס לסדנה ונעצר: 'זה אתה?'", "הפסל הושלם. אבל אתה יודע: יצירת מופת מתוחזקת כל יום."];
+function dayStars(d, T) { const k = dayTotals(d); if (!k.kcal) return { k, kc: false, pr: false, n: 0 }; const kc = k.kcal >= T.kcal * .85 && k.kcal <= T.kcal * 1.05, pr = k.p >= T.protein * .9; return { k, kc, pr, n: kc + pr }; }
+function sculptCard() { // nutrition game for a cut ("חיטוב" = sculpting): stars only for staying on target, never for eating more
+  const T = targets(); if (!T) return `<div class="tcard climb sculpt"><span class="tl">🗿 הפסל · משחק התזונה</span><div class="small cmuted">ממלאים פרטים ב"מטרות" כדי שיהיה יעד, ואז כל יום ביעד מגלף את הפסל.</div></div>`;
+  const days = [...new Set(S.food.map(f => f.date))].filter(d => d < today()).sort(), res = days.map(d => [d, dayStars(d, T)]), stars = res.reduce((a, [, r]) => a + r.n, 0);
+  let streak = 0; for (let d = addDays(today(), -1); ; d = addDays(d, -1)) { const r = dayStars(d, T); if (r.n === 2) streak++; else break; if (streak > 999) break; }
+  const lv = Math.floor(stars / SC_STEP), into = stars - lv * SC_STEP, nm = k => SC_ST[k % SC_ST.length] + (k >= SC_ST.length ? ` ${Math.floor(k / SC_ST.length) + 1}` : ""), ic = k => SC_IC[k % SC_IC.length];
+  const t = dayStars(today(), T), left = Math.round(T.kcal - t.k.kcal), pneed = Math.max(0, Math.round(T.protein - t.k.p)), ks = [lv - 1, lv, lv + 1, lv + 2].filter(k => k >= 0).slice(0, 4);
+  return `<div class="tcard climb sculpt"><div class="row sb" style="flex-wrap:nowrap"><div class="clvl"><span class="chex n">${lv + 1}</span><span><span class="tl">שלב ${lv + 1} · הפסל, משחק התזונה</span><b>${ic(lv)} ${esc(nm(lv))}</b></span></div><span class="small n cmuted" style="text-align:end">⭐ ${stars}<br>כוכבים</span></div>
+    ${(() => { let best = 0, run = 0; res.forEach(([d, r], k) => { run = r.n === 2 ? (k && res[k - 1][0] === addDays(d, -1) ? run + 1 : 1) : 0; best = Math.max(best, run); });
+      const tNow = streak + (t.n === 2 ? 1 : 0), broke = tNow > best && best > 0;
+      return `<div class="crec"><span class="small cmuted">${broke ? "🏆 שברת את שיא הרצף!" : "🔥 ימים ברצף ביעד"}</span><b class="n">${tNow} <small>${best ? `· השיא ${Math.max(best, tNow)}` : ""}</small></b>
+      <div class="ctoday"><span class="${t.kc ? "on" : ""}">${t.kc ? "⭐" : "☆"} קלוריות ${t.kc ? "ביעד" : left > 0 ? `· עוד ${left.toLocaleString("he-IL")}` : `· ${Math.abs(left).toLocaleString("he-IL")} מעל`}</span><span class="${t.pr ? "on" : ""}">${t.pr ? "⭐" : "☆"} חלבון ${t.pr ? "ביעד" : `· עוד ${pneed} ג׳`}</span></div>
+      <span class="small cmuted">${t.n === 2 ? "היום נספר ברצף. רק לא לעבור את היעד" : best && tNow < best ? `עוד ${best - tNow + 1} ימים מושלמים כדי לשבור את השיא` : "שני כוכבים היום = יום ברצף"}</span></div>`; })()}
+    ${storyBox(lv, nm, SC_TXT, k => `־${k * SC_STEP} כוכבים`)}
+    <div class="cxp"><div class="row sb"><span class="small cmuted">לשלב ${lv + 2}: ${ic(lv + 1)} ${esc(nm(lv + 1))}</span><span class="small n cmuted">עוד ${SC_STEP - into} ⭐</span></div><div class="cbar"><i style="width:${Math.round(into / SC_STEP * 100)}%"></i></div></div></div>`;
 }
 function focusIdx() { return curIdx(S.draft); }
 const ssGroup = (D, i) => { const g = D.exercises[i]?.ss; if (!g) return [i]; return D.exercises.map((e, k) => e.ss === g ? k : -1).filter(k => k >= 0); };
@@ -1500,7 +1529,7 @@ async function obNext(dir) { const o = S.ob; obRead();
       if (await save("settings/profile", prof)) { await save("weights/" + today(), { date: today(), kg: o.kg }); S.profile = prof; S.ob = null; S.tab = "goals"; S.goalSeg = "goal"; toast("מוכן. היעדים חושבו"); render(); scrollTo({ top: 0 }); } return; } }
   o.step = Math.max(0, o.step + dir); render(); scrollTo({ top: 0 }); }
 function vFood() {
-  return `<div class="stack">${head("תזונה", `<div class="segm" role="group" aria-label="תצוגה">${[["log","יומן"],["menu","תפריט"]].map(([v, t]) => `<button data-seg="foodSeg:${v}" aria-pressed="${S.foodSeg === v}">${t}</button>`).join("")}</div>`)}${S.foodSeg === "menu" ? planMenu() : tFood()}</div>`;
+  return `<div class="stack">${head("תזונה", `<div class="segm" role="group" aria-label="תצוגה">${[["log","יומן"],["menu","תפריט"]].map(([v, t]) => `<button data-seg="foodSeg:${v}" aria-pressed="${S.foodSeg === v}">${t}</button>`).join("")}</div>`)}${S.foodSeg === "menu" ? planMenu() : sculptCard() + tFood()}</div>`;
 }
 function vTrain() {
   const days = S.plan?.days || [], nx = nextDay(), pd = days.find(d => d.id === (S.pickDay || S.daily.find(x => x.date === today())?.answers?.pick)) || nx;
