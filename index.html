@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="c66bb43d5e";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="9ec671934f";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -623,6 +623,7 @@ button.cfgrow:not(:first-child),.cfgrow+.cfgrow{border-top:1px solid var(--line)
 .simple:has(.cstory[open]){flex-wrap:wrap}.simple .row.sb:has(.cstory[open]){flex-direction:column;align-items:stretch}
 .ceq{text-align:center;font-size:.85rem;color:#e9e4e6;margin-top:-4px}.ceq b{color:#fff}.sculpt .ceq b{color:#ffd34d}
 .cghost{position:absolute;top:50%;transform:translateY(-50%);width:22px;height:22px;display:grid;place-items:center;font-size:.85rem;text-decoration:none;background:#17181b;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;z-index:1}
+body.obOn #drawer,body.obOn #resume{display:none!important}
 /* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
 :root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
 body:not(.wkOn):not(.dk){background:#f3f4f6}
@@ -874,7 +875,8 @@ function render() {
   $("#tabs").innerHTML = TABS.map(([id, t]) => `<button data-tab="${id}" ${S.tab === id ? 'aria-current="page"' : ""}>${ICON[id]}<span>${t}</span>${id === "train" && S.draft ? '<span class="dot">פתוח</span>' : ""}${id === "coach" && S.coachUnread ? '<span class="dot">הודעה</span>' : ""}</button>`).join("") + (S.guest ? `<div class="dnote">מצב אורח: הנתונים נשמרים רק במכשיר הזה. כדי לשמור בחשבון ולהשתמש במאמן AI, התחבר ל-Claude ורענן.</div>` : "");
   const a = document.activeElement, id = a?.id, val = a?.value, pos = a?.selectionStart;
   if (S.noUser) { $("#view").innerHTML = `<div class="stack">${head("כניסה")}<div class="list pad" style="display:grid;gap:8px"><b>צריך להיות מחובר כדי לשמור נתונים</b><span class="small muted">התחבר בחלון הזה ורענן את הדף.</span></div></div>`; return; }
-  if (S.live && S.loaded && !S.profile?.onboarded && !(S.profile?.age && S.profile?.heightCm)) { S.ob = S.ob || { step: 0, act: "1.55" }; $("#view").innerHTML = vOnboard(); return; }
+  if (S.live && S.loaded && !S.profile?.onboarded && !(S.profile?.age && S.profile?.heightCm)) { S.ob = S.ob || { step: 0, act: "1.55" }; document.body.classList.add("obOn"); $("#view").innerHTML = vOnboard(); return; }
+  document.body.classList.remove("obOn");
   $("#view").innerHTML = ({ today: vToday, goals: vGoals, food: vFood, daily: () => vDaily(head("מטרות")), plan: vPlan, train: vTrainTab, settings: vSettings, track: () => (S.tab = "goals", S.goalSeg = "body", vGoals()), coach: vCoach })[S.tab]();
   const n = id && document.getElementById(id);
   if (n && /INPUT|TEXTAREA/.test(n.tagName)) { n.value = val; n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
@@ -1232,7 +1234,7 @@ function vToday() {
       ${exRows(D.exercises.slice(ci, ci + 3))}<button class="btn primary block big2 hgo" data-resume="1">${IC.play}המשך אימון</button>`; }
   else if (doneT) { const w = [...S.workouts].reverse().find(x => x.date === today()), ns = (w.exercises || []).reduce((a, e) => a + e.sets.filter(x => x.t !== "w" && x.t !== "d").length, 0);
     wc = `<div class="row sb"><span class="tl">בוצע היום</span><span class="hchip n">${w.minutes || 0} דק׳</span></div><h2 class="th">${esc(w.dayName || "אימון")}</h2><div class="small muted n">${(w.exercises || []).length} תרגילים · ${ns} סטים · ${leftTxt}</div><div class="hprog"><i style="width:100%;background:var(--ok)"></i></div>`; }
-  else if (pick === undefined && days.length) wc = `<div class="row sb"><span class="tl">האימון להיום</span><span class="small muted n">${leftTxt}</span></div><h2 class="th">יש אימון היום?</h2>
+  else if (pick === undefined && days.length) wc = `<span class="tl">האימון להיום</span><h2 class="th">יש אימון היום?</h2>
       <div class="chips">${(RC => days.map(d => { const v = RC._any ? dayReady(d, RC) : null; return `<button class="chip" data-tpick="${esc(d.id)}">${esc(d.name)}${v != null ? ` <small class="n">${v}%</small>` : ""}</button>`; }).join(""))(recovery())}<button class="chip" data-tpick="rest">מנוחה</button></div>`;
   else if (pick === "rest" && !doneT) wc = `<div class="row sb"><span class="tl">היום</span><button class="btn link" data-tpick="">שינוי</button></div><h2 class="th">מנוחה</h2>`;
   else if (nd) { const ex = nd.exercises.filter(e => e.name), sets = ex.reduce((a, e) => a + (+e.sets || 0), 0), mins = estMin(ex);
@@ -1245,7 +1247,7 @@ function vToday() {
   const hab = dailyState(today()), hn = hab.filter(x => x.v === "y" || x.v === "rest").length;
   const wk = addDays(today(), -now.getDay()), pl = st.eod ? weekPlan() : {};
   const flame = `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#ff6b63"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1.2-3.6 2.4-4.6.2 1.6 1 2.6 2.1 2.6 0-2.8-.6-5.2.5-8z"/></svg>`;
-  const tile = (lbl, big, of, pc, c, sub, act) => `<button class="tcard tile" ${act}><span class="tlb">${lbl}</span><span class="tbig n"><b>${big}</b>${of ? ` <span class="muted">/ ${of}</span>` : ""}</span><div class="track" style="--c:${c}"><i style="width:${Math.max(0, Math.min(100, pc))}%"></i></div><span class="small muted n">${sub}</span></button>`;
+  const tile = (lbl, big, of, pc, c, sub, act) => `<button class="tcard tile" ${act}><span class="tlb">${lbl}</span><span class="tbig n"><b>${big}</b>${of ? ` <span class="muted">/ ${of}</span>` : ""}</span><div class="track" style="--c:${c}${pc == null ? ";visibility:hidden" : ""}"><i style="width:${Math.max(0, Math.min(100, pc || 0))}%"></i></div><span class="small muted n">${sub}</span></button>`;
   return `<div class="stack">
     <div class="top tall"><div><h1>${greet}${nm ? `, ${esc(nm)}` : ""}</h1><span class="hpill n">${flame}<b>${st.cur}</b> אימונים השבוע${st.eod ? ` · מתוך ${st.max}` : ""}</span></div></div>
     <div class="tcard hero1">${wc}</div>
@@ -1256,7 +1258,7 @@ function vToday() {
     ${climbCard()}
     <div class="tiles">
       ${tile("קלוריות", T ? Math.round(tot.kcal).toLocaleString("he-IL") : "—", T ? T.kcal.toLocaleString("he-IL") : "", T ? tot.kcal / T.kcal * 100 : 0, "var(--accent)", left == null ? "אין יעד" : left >= 0 ? `נותרו ${left.toLocaleString("he-IL")}` : `${Math.abs(left).toLocaleString("he-IL")} מעל היעד`, `data-tab="food"`)}
-      ${tile("משקל", wt ? wt.kg : lastW ? lastW.kg : "—", "", wt ? 100 : 0, "var(--ink)", wt ? `ממוצע 7 ימים ${a7 ? r1(a7) : "—"}` : "לחיצה לשקילת בוקר", `data-qweigh="1"`)}
+      ${tile("משקל", wt ? wt.kg : lastW ? lastW.kg : "—", "", null, "var(--ink)", wt ? `ממוצע 7 ימים ${a7 ? r1(a7) : "—"}` : lastW ? "לא נשקלת היום · לחיצה" : "לחיצה לשקילה ראשונה", `data-qweigh="1"`)}
     </div>
     <div class="tcard"><div class="row sb"><b>הרגלים היום</b><span class="small muted n">${hn} מתוך ${hab.length}</span></div>
       <div class="chips">${hab.map(x => { const on = x.v === "y" || x.v === "rest", no = x.v === "n"; return `<button class="chip ${on ? "on" : no ? "no" : ""}" aria-label="${esc(x.short)}: ${on ? "בוצע" : no ? "לא בוצע" : "לא סומן"}" data-dc="${x.k}">${on ? IC.check : no ? IC.x : IC.ring}${esc(x.short)}</button>`; }).join("")}</div></div>
@@ -1520,7 +1522,7 @@ function vOnboard() {
   ][o.step]();
   return `<div class="stack ob"><div class="obbar">${Array.from({ length: steps }, (_, i) => `<i class="${i <= o.step ? "on" : ""}"></i>`).join("")}</div>
     <div class="list pad" style="display:grid;gap:14px">${body}</div>
-    <div class="row" style="justify-content:space-between">${o.step ? `<button class="btn" data-obnav="-1">חזרה</button>` : `<span></span>`}<button class="btn primary" data-obnav="1">${o.step === steps - 1 ? "סיום והתחלה" : "המשך"}</button></div></div>`;
+    <div class="row" style="flex-wrap:nowrap">${o.step ? `<button class="btn big2" data-obnav="-1">חזרה</button>` : ""}<button class="btn primary big2" style="flex:1" data-obnav="1">${o.step === steps - 1 ? "סיום והתחלה" : "המשך"}</button></div></div>`;
 }
 function obRead() { const o = S.ob, v = id => document.getElementById(id)?.value?.trim();
   if (v("obAge") != null) o.age = num(v("obAge")); if (v("obH") != null) o.h = num(v("obH")); if (v("obW") != null) o.kg = num(v("obW"));
@@ -1534,7 +1536,7 @@ async function obNext(dir) { const o = S.ob; obRead();
       if (await save("settings/profile", prof)) { await save("weights/" + today(), { date: today(), kg: o.kg }); S.profile = prof; S.ob = null; S.tab = "goals"; S.goalSeg = "goal"; toast("מוכן. היעדים חושבו"); render(); scrollTo({ top: 0 }); } return; } }
   o.step = Math.max(0, o.step + dir); render(); scrollTo({ top: 0 }); }
 function vFood() {
-  return `<div class="stack">${head("תזונה", `<div class="segm" role="group" aria-label="תצוגה">${[["log","יומן"],["menu","תפריט"]].map(([v, t]) => `<button data-seg="foodSeg:${v}" aria-pressed="${S.foodSeg === v}">${t}</button>`).join("")}</div>`)}${S.foodSeg === "menu" ? planMenu() : sculptCard() + tFood()}</div>`;
+  return `<div class="stack">${head("תזונה", `<div class="segm" role="group" aria-label="תצוגה">${[["log","יומן"],["menu","תפריט"]].map(([v, t]) => `<button data-seg="foodSeg:${v}" aria-pressed="${S.foodSeg === v}">${t}</button>`).join("")}</div>`)}${S.foodSeg === "menu" ? planMenu() : tFood() + sculptCard()}</div>`;
 }
 function vTrain() {
   const days = S.plan?.days || [], nx = nextDay(), pd = days.find(d => d.id === (S.pickDay || S.daily.find(x => x.date === today())?.answers?.pick)) || nx;
@@ -1558,7 +1560,7 @@ function vTrain() {
         <div style="margin-top:8px;display:grid;gap:4px">${w.exercises.map(e => `<div class="row small" style="justify-content:space-between"><span>${esc(e.name)}${e.ss ? ` <span class="muted">· סופר סט</span>` : ""}</span><span class="n muted"><bdi dir="ltr">${e.sets.map(s => `${s.t === "w" ? "ח " : s.t === "d" ? "↓" : ""}${s.kg}×${s.reps}`).join("  ")}</bdi></span></div>`).join("")}
         ${w.note ? `<div class="small muted">${esc(w.note)}</div>` : ""}<div class="row"><button class="btn" data-wedit="${w.id}">עריכת האימון</button><button class="btn del" data-delw="${w.id}">מחיקה</button></div></div></details>`; }).join("")}</div>` : `<div class="list pad muted small">האימונים שתסיים יופיעו כאן.</div>`}
       ${painCard()}${strengthTable()}` : ""}
-    ${pd ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}">${IC.play}התחל אימון ${esc(pd.name)}</button></div>` : ""}</div>`;
+    ${pd ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}">${IC.play}התחלת אימון ${esc(pd.name)}</button></div>` : ""}</div>`;
 }
 function exHead(ex, i, tag = "") { return `        <div class="row exh" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;row-gap:4px"><button class="btn" style="padding:0;background:none" data-wprev="${esc(ex.name)}">${thumb(ex.name, "sm")}</button><div style="min-width:0;flex:1">${ex.muscle ? `<div class="mus">${esc(ex.muscle)}</div>` : ""}${S.renOpen === i ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;margin:4px 0"><input id="ren-${i}" value="${esc(ex.name)}" aria-label="שם חדש" enterkeyhint="done"><button class="btn small primary" data-rensave="${i}">שמירה</button><button class="btn small" data-rensave="x">ביטול</button></div>` : ""}<div class="name">${tag ? `<b class="sstl">${tag}</b> ` : ""}${esc(ex.name)}${ex.wrist && WR() ? `<span class="flag">יד שמאל</span>` : ""}</div>
         <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint">${ex.sug.hint}</div>` : ""}</div>
