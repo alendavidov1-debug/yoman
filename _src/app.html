@@ -529,6 +529,8 @@ button.cfgrow:not(:first-child),.cfgrow+.cfgrow{border-top:1px solid var(--line)
 .simple .cstory{background:none;padding:0;position:relative}.simple .cstory summary{font-size:.72rem;font-weight:600;color:#cfc9cb;background:rgba(255,255,255,.08);border-radius:999px;padding:4px 10px}
 .simple .cstory[open]{position:static}.simple .cstory[open]>p,.simple .cstory[open]>ol{position:relative}
 .simple:has(.cstory[open]){flex-wrap:wrap}.simple .row.sb:has(.cstory[open]){flex-direction:column;align-items:stretch}
+.ceq{text-align:center;font-size:.85rem;color:#e9e4e6;margin-top:-4px}.ceq b{color:#fff}.sculpt .ceq b{color:#ffd34d}
+.cghost{position:absolute;top:50%;transform:translateY(-50%);width:22px;height:22px;display:grid;place-items:center;font-size:.85rem;text-decoration:none;background:#17181b;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;z-index:1}
 /* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
 :root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
 body:not(.wkOn):not(.dk){background:#f3f4f6}
@@ -1179,15 +1181,21 @@ const storyBox = (lvl, names, texts, unit, label) => `<details class="cstory"><s
 const STOP_IC = ["⛺", "💧", "🌲", "🔭", "🪨", "🦇", "🌊", "⛩️", "🏰", "🌿", "🌄", "⛰️", "🏞️", "🗿", "🏔️", "☁️", "❄️", "🗻", "🦁", "🦅", "🐻", "💀", "🏆", "🚀"];
 const lifeVol = () => S.workouts.reduce((a, w) => a + (w.exercises || []).reduce((b, e) => b + (e.sets || []).filter(work).reduce((c, x) => c + (x.kg || 0) * (x.reps || 0), 0), 0), 0);
 const STOPS = ["נקודת היציאה", "המעיין", "חורשת האורנים", "תצפית העמק", "גבעת הסלעים", "מערת הנטיפים", "המפל", "שער ההר", "מצדה", "הכרמל", "הגלבוע", "הר תבור", "הר מירון", "קרן חטין", "החרמון", "מעל העננים", "מון בלאן", "המטרהורן", "קילימנג׳רו", "אקונקגואה", "דנאלי", "K2", "האוורסט", "החלל"], STEP = 2500;
+const EQUIV = [[300, "🐻", "דוב חום"], [600, "🐄", "פרה"], [1000, "🚗", "מכונית"], [2000, "🦏", "קרנף"], [3500, "🚙", "ג׳יפ"], [5000, "🐘", "פיל"], [7000, "🦖", "טי־רקס"], [11000, "🚌", "אוטובוס"], [18000, "🚒", "כבאית"], [30000, "🐋", "לוויתן"], [45000, "✈️", "מטוס"]];
+const equiv = v => { let e = null; for (const x of EQUIV) if (v >= x[0]) e = x; return e; };
+const STREAK_T = [[1, "ניצוץ"], [3, "מתחמם"], [7, "בוער"], [14, "מכונה"], [30, "אגדה"], [60, "בלתי עציר"]];
 function climbCard() { // one number to break: your best single-workout volume (weight × reps). Level/story stay one small line.
   const vol = e => (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), D = S.draft;
   const live = D ? D.exercises.reduce((a, e) => a + e.log.filter(x => x.done && x.t !== "w").reduce((b, x) => b + (num(x.kg) || 0) * (parseInt(x.reps) || 0), 0), 0) : 0;
   const tot = lifeVol() + live, at = Math.floor(tot / STEP), nm = k => STOPS[k % STOPS.length] + (k >= STOPS.length ? ` ${Math.floor(k / STOPS.length) + 1}` : ""), kg = v => Math.round(v).toLocaleString("he-IL");
   const vs = S.workouts.map(w => (w.exercises || []).reduce((b, e) => b + vol(e), 0)), rec = vs.length ? Math.max(...vs) : 0, broke = D && rec && live > rec;
   const last = vs.length ? vs[vs.length - 1] : 0, bar = D ? (rec ? Math.min(100, live / rec * 100) : 0) : rec ? Math.min(100, last / rec * 100) : 0;
+  const gw = S.workouts.filter(w => w.date <= addDays(today(), -21) && w.date >= addDays(today(), -45)).sort((a, b) => Math.abs(Date.parse(a.date) - Date.parse(addDays(today(), -30))) - Math.abs(Date.parse(b.date) - Date.parse(addDays(today(), -30))))[0];
+  const ghost = gw ? (gw.exercises || []).reduce((b, e) => b + vol(e), 0) : 0, gp = rec && ghost ? Math.min(100, ghost / Math.max(rec, live) * 100) : null, big = broke ? live : rec, eq = equiv(big);
   return `<div class="tcard climb simple"><div class="row sb"><span class="tl">🎯 השיא שלך באימון</span>${storyBox(at, nm, STORY, k => `־${kg(k * STEP)} ק״ג`, `רמה ${at + 1} · ${STOP_IC[at % STOP_IC.length]} ${nm(at)}`)}</div>
-    <b class="cbig n">${broke ? `🏆 ${kg(live)}` : rec ? kg(rec) : "—"} <small>ק״ג</small></b>
-    <div class="cbar big"><i style="width:${broke ? 100 : bar}%"></i><s class="n">${D ? (broke ? "שברת את השיא!" : rec ? `היום ${kg(live)} · עוד ${kg(rec - live)}` : `היום ${kg(live)}`) : rec ? "האימון הבא: לשבור" : "האימון הראשון קובע שיא"}</s></div>
+    <b class="cbig n">${broke ? `🏆 ${kg(live)}` : rec ? kg(rec) : "—"} <small>ק״ג</small></b>${eq ? `<span class="ceq">${eq[1]} כמו להרים ${eq[2]}${big >= eq[0] * 2 ? ` × ${Math.floor(big / eq[0])}` : ""} באימון אחד</span>` : ""}
+    <div class="cbar big"><i style="width:${broke ? 100 : bar}%"></i>${gp != null ? `<u class="cghost" style="inset-inline-start:calc(${gp}% - 11px)" title="אתה מלפני חודש">👻</u>` : ""}<s class="n">${D ? (broke ? "שברת את השיא!" : rec ? `היום ${kg(live)} · עוד ${kg(rec - live)}` : `היום ${kg(live)}`) : rec ? "האימון הבא: לשבור" : "האימון הראשון קובע שיא"}</s></div>
+    ${gp != null ? `<div class="small cmuted" style="text-align:center">👻 אתה מלפני חודש: <b class="n">${kg(ghost)}</b> ק״ג${D ? (live > ghost ? " · עקפת אותו!" : ` · עוד ${kg(ghost - live)} כדי לעקוף`) : ""}</div>` : ""}
     <div class="chow">איך זה עובד: כל סט = משקל × חזרות. מחברים את כל הסטים באימון, והמטרה לעבור את האימון הכי חזק שלך.</div></div>`;
 }
 const SC_ST = ["גוש השיש", "המכה הראשונה", "קווי המתאר", "הסרת העודף", "הכתפיים", "קו המותן", "פרטי השריר", "הליטוש", "אור הגלריה", "יצירת מופת"], SC_IC = ["🪨", "🔨", "✏️", "🪓", "💪", "📐", "🔎", "✨", "💡", "🗿"], SC_STEP = 6;
@@ -1201,7 +1209,7 @@ function sculptCard() { // one number to break: days in a row on target. Never r
   const t = dayStars(today(), T), now = streak + (t.n === 2 ? 1 : 0), broke = best > 0 && now > best, lv = Math.floor(stars / SC_STEP), nm = k => SC_ST[k % SC_ST.length] + (k >= SC_ST.length ? ` ${Math.floor(k / SC_ST.length) + 1}` : "");
   const left = Math.round(T.kcal - t.k.kcal), pneed = Math.max(0, Math.round(T.protein - t.k.p)), todo = [t.kc ? "" : left > 0 ? `עוד ${left.toLocaleString("he-IL")} קק״ל` : "עברת את הקלוריות", t.pr ? "" : `עוד ${pneed} ג׳ חלבון`].filter(Boolean).join(" · ");
   return `<div class="tcard climb sculpt simple"><div class="row sb"><span class="tl">🔥 ימים ברצף ביעד</span>${storyBox(lv, nm, SC_TXT, k => `־${k * SC_STEP} ⭐`, `שלב ${lv + 1} · ${SC_IC[lv % SC_IC.length]} ${nm(lv)}`)}</div>
-    <b class="cbig n">${broke ? "🏆 " : ""}${now} <small>${best ? `/ שיא ${Math.max(best, now)}` : "ימים"}</small></b>
+    <b class="cbig n">${broke ? "🏆 " : ""}${now} <small>${best ? `/ שיא ${Math.max(best, now)}` : "ימים"}</small></b>${(() => { const r = [...STREAK_T].reverse().find(([n]) => now >= n), nx = STREAK_T.find(([n]) => n > now); return `<span class="ceq">${r ? `🔥 דרגה: <b>${r[1]}</b>` : "🔥 אין עדיין דרגה"}${nx ? ` · עוד ${nx[0] - now} ${nx[0] - now === 1 ? "יום" : "ימים"} ל<b>${nx[1]}</b>` : ""}</span>`; })()}
     <div class="cbar big"><i style="width:${best ? Math.min(100, now / (best + 1) * 100) : t.n * 50}%"></i><s class="n">${t.n === 2 ? "היום ביעד ✓" : `היום: ${todo}`}</s></div>
     <div class="chow">איך זה עובד: יום נספר כשאכלת את הקלוריות בלי לעבור את היעד, והגעת לחלבון. יום שמפספסים מתחיל את הרצף מחדש.</div></div>`;
 }
