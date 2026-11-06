@@ -498,6 +498,53 @@ body.focusOn .restbar{display:none!important}
 .dchips button .rdy{font-size:.72rem;opacity:.65;font-weight:500}
 .sumshare{align-self:flex-start;min-height:40px;border:0;border-radius:10px;background:#fff;color:#17181b;font:700 .88rem var(--font);padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center;direction:rtl}.mcal span{height:32px;display:grid;place-items:center;border-radius:8px;font-size:.8rem;color:var(--muted)}.mcal .mh{height:20px;font-size:.7rem;font-weight:600}.mcal .on{background:var(--accent);color:#fff;font-weight:700}.mcal .td{box-shadow:inset 0 0 0 1.5px var(--ink);color:var(--ink)}.mcal .on.td{color:#fff}
+
+/* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
+:root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
+body:not(.wkOn):not(.dk){background:#f3f4f6}
+.tcard,.list{border-radius:var(--r-l)!important;box-shadow:var(--sh-1)!important}
+.tcard.hero1,.tcard.dayhero{box-shadow:var(--sh-2)!important}
+.dayhero .th{font-size:1.7rem}
+.btn{border-radius:var(--r-m);transition:transform .12s var(--ease),background-color .2s,box-shadow .2s,opacity .2s}
+.btn.link,.btn.del{border-radius:var(--r-s)}
+input,select,textarea{border-radius:var(--r-m)!important;transition:border-color .15s,box-shadow .15s}
+input:focus-visible,select:focus-visible,textarea:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.btn:not(:disabled):active,.chip:active,.dchips button:active,.segm button:active,.seg button:active,button.tcard:active,button.item:active,.sugg button:active,.pillbtn:active,.iconbtn:active{transform:scale(.97)}
+.chip,.dchips button,.segm button,.seg button,button.tcard,button.item,.sugg button,.pillbtn,.iconbtn{transition:transform .12s var(--ease),background-color .2s,color .2s,border-color .2s,box-shadow .2s}
+button.item:active{background:var(--soft)}
+.seg button[aria-pressed="true"],.segm button[aria-pressed="true"]{box-shadow:0 1px 3px rgba(20,21,24,.12),0 1px 1px rgba(20,21,24,.04)}
+.ghead .lbl{letter-spacing:.02em;text-transform:none;font-size:.78rem;font-weight:700}
+.btn.primary{box-shadow:0 1px 0 rgba(255,255,255,.18) inset}
+/* plan chips: secondary to the day chips (one red per screen) */
+.pchips button{min-height:32px;font-size:.78rem;border-width:1px;color:var(--muted)}
+.pchips button[aria-pressed="true"]{background:#fff!important;border-color:var(--ink)!important;color:var(--ink)!important;font-weight:700}
+/* daily yes/no as one segmented control */
+.ynseg{display:inline-flex;background:var(--soft);border-radius:12px;padding:3px;gap:2px;flex:0 0 auto}
+.ynseg .btn.yn{border:0!important;background:none;min-height:34px;min-width:44px;padding:0 10px;border-radius:9px;color:var(--muted);font-weight:600}
+.ynseg .btn.yn.on{background:var(--ok);color:#fff;box-shadow:0 1px 3px rgba(31,157,85,.35)}
+.ynseg .btn.yn.on.no{background:var(--bad);box-shadow:0 1px 3px rgba(225,6,0,.3)}
+/* coach */
+.msg.coach{background:#fff!important;box-shadow:var(--sh-1);border-radius:6px 18px 18px 18px!important}
+.msg.me{border-radius:18px 6px 18px 18px!important}
+.msg{animation:fadeUp .25s var(--ease) both}
+.typing{display:inline-flex;gap:4px;padding:4px 2px}.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.4;animation:tdot 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tdot{0%,60%,100%{opacity:.25;transform:none}30%{opacity:.9;transform:translateY(-3px)}}
+.composer{background:linear-gradient(to top,#f3f4f6 70%,transparent)!important}
+.composer textarea{background:#fff!important;box-shadow:var(--sh-1)}
+.sugg button{background:#fff;border-color:transparent;box-shadow:var(--sh-1)}
+/* tab bar: active pill behind the icon */
+.dpanel button svg{transition:transform .2s var(--ease)}
+.dpanel button[aria-current="page"] svg{transform:translateY(-1px) scale(1.06)}
+/* cards enter softly */
+@media (prefers-reduced-motion:no-preference){#app .stack>*{animation:fadeUp .32s var(--ease) both}#app .stack>*:nth-child(2){animation-delay:.03s}#app .stack>*:nth-child(3){animation-delay:.06s}#app .stack>*:nth-child(4){animation-delay:.09s}#app .stack>*:nth-child(n+5){animation-delay:.12s}}
+/* hover on pointer devices */
+@media (hover:hover){.btn:not(:disabled):hover{filter:brightness(.97)}.btn.primary:not(:disabled):hover{filter:brightness(1.06);box-shadow:0 6px 16px rgba(225,6,0,.22)}button.tcard:hover,.list button.item:hover{background:#fafafa}.chip:hover,.dchips button:hover{border-color:var(--ink)}.sugg button:hover{box-shadow:var(--sh-2)}}
+/* dark mode follow-ups */
+body.dk .msg.coach,body.dk .composer textarea,body.dk .sugg button,body.dk .pchips button[aria-pressed="true"]{background:rgba(255,255,255,.06)!important;color:#f4f1f2!important}
+body.dk .composer{background:linear-gradient(to top,#0f0b0d 70%,transparent)!important}
+body.dk .ynseg{background:rgba(255,255,255,.06)}body.dk .ynseg .btn.yn{background:none!important;border:0!important;color:#a9a1a4}body.dk .ynseg .btn.yn.on{background:var(--ok)!important;color:#fff}body.dk .ynseg .btn.yn.on.no{background:var(--bad)!important}
+body.dk .msg.me{background:var(--accent)!important;color:#fff!important}body.dk .stat3>div+div{border-color:rgba(255,255,255,.1)!important}body.dk .dchips:not(.pchips) button[aria-pressed="true"]{background:#f4f1f2!important;color:#17181b!important;border-color:#f4f1f2!important}body.dk .pchips button[aria-pressed="true"]{border-color:rgba(255,255,255,.5)!important}
+body.dk .wk2 i.today{background:var(--accent);color:#fff}body.dk .wk2 i.done{background:#2e7d4f;color:#fff}body.dk .tcard,body.dk .list{box-shadow:none!important}
 </style>
 
 <div id="splash" aria-hidden="true"><div class="sp"><svg viewBox="0 0 180 90" fill="none" stroke-linecap="round"><g class="lift"><path class="bar" d="M50 45h80" stroke="#fff" stroke-opacity=".85" stroke-width="6"/><path class="pl l" d="M42 22v46" stroke="#e10600" stroke-width="12"/><path class="pl r" d="M138 22v46" stroke="#e10600" stroke-width="12"/><path class="pl l2" d="M28 30v30" stroke="#e10600" stroke-width="9"/><path class="pl r2" d="M152 30v30" stroke="#e10600" stroke-width="9"/></g></svg><h1>יומן מתאמן</h1><div class="ln"></div><div class="sub" id="spSub"></div></div></div>
@@ -1332,8 +1379,8 @@ function vTrain() {
   const RC = recovery();
   return `<div class="stack">${summaryCard()}${deloadAdvice()}${pl}${done}${recoveryCard(days)}
     ${days.length ? `<div class="dchips" role="group" aria-label="בחירת יום">${days.map(d => `<button aria-pressed="${pd && pd.id === d.id}" data-pickday="${esc(d.id)}">${esc(d.name)}${RC._any && dayReady(d, RC) != null ? ` <small class="n rdy">${dayReady(d, RC)}%</small>` : ""}</button>`).join("")}</div>` : ""}
-    ${pd ? `<div class="tcard" style="gap:14px"><div class="row"><h2 class="th2">${esc(pd.name)}</h2></div>
-      <div class="stat3"><div><b class="n">${ex.length}</b><span>תרגילים</span></div><div><b class="n">${ex.reduce((a, e) => a + (+e.sets || 0), 0)}</b><span>סטים</span></div><div><b class="n">~${estMin(ex)}</b><span>דקות</span></div></div>
+    ${pd ? `<div class="tcard dayhero" style="gap:14px"><div class="row sb"><span class="tl">${pd.id === nx?.id ? "הבא בתור" : "היום הנבחר"}</span><span class="hchip n">כ־${estMin(ex)} דק׳</span></div><h2 class="th">${esc(pd.name)}</h2>
+      <div class="stat3"><div><b class="n">${ex.length}</b><span>תרגילים</span></div><div><b class="n">${ex.reduce((a, e) => a + (+e.sets || 0), 0)}</b><span>סטים</span></div><div><b class="n">${new Set(ex.map(e => (e.muscle || EX_INDEX[e.name]?.p?.map(mLabel)?.[0] || "").split(" ")[0]).filter(Boolean)).size}</b><span>קבוצות שריר</span></div></div>
       ${pd.note ? `<div class="dnote2">${IC.trend}<span>${esc(pd.note)}</span></div>` : ""}</div>
       <div class="list">${ex.map(e => { const sg = suggest(e), l = lastSessionFor(e.name), ls = l?.sets[0];
         return `<button class="item exrow" data-wprev="${esc(e.name)}">${thumb(e.name, "sm")}<div class="grow"><div class="t">${esc(e.name)}</div>${e.muscle || EX_INDEX[e.name] ? `<div class="s">${esc(e.muscle || EX_INDEX[e.name].p.map(mLabel).join(" · "))}</div>` : ""}</div>
@@ -1652,7 +1699,7 @@ function vDaily(top) { // resets every day: today's habits only, plus a recap of
   return `<div class="stack">${top}
     <div class="row" style="justify-content:space-between"><b>היום · ${fmtDate(d)}</b><span class="n" style="font-weight:700;font-size:1.1rem">${sc.done}/${sc.n}</span></div>
     <div class="list">${st.map(x => `<div class="item dq ${x.v === "y" || x.v === "rest" ? "yes" : x.v === "n" ? "no" : ""}"><div class="grow"><div class="t">${x.q}</div>${x.why ? `<div class="s n">${esc(x.why)}${x.auto ? " · אוטומטי" : ""}</div>` : ""}</div>
-      <span class="row" style="flex-wrap:nowrap;gap:4px"><button class="btn yn ${x.v === "y" ? "on" : ""}" data-dq="${x.k}:y">כן</button><button class="btn yn ${x.v === "n" ? "on no" : ""}" data-dq="${x.k}:n">לא</button>${x.k === "train" ? `<button class="btn yn ${x.v === "rest" ? "on" : ""}" data-dq="train:rest">מנוחה</button>` : ""}</span></div>`).join("")}</div>
+      <span class="ynseg"><button class="btn yn ${x.v === "y" ? "on" : ""}" data-dq="${x.k}:y">כן</button><button class="btn yn ${x.v === "n" ? "on no" : ""}" data-dq="${x.k}:n">לא</button>${x.k === "train" ? `<button class="btn yn ${x.v === "rest" ? "on" : ""}" data-dq="train:rest">מנוחה</button>` : ""}</span></div>`).join("")}</div>
     <div class="group"><div class="ghead"><span class="lbl">סיכום אתמול · ${fmtDate(y)}</span><span class="n" style="font-weight:700">${yc.done}/${yc.n}</span></div>
       <div class="list">
         <div class="item"><div class="grow s">${ys.map(x => `<span style="display:inline-flex;gap:4px;margin-inline-end:12px">${mark(x.v)} ${x.short}</span>`).join("")}</div></div>
@@ -1985,7 +2032,7 @@ function vCoach() {
     ${!msgs.length ? `<div class="list pad" style="display:grid;gap:6px"><b style="font-weight:600">מאמן כושר ותזונה</b><span class="small muted">רואה את כל הנתונים שלך ויכול לשנות באפליקציה: תוכנית, משקלי עבודה, תפריט, מטרה, ולרשום אוכל ומשקל.</span></div>
       <div class="sugg">${[...(WR() ? STARTERS_WR : []), ...STARTERS].map(s => `<button data-ask="${esc(s)}">${esc(s)}</button>`).join("")}</div>` : ""}
     <div class="chat">${msgs.map(m => `<div class="msg ${m.role === "user" ? "me" : "coach"}">${m.img ? `<img src="${src(m.img)}" alt="">` : ""}${esc(m.text)}${m.changed ? `<div class="small" style="color:var(--accent);font-weight:600;margin-top:6px">עודכן באפליקציה</div>` : ""}</div>`).join("")}
-      ${S.chatBusy ? `<div class="msg coach">${S.chatStream ? esc(S.chatStream) : `<span class="muted">חושב…</span>`}</div>` : ""}</div>
+      ${S.chatBusy ? `<div class="msg coach">${S.chatStream ? esc(S.chatStream) : `<span class="typing" aria-label="חושב"><i></i><i></i><i></i></span>`}</div>` : ""}</div>
     ${S.coachUndo && !S.chatBusy ? `<div class="row"><button class="btn del" id="coachUndo">ביטול השינוי</button></div>` : ""}
     ${!S.sample && S.live ? `<div class="small muted">${S.pwa ? "המאמן צריך מפתח API: מטרות ← המטרה שלי ← גיבוי ונתונים." : "הצ׳אט לא זמין כרגע. נסה לרענן את הדף."}</div>` : ""}
     ${!S.chatBusy ? `<div class="sugg"><button data-ask="${esc(WEEKLY_Q)}">סיכום השבוע ומה לשפר</button></div>` : ""}
