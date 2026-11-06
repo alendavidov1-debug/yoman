@@ -500,6 +500,9 @@ body.focusOn .restbar{display:none!important}
 .mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center;direction:rtl}.mcal span{height:32px;display:grid;place-items:center;border-radius:8px;font-size:.8rem;color:var(--muted)}.mcal .mh{height:20px;font-size:.7rem;font-weight:600}.mcal .on{background:var(--accent);color:#fff;font-weight:700}.mcal .td{box-shadow:inset 0 0 0 1.5px var(--ink);color:var(--ink)}.mcal .on.td{color:#fff}
 
 .rrir{flex-basis:100%}.rrir:empty{display:none}#rest .rirask{padding:2px 0 4px;color:inherit;opacity:.95;justify-content:center}#rest .rirask span{flex-basis:auto;opacity:.75}#rest .rirask button{flex:0 0 40px;min-height:34px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);color:#fff}.rtip{text-align:center;font-size:.8rem;font-weight:600;color:#ff8a84;padding-bottom:4px}
+.rpr{text-align:center;font-weight:800;font-size:.9rem;color:#ffd34d;padding-bottom:2px}.sr.pr .chk{background:#f5b800!important;border-color:#f5b800!important;color:#17181b!important}
+.list>.item.mhead{background:none;padding-block:14px 10px}.list>.item.mhead b{font-size:1.05rem;font-weight:800}.list>.item.mhead::before{content:"";width:4px;align-self:stretch;border-radius:2px;background:var(--accent);margin-inline-end:-2px}
+button.cfgrow:not(:first-child),.cfgrow+.cfgrow{border-top:1px solid var(--line)!important}
 /* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
 :root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
 body:not(.wkOn):not(.dk){background:#f3f4f6}
@@ -1024,7 +1027,7 @@ function fitItem(it, kcal) { // resize one exchange item so it is worth exactly 
 function menuSections(M) { // exchange lists: section → portions → interchangeable items; editable in place
   const E = S.menuEdit, inp = (k, v, ph, cls = "") => `<input class="medit ${cls}" data-mf="${k}" value="${esc(v || "")}" placeholder="${ph}">`;
   const fit = E ? null : menuFit(M), sc = g => fit && gKind(g) !== "p" ? fit.f : 1;
-  return `${fit ? `<div class="list"><div class="item mhead" style="background:color-mix(in srgb,var(--accent) 8%,transparent)"><div class="grow"><b>מותאם ליעד: ${fit.target} קק״ל</b><div class="s">${Math.abs(fit.f - 1) < 0.02 ? "התפריט כבר תואם ליעד" : `פחמימות ושומן ${fit.f < 1 ? "הוקטנו" : "הוגדלו"} ב-${Math.round(Math.abs(1 - fit.f) * 100)}%, החלבון נשאר`}</div></div><span class="small muted n">סה״כ ${fit.total}</span></div></div>` : ""}
+  return `${fit ? `<div class="list"><div class="item mhead"><div class="grow"><b>מותאם ליעד: ${fit.target} קק״ל</b><div class="s">${Math.abs(fit.f - 1) < 0.02 ? "התפריט כבר תואם ליעד" : `פחמימות ושומן ${fit.f < 1 ? "הוקטנו" : "הוגדלו"} ב-${Math.round(Math.abs(1 - fit.f) * 100)}%, החלבון נשאר`}</div></div><span class="small muted n">סה״כ ${fit.total}</span></div></div>` : ""}
     <div class="row" style="justify-content:flex-end"><button class="btn link" data-medit="1">${E ? "סיום עריכה" : "עריכה"}</button></div>
     ${M.sections.map((sec, si) => `<div class="group"><div class="ghead">${E ? inp(`${si}`, sec.title, "שם הארוחה", "h") + `<button class="btn link small" style="color:var(--bad)" data-mdel="${si}">מחיקה</button>` : `<h2>${esc(sec.title)}</h2>`}</div>
       ${sec.groups.map((g, gi) => `<div class="list mgroup"><div class="item mhead">${E ? `${inp(`${si}-${gi}-t`, g.title, "מנה")}${inp(`${si}-${gi}-g`, g.target, "יעד, למשל 250 קק״ל", "tg")}<button class="btn link small" style="color:var(--bad)" data-mdel="${si}-${gi}">✕</button>` : `<div class="grow"><b>${esc(g.title)}</b></div><span class="small muted n">${esc(scaleTxt(g.target || "", sc(g), true))}</span>`}</div>
@@ -1043,7 +1046,7 @@ function planMenu() {
       <div class="kpi"><span class="k">פחמימה</span><span class="v n">${T ? T.carbs : "–"}</span></div>
       <div class="kpi"><span class="k">שומן</span><span class="v n">${T ? T.fat : "–"}</span></div></div></div>
     ${!T ? `<div class="small muted" style="padding-inline:4px">היעדים יחושבו אחרי שתמלא פרטים ומשקל בעמוד המטרות.</div>` : ""}
-    ${A ? `<div class="list"><div class="item mhead" style="background:color-mix(in srgb,var(--accent) 8%,transparent)"><div class="grow"><b>תפריט אוטומטי לפי היעדים שלך</b><div class="s">כ-${A.kcal} קק״ל ביום. מתעדכן לבד כשהיעדים משתנים.</div></div></div></div>` : ""}
+    ${A ? `<div class="list"><div class="item mhead"><div class="grow"><b>תפריט אוטומטי לפי היעדים שלך</b><div class="s">כ-${A.kcal} קק״ל ביום. מתעדכן לבד כשהיעדים משתנים.</div></div></div></div>` : ""}
     ${M?.sections ? menuSections(M) : M?.meals ? M.meals.map(m => `<div class="group"><div class="ghead"><h2>${esc(m.time)}</h2><span class="small muted">בוחרים אחת</span></div>
       <div class="list">${m.options.map(o => `<div class="item"><div class="grow"><div class="t">${esc(o.name)}</div><div class="s">${esc(o.items)}</div></div>
         <div class="r n" style="text-align:end">${o.kcal} קק״ל<br>${o.p} גרם חלבון</div></div>`).join("")}</div></div>`).join("")
@@ -1291,7 +1294,7 @@ function etaCard() { // time-to-goal, recomputed on every render: planned pace v
   const eta = wk => `<b class="n">${Math.max(1, Math.round(wk))}</b> שבועות · ${fmtDate(addDays(today(), Math.round(wk * 7)))}`;
   const plan = pct ? Math.abs(left) / (Math.abs(pct) / 100 * w) : null, rate = weeklyRate(), early = !S.weights.length || daysBetween(S.weights[0].date, today()) < 14;
   const act = !early && rate && Math.sign(rate) === Math.sign(left) ? Math.abs(left) / Math.abs(rate) : null;
-  return `<div class="list"><div class="item mhead" style="background:color-mix(in srgb,var(--accent) 8%,transparent)"><div class="grow"><b>תחזית הגעה ל-${r1(g)} ק״ג</b></div><span class="small muted n">נשארו <bdi dir="ltr">${r1(Math.abs(left))}</bdi> ק״ג</span></div>
+  return `<div class="list"><div class="item mhead"><div class="grow"><b>תחזית הגעה ל-${r1(g)} ק״ג</b></div><span class="small muted n">נשארו <bdi dir="ltr">${r1(Math.abs(left))}</bdi> ק״ג</span></div>
     <div class="item"><div class="grow s">לפי הקצב שבחרת</div><div class="small">${plan ? eta(plan) : "—"}</div></div>
     <div class="item"><div class="grow s">לפי הקצב בפועל</div><div class="small">${act ? eta(act) : early ? "יוצג אחרי שבועיים של שקילות" : rate == null ? "צריך עוד שקילות" : "המשקל לא זז לכיוון היעד"}</div></div></div>`;
 }
@@ -1318,7 +1321,7 @@ function vGoals() {
   const wrongWay = p.goalWeight && w && pct && Math.sign(p.goalWeight - w) !== Math.sign(pct) && Math.abs(p.goalWeight - w) > 0.5;
   const row = (k, a, b, u) => `<div class="item"><div class="grow s">${k}</div><div class="n" style="min-width:70px;text-align:center">${a ?? "—"}</div><div class="n" style="min-width:70px;text-align:center;color:var(--accent);font-weight:700">${b ?? "—"}</div></div>`;
   return `<div class="stack">${top}
-    <div class="list"><div class="item mhead" style="background:color-mix(in srgb,var(--accent) 8%,transparent)"><div class="grow"><b>${GOALS[g]?.[0] || "—"}</b>${PACE[g] ? `<span class="small muted"> · ${rate}% בשבוע</span>` : ""}</div><button class="btn link" data-gedit="1">שינוי</button></div>
+    <div class="list"><div class="item mhead"><div class="grow"><b>${GOALS[g]?.[0] || "—"}</b>${PACE[g] ? `<span class="small muted"> · ${rate}% בשבוע</span>` : ""}</div><button class="btn link" data-gedit="1">שינוי</button></div>
       <div class="item"><div class="grow"></div><div class="small muted" style="min-width:70px;text-align:center">נוכחי</div><div class="small muted" style="min-width:70px;text-align:center">רצוי</div></div>
       ${row("משקל (ק״ג)", curKg, p.goalWeight)}${row("היקף טבור (ס״מ)", st.waist, p.goalWaist)}</div>
     ${st.date ? `<div class="small muted" style="padding-inline:4px">סומן: ${fmtDay(st.date)}${w != null && st.kg != null && w !== st.kg ? ` · היום ${w} ק״ג (<bdi dir="ltr">${w - st.kg > 0 ? "+" : ""}${r1(w - st.kg)}</bdi>)` : ""}</div>` : ""}
@@ -1397,16 +1400,22 @@ function exHead(ex, i, tag = "") { return `        <div class="row exh" style="j
           ${ex.opts?.length > 1 && S.draft ? `<div class="optseg wide" role="radiogroup" aria-label="איזה תרגיל היום">${ex.opts.map(o => `<button role="radio" aria-checked="${o === ex.name}" class="${o === ex.name ? "on" : ""}" data-optpick="${i}" data-opt="${esc(o)}">${esc(dn(o))}</button>`).join("")}</div>` : ""}<button class="exdots" data-exmenu="${i}" aria-label="פעולות לתרגיל" aria-expanded="${S.exMenu === i}">•••</button>${S.exMenu !== i ? "" : `<span class="stmenu exmenu" style="flex-basis:100%">${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? "" : `<button data-noteopen="${esc(ex.name)}">הערה</button>`}<button data-exren="${i}">שינוי שם</button><button data-wswap="${i}">החלפת תרגיל</button>${ex.ss ? `<button data-ssoff="${i}">${ex.ssT === "alt" ? "ביטול לסירוגין" : "ביטול סופר סט"}</button>` : `<button data-ss="${i}">סופר סט</button><button data-ssalt="${i}">סטים לסירוגין</button>`}<button class="xdel" data-wdel="${i}">הסרה מהאימון</button></span>`}</div>
 `; }
 function setRow(ex, i, j, last, best, tag = "") { const s = ex.log[j]; const p = s.t === "w" ? null : last?.sets[ex.log.slice(0, j).filter(work).length], isPR = s.done && s.t !== "w" && best.e && e1rm(num(s.kg) || 0, parseInt(s.reps) || 0) > best.e + 0.1;
-          return `<div class="sr ${s.done ? "done" : ""}${s.t === "d" ? " drop" : ""}">${s.t === "d" ? `<button class="stype d n dsub" data-deldrop="${i}-${j}" aria-label="הסרת דרופ">↳ <span>✕</span></button>` : `<button class="stype ${s.t || ""} n" data-stype="${i}-${j}" aria-label="סוג סט">${s.t === "w" ? "ח" : tag ? `${mainNo(ex.log, j)}${tag}` : mainNo(ex.log, j)}</button>`}<span class="prev n">${isPR ? `<b class="prb">שיא חדש</b>` : ""}${p ? ltr(`${p.kg}×${p.reps}`) : "—"}</span>
+          return `<div class="sr ${s.done ? "done" : ""}${s.t === "d" ? " drop" : ""}${s.done && s.pr ? " pr" : ""}">${s.t === "d" ? `<button class="stype d n dsub" data-deldrop="${i}-${j}" aria-label="הסרת דרופ">↳ <span>✕</span></button>` : `<button class="stype ${s.t || ""} n" data-stype="${i}-${j}" aria-label="סוג סט">${s.t === "w" ? "ח" : tag ? `${mainNo(ex.log, j)}${tag}` : mainNo(ex.log, j)}</button>`}<span class="prev n">${isPR ? `<b class="prb">שיא חדש</b>` : ""}${p ? ltr(`${p.kg}×${p.reps}`) : "—"}</span>
           <input id="kg-${i}-${j}" class="n" inputmode="decimal" aria-label="ק״ג" placeholder="${(s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""}" value="${s.kg ?? ""}" data-f="kg" data-i="${i}" data-j="${j}">
           <input id="rp-${i}-${j}" class="n" inputmode="numeric" aria-label="חזרות" placeholder="${ex.amrap ? "max" : (s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin)}" value="${s.reps ?? ""}" data-f="reps" data-i="${i}" data-j="${j}">
           <button class="chk" aria-label="סט בוצע" data-done="${i}-${j}">✓</button></div>${S.stMenu === `${i}-${j}` ? `<div class="stmenu" role="group" aria-label="סוג הסט">${[["", "רגיל"], ["w", "חימום"], ["f", "עד כשל"], ["d", "דרופ"]].map(([k, l]) => `<button class="${k} ${(s.t || "") === k ? "on" : ""}" data-stset="${i}-${j}-${k}">${l}</button>`).join("")}<button data-ss="${i}">סופר סט</button></div>` : ""}`; }
 const SSL = ["א", "ב", "ג", "ד"];
 const roundKg = (kg, inc) => { const st = inc >= 2.5 ? 1.25 : .5; return Math.round(kg / st) * st; };
+function histBest(name) { let b = 0; for (const w of S.workouts) for (const e of w.exercises || []) if (e.name === name) for (const st of e.sets || []) if (work(st) && st.kg > 0 && st.reps > 0) b = Math.max(b, e1rm(st.kg, st.reps)); return b; }
+function livePR(i, j) { // like Hevy: a trophy the moment a set beats every earlier one (estimated 1RM)
+  const ex = S.draft.exercises[i], s = ex.log[j], kg = num(s.kg), reps = parseInt(s.reps); if (!kg || !reps || SEC.has(ex.name)) return;
+  let b = histBest(ex.name); if (!b) return; ex.log.forEach((x, k) => { if (k !== j && x.done && x.t !== "w" && x.t !== "d" && num(x.kg) && parseInt(x.reps)) b = Math.max(b, e1rm(num(x.kg), parseInt(x.reps))); });
+  if (e1rm(kg, reps) > b + .01) { s.pr = 1; S.livePR = { k: `${i}-${j}`, txt: `🏆 שיא חדש · <bdi dir="ltr">${kg}×${reps}</bdi>` }; try { navigator.vibrate?.([30, 60, 30]); } catch {} } }
 function rirBar() { // reps-left chips + next-set tip live in the fixed rest bar, so the workout list never shifts
   const el = $("#rest .rrir"); if (!el) return; const D = S.draft; let h = "";
   if (D && S.rirAsk) { const [i, j] = S.rirAsk.split("-").map(Number), s = D.exercises[i]?.log[j]; if (s?.done && s.rir == null) h = `<div class="rirask" role="group" aria-label="כמה חזרות נשארו"><span>כמה חזרות נשארו?</span>${[0, 1, 2, 3, 4].map(v => `<button data-rir="${i}-${j}-${v}">${v === 4 ? `<bdi dir="ltr">4+</bdi>` : v}</button>`).join("")}</div>`; }
-  if (!h && D) { const ex = D.exercises[curIdx(D)]; if (ex?.tip) h = `<div class="rtip n">${ex.tip.txt}</div>`; }
+  if (D && S.livePR) { const [i, j] = S.livePR.k.split("-").map(Number); if (D.exercises[i]?.log[j]?.pr) h = `<div class="rpr">${S.livePR.txt}</div>` + h; }
+  if (!h.includes("rirask") && D) { const ex = D.exercises[curIdx(D)]; if (ex?.tip) h = `<div class="rtip n">${ex.tip.txt}</div>`; }
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
 function nextTip(i, j) { // like a coach next to you: adjust the next set's weight from what you just did (reps vs the target range + reps left)
   const D = S.draft, ex = D.exercises[i], s = ex.log[j]; if (!CFG("smartNext") || SEC.has(ex.name) || ex.amrap) return;
@@ -1488,7 +1497,8 @@ function toggleSet(i, j) {
   if (R && R.i === i && R.j === j) { S.draft.run = null; if (!s.done) { const sec = Math.round((Date.now() - R.t0) / 1000); s.sec = sec; if (SEC.has(ex.name) && s.reps === "") s.reps = String(sec); } }
   if (!s.done) { if (s.kg === "") s.kg = (s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""; if (s.reps === "" && !ex.amrap) s.reps = (s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin); } // confirm the placeholder values, like Hevy
   s.done = !s.done; if (!s.done) { delete s.rir; if (ex.tip?.j === j) ex.tip = null; S.rirAsk = null; }
-  if (s.done && s.t !== "w" && s.t !== "d") { if (CFG("askRir") && !SEC.has(ex.name)) S.rirAsk = `${i}-${j}`; nextTip(i, j); }
+  if (s.done && s.t !== "w" && s.t !== "d") { if (CFG("askRir") && !SEC.has(ex.name)) S.rirAsk = `${i}-${j}`; nextTip(i, j); livePR(i, j); }
+  if (!s.done && s.pr) { delete s.pr; if (S.livePR?.k === `${i}-${j}`) S.livePR = null; }
   store.set("draft", S.draft);
   const nx = ex.log[j + 1];
   const isAlt = ex.ssT === "alt", ssNext = s.done && s.t !== "w" && ex.ss && ssGroup(S.draft, i).some(k => k > i && S.draft.exercises[k].log.some(x => !x.done && x.t !== "w"));
