@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="b296e52ce5";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="ed3779cd50";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -595,8 +595,20 @@ body.focusOn .restbar{display:none!important}
 .rpr{text-align:center;font-weight:800;font-size:.9rem;color:#ffd34d;padding-bottom:2px}.sr.pr .chk{background:#f5b800!important;border-color:#f5b800!important;color:#17181b!important}
 .list>.item.mhead{background:none;padding-block:14px 10px}.list>.item.mhead b{font-size:1.05rem;font-weight:800}.list>.item.mhead::before{content:"";width:4px;align-self:stretch;border-radius:2px;background:var(--accent);margin-inline-end:-2px}
 button.cfgrow:not(:first-child),.cfgrow+.cfgrow{border-top:1px solid var(--line)!important}
-.climb{background:radial-gradient(130% 120% at 85% 0%,#3a0d10 0%,#17181b 60%)!important;color:#fff;overflow:hidden}.climb .tl{color:#ff6b63}.climb .cmuted{color:#b9b3b5}.climb .cmuted b{color:#fff}
-.cpeak{color:#b9b3b5;margin-top:-4px}.cpeak b{color:#fff}.csvg{width:100%;height:auto;display:block;margin:2px 0}.cbar{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.cbar i{display:block;height:100%;background:linear-gradient(90deg,#ff3b30,#e10600);border-radius:3px}
+.climb{background:radial-gradient(130% 120% at 85% 0%,#3a0d10 0%,#17181b 60%)!important;color:#fff;gap:12px!important}.climb .tl{color:#ff6b63}.climb .cmuted{color:#b9b3b5}.climb .cmuted b{color:#fff}
+.ctrail{display:grid;grid-template-columns:repeat(4,1fr);position:relative;padding-top:4px}.ctrail::before{content:"";position:absolute;top:22px;inset-inline:12.5%;height:2px;background:repeating-linear-gradient(to left,rgba(255,255,255,.3) 0 6px,transparent 6px 11px)}
+.cst{display:grid;justify-items:center;gap:4px;text-align:center;position:relative;min-width:0}.cst i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:.8rem;background:#2a2b2f;color:#b9b3b5;border:2px solid rgba(255,255,255,.18);box-sizing:border-box}.cst i svg{width:16px;height:16px}
+.cst.past i{background:#2e7d4f;border-color:#2e7d4f;color:#fff}.cst.here i{background:#e10600;border-color:#ff6b63;box-shadow:0 0 0 6px rgba(225,6,0,.22)}.cst.here i::after{content:"";width:10px;height:10px;border-radius:50%;background:#fff}
+.cst b{font-size:.78rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}.cst span{font-size:.68rem;color:#b9b3b5}.cst.here span{color:#ff8a84;font-weight:700}
+.cnext{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.cnext>span{color:#d9d4d6}.cnext>b{font-size:1.25rem;font-weight:800}
+.cbar{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.cbar i{display:block;height:100%;background:linear-gradient(90deg,#ff3b30,#e10600);border-radius:3px}
+.clvl{display:flex;align-items:center;gap:10px;min-width:0}.clvl>span:last-child{display:grid;gap:1px;min-width:0}.clvl b{font-size:1.1rem;font-weight:800}
+.chex{width:46px;height:50px;flex:0 0 auto;display:grid;place-items:center;font-weight:900;font-size:1.25rem;color:#fff;background:linear-gradient(160deg,#ff3b30,#a30400);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.cst i{position:relative;font-size:1.05rem!important;width:44px!important;height:44px!important}.cst.here i{font-size:1.3rem!important}.cst.here i::after{display:none}.ctrail::before{top:26px!important}
+.cst.lock i{filter:grayscale(1);opacity:.55}.cst i em{position:absolute;bottom:-4px;left:-4px;font-style:normal;font-size:.7rem;filter:none}
+.cxp{display:grid;gap:6px}.cxp .cbar{height:14px;border-radius:7px;position:relative}.cxp .cbar i{border-radius:7px;background:linear-gradient(90deg,#ffb020,#ff3b30 60%,#e10600)}.cxp .cbar s{position:absolute;inset:0;display:grid;place-items:center;text-decoration:none;font-size:.68rem;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.cfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bknudge{flex-direction:row!important;justify-content:space-between;align-items:center;font-size:.88rem;color:var(--muted)}.bknudge b{color:var(--accent);white-space:nowrap}
 /* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
 :root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
 body:not(.wkOn):not(.dk){background:#f3f4f6}
@@ -1234,27 +1246,30 @@ function vToday() {
     </div>
     <div class="tcard"><div class="row sb"><b>הרגלים היום</b><span class="small muted n">${hn} מתוך ${hab.length}</span></div>
       <div class="chips">${hab.map(x => { const on = x.v === "y" || x.v === "rest", no = x.v === "n"; return `<button class="chip ${on ? "on" : no ? "no" : ""}" aria-label="${esc(x.short)}: ${on ? "בוצע" : no ? "לא בוצע" : "לא סומן"}" data-dc="${x.k}">${on ? IC.check : no ? IC.x : IC.ring}${esc(x.short)}</button>`; }).join("")}</div></div>
-    ${S.loaded ? ciCard() : ""}</div>`;
+    ${S.loaded ? ciCard() : ""}${bkNudge()}</div>`;
 }
-const PEAKS = [[5, "גבעה"], [15, "הר תבור"], [40, "הר מירון"], [100, "החרמון"], [250, "מון בלאן"], [500, "קילימנג׳רו"], [1000, "האוורסט"], [1e9, "החלל"]];
-function climbCard() { // "One Way Up": every workout is a step; the line is your lifetime volume climbing toward the next peak
-  const W = [...S.workouts].sort((a, b) => a.date < b.date ? -1 : 1), vol = w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0);
-  let c = 0; const cum = W.map(w => (c += vol(w)) / 1000), tot = c / 1000, k = PEAKS.findIndex(([t]) => tot < t), [goal, name] = PEAKS[k], prev = k ? PEAKS[k - 1][0] : 0;
-  const pts = cum.slice(-14), n = Math.max(pts.length, 1), lo = pts.length > 1 ? pts[0] : 0, hi = Math.max(goal, lo + .001), X = i => 12 + i * (276 / Math.max(n - 1, 1)), Y = v => 104 - (v - lo) / (hi - lo) * 84;
-  let d = `M12 ${Y(lo).toFixed(1)}`; pts.forEach((v, i) => { const x = X(i); d += ` H${x.toFixed(1)} V${Y(v).toFixed(1)}`; });
-  const ex = pts.length ? X(pts.length - 1) : 12, ey = pts.length ? Y(pts[pts.length - 1]) : 104, pc = Math.round((tot - prev) / (goal - prev) * 100);
-  const fmt = t => t >= 100 ? Math.round(t).toLocaleString("he-IL") : t.toFixed(1);
-  return `<div class="tcard climb"><div class="row sb"><span class="tl">הטיפוס שלך</span><span class="small n cmuted">${W.length} אימונים · ${fmt(tot)} טון</span></div>
-    <div class="cpeak small n">⛰ הפסגה הבאה: <b>${name}</b> · ${goal >= 1e9 ? "∞" : goal} טון</div>
-    <svg viewBox="0 0 300 120" class="csvg" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e10600" stop-opacity=".45"/><stop offset="1" stop-color="#e10600" stop-opacity="0"/></linearGradient>
-      <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity=".02"/></linearGradient></defs>
-      <path d="M150 120 L214 46 L236 62 L262 16 L300 58 V120 Z" fill="url(#mg)"/><path d="M252 30 L262 16 L270 27 L264 24 L258 30 Z" fill="#fff" fill-opacity=".5"/>
-      <line x1="12" x2="288" y1="20" y2="20" stroke="#fff" stroke-opacity=".25" stroke-dasharray="3 5"/>
-      ${pts.length ? `<path d="${d} V120 H12 Z" fill="url(#cg)"/><path d="${d}" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linejoin="round"/>
-      <circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="9" fill="#e10600" fill-opacity=".25"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="4.5" fill="#fff"/>
-      <path d="M${ex.toFixed(1)} ${(ey - 12).toFixed(1)} l-5 6 m5 -6 l5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>` : `<path d="M12 104 H60 V90 H108 V76 H156 V62 H204 V48" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2" stroke-dasharray="4 4"/>`}</svg>
-    <div class="row sb"><span class="small cmuted">${pts.length ? `עוד <b class="n">${fmt(goal - tot)} טון</b> עד ${name}` : "האימון הראשון הוא הצעד הראשון"}</span><span class="small n cmuted">${pts.length ? `${pc}%` : ""}</span></div>
-    <div class="cbar"><i style="width:${Math.max(0, Math.min(100, pc))}%"></i></div></div>`;
+function bkNudge() { // data lives only on this phone: a quiet reminder on Home when the last backup is a week old and something changed
+  if (!S.pwa) return ""; const last = store.get("lastBackup", null), dirty = (() => { try { return !!localStorage.getItem("dirty"); } catch { return false; } })();
+  if (!dirty || (last && Date.now() - last < 7 * 864e5)) return ""; const d = last ? Math.floor((Date.now() - last) / 864e5) : null;
+  return `<button class="tcard bknudge" data-bknow="1"><span>💾 ${d == null ? "עוד לא גיבית את הנתונים" : `הגיבוי האחרון לפני ${d} ימים`}</span><b>גיבוי עכשיו</b></button>`;
+}
+const STOP_IC = ["⛺", "💧", "🌲", "🔭", "🪨", "🦇", "🌊", "⛩️", "🏰", "🌿", "🌄", "⛰️", "🏞️", "🗿", "🏔️", "☁️", "❄️", "🗻", "🦁", "🦅", "🐻", "💀", "🏆", "🚀"];
+const lifeVol = () => S.workouts.reduce((a, w) => a + (w.exercises || []).reduce((b, e) => b + (e.sets || []).filter(work).reduce((c, x) => c + (x.kg || 0) * (x.reps || 0), 0), 0), 0);
+const STOPS = ["נקודת היציאה", "המעיין", "חורשת האורנים", "תצפית העמק", "גבעת הסלעים", "מערת הנטיפים", "המפל", "שער ההר", "מצדה", "הכרמל", "הגלבוע", "הר תבור", "הר מירון", "קרן חטין", "החרמון", "מעל העננים", "מון בלאן", "המטרהורן", "קילימנג׳רו", "אקונקגואה", "דנאלי", "K2", "האוורסט", "החלל"], STEP = 2500;
+function climbCard() { // "One Way Up": every kg you lift (weight × reps) moves you along a trail of close stops, one or more per workout
+  const vol = e => (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0);
+  const past = S.workouts.reduce((a, w) => a + (w.exercises || []).reduce((b, e) => b + vol(e), 0), 0), D = S.draft;
+  const live = D ? D.exercises.reduce((a, e) => a + e.log.filter(x => x.done && x.t !== "w").reduce((b, x) => b + (num(x.kg) || 0) * (parseInt(x.reps) || 0), 0), 0) : 0;
+  const tot = past + live, at = Math.floor(tot / STEP), nm = k => STOPS[k % STOPS.length] + (k >= STOPS.length ? ` ${Math.floor(k / STOPS.length) + 1}` : ""), need = (at + 1) * STEP - tot, pc = Math.round((tot - at * STEP) / STEP * 100);
+  const last = [...S.workouts].sort((a, b) => a.date < b.date ? -1 : 1).slice(-3), avg = last.length ? last.reduce((a, w) => a + (w.exercises || []).reduce((b, e) => b + vol(e), 0), 0) / last.length : 0;
+  const per = avg ? Math.floor(avg / STEP) : 0, ks = [at - 1, at, at + 1, at + 2, at + 3].filter(k => k >= 0).slice(0, 4);
+  const kg = v => Math.round(v).toLocaleString("he-IL");
+  const ic = k => STOP_IC[k % STOP_IC.length];
+  return `<div class="tcard climb"><div class="row sb" style="flex-wrap:nowrap"><div class="clvl"><span class="chex n">${at + 1}</span><span><span class="tl">רמה ${at + 1} · המסע למעלה</span><b>${ic(at)} ${esc(nm(at))}</b></span></div><span class="small n cmuted" style="text-align:end">${kg(tot)}<br>ק״ג סה״כ</span></div>
+    <div class="ctrail">${ks.map(k => `<div class="cst ${k < at ? "past" : k === at ? "here" : "lock"}"><i>${k === at ? "🧗" : ic(k)}${k > at ? `<em>🔒</em>` : ""}</i><b>${esc(nm(k))}</b><span class="n">${k === at ? "אתה כאן" : k < at ? "נפתח ✓" : `${kg(k * STEP)} ק״ג`}</span></div>`).join("")}</div>
+    <div class="cxp"><div class="row sb"><span class="small"><b>XP</b> לרמה ${at + 2}: ${ic(at + 1)} ${esc(nm(at + 1))}</span><b class="n">עוד ${kg(need)} ק״ג</b></div><div class="cbar"><i style="width:${pc}%"></i><s class="n">${pc}%</s></div></div>
+    <div class="cfoot small cmuted"><span>🏅 <b class="n">${at}</b> תחנות נפתחו</span><span>${D ? `🔥 באימון הזה: <b class="n">${kg(live)} ק״ג</b>` : per ? `⚡ אימון ממוצע = <b class="n">${per}</b> ${per === 1 ? "רמה" : "רמות"}` : `⚡ רמה כל <b class="n">${kg(STEP)}</b> ק״ג`}</span></div>
+    <div class="small cmuted" style="opacity:.75">כל סט נספר: משקל × חזרות.</div></div>`;
 }
 function focusIdx() { return curIdx(S.draft); }
 const ssGroup = (D, i) => { const g = D.exercises[i]?.ss; if (!g) return [i]; return D.exercises.map((e, k) => e.ss === g ? k : -1).filter(k => k >= 0); };
@@ -1640,9 +1655,10 @@ async function finishWorkout1() {
   const volume = exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + st.kg * st.reps, 0), 0);
   const prevW = [...S.workouts].reverse().find(w => w.dayId === D.dayId);
   const prevVolume = prevW ? prevW.exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + (st.kg||0) * (st.reps||0), 0), 0) : 0;
+  const lvBefore = D.editId ? null : Math.floor(lifeVol() / STEP);
   const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, exercises, minutes, ts: now }));
   if (await (D.editId ? (x => save("workouts/" + D.editId, x)) : (x => addTo("workouts", x)))(doc)) {
-    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null };
+    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
     if (COACH_ON && !D.editId) setTimeout(() => { const sets = S.summary?.sets ?? 0, wk = streak().cur;
       const t = (prs.length ? `${prs.length === 1 ? "שיא חדש" : prs.length + " שיאים חדשים"} היום, ` : "") + `סיימת ${esc(D.dayName || "אימון")}: ${sets === 1 ? "סט אחד" : sets + " סטים"}${minutes > 0 ? ` ב-${minutes} דקות` : ""}. ` + (wk >= 4 ? "היעד השבועי הושג, כל הכבוד על ההתמדה." : `זה אימון ${wk} מתוך 4 השבוע.`) + " איך הגוף מרגיש?";
       const msg = { role: "coach", text: t, ts: Date.now(), nudge: "w" + now }; S.chat.push(msg); S.coachUnread = true; store.set("coachUnread", true); addTo("chat", msg); render(); }, 1500);
@@ -1704,7 +1720,7 @@ function summaryCard() {
   const W = S.summary; if (!W) return "";
   const dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
   return `<div class="sumhero"><div class="row sb"><span class="sumdone">הושלם · ${fmtDate(today())}</span><button class="bsx" data-sumclose="1" aria-label="סגירה">${IC.x}</button></div><h2>${esc(W.dayName)}</h2>
-      <div class="sumchips n"><span>${W.sets} סטים</span><span>${W.minutes} דק׳</span>${W.prs.length ? `<span class="pr">${W.prs.length === 1 ? "שיא חדש" : W.prs.length + " שיאים חדשים"}</span>` : ""}${dv != null ? `<span><bdi dir="ltr">${dv >= 0 ? "+" : ""}${dv}%</bdi> נפח</span>` : ""}<span>${Math.round(W.volume).toLocaleString("he-IL")} ק״ג סה״כ</span></div><button class="sumshare" data-sumshare="1">${IC.up}תמונה לשיתוף</button></div>
+      <div class="sumchips n">${W.up > 0 ? `<span class="pr">🧗 עלית ${W.up === 1 ? "רמה" : W.up + " רמות"}</span>` : ""}<span>${W.sets} סטים</span><span>${W.minutes} דק׳</span>${W.prs.length ? `<span class="pr">${W.prs.length === 1 ? "שיא חדש" : W.prs.length + " שיאים חדשים"}</span>` : ""}${dv != null ? `<span><bdi dir="ltr">${dv >= 0 ? "+" : ""}${dv}%</bdi> נפח</span>` : ""}<span>${Math.round(W.volume).toLocaleString("he-IL")} ק״ג סה״כ</span></div><button class="sumshare" data-sumshare="1">${IC.up}תמונה לשיתוף</button></div>
     <div class="list">
     ${W.prs.map(p => `<div class="item"><div class="grow"><div class="t"><span style="color:var(--accent);font-weight:600">שיא חדש</span> · ${esc(p.name)}</div><div class="s n">${p.kind === "kg" ? `שיא משקל: ${p.kg} ק״ג` : `שיא 1RM משוער: ${r1(p.e)} ק״ג`} (קודם ${r1(p.prev)})</div></div></div>`).join("")}
     ${W.pain != null && W.pain >= 3 && WR() ? `<div class="item"><div class="grow s" style="color:var(--bad)">דיווחת על כאב ${W.pain}/10 בשורש כף היד.</div></div>` : ""}</div>`.replace(/<div class="list">\s*<\/div>/, "");
@@ -2462,6 +2478,7 @@ document.addEventListener("click", async ev => {
   if (ds.recent) { const f0 = S.food.find(x => x.id === ds.recent), done = f0 && S.food.filter(x => x.date === S.foodDate && x.name === f0.name).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
     if (done) { const { id, ...rest } = done; await remove("food/" + id); toast(`הוסר: ${done.name}`, () => addTo("food", rest)); return; } }
   if (ds.recent) { const f = S.food.find(x => x.id === ds.recent); if (f) { const { id, ...rest } = f, ts = Date.now(); try { navigator.vibrate?.(15); } catch {} if (await addTo("food", { ...rest, date: S.foodDate, meal: $("#fMeal")?.value || guessMeal(), ts })) toast(`נוסף: ${f.name}`, () => { const x = S.food.find(z => z.ts === ts && z.name === f.name); if (x) remove("food/" + x.id); }); } return; }
+  if (ds.bknow) { S.tab = "settings"; S.bkOpen = true; store.set("tab", S.tab); render(); setTimeout(() => document.querySelector("details.group[open]")?.scrollIntoView({ block: "start" }), 0); return; }
   if (ds.qweigh) { S.sheet = "w"; render(); setTimeout(() => $("#wKg")?.focus(), 50); return; }
   if (ds.sheet === "0") { S.sheet = null; render(); return; }
   if (ds.sheet === "menu") { S.sheet = "menu"; render(); return; }
