@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="d56c4932a4";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="b296e52ce5";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -595,6 +595,8 @@ body.focusOn .restbar{display:none!important}
 .rpr{text-align:center;font-weight:800;font-size:.9rem;color:#ffd34d;padding-bottom:2px}.sr.pr .chk{background:#f5b800!important;border-color:#f5b800!important;color:#17181b!important}
 .list>.item.mhead{background:none;padding-block:14px 10px}.list>.item.mhead b{font-size:1.05rem;font-weight:800}.list>.item.mhead::before{content:"";width:4px;align-self:stretch;border-radius:2px;background:var(--accent);margin-inline-end:-2px}
 button.cfgrow:not(:first-child),.cfgrow+.cfgrow{border-top:1px solid var(--line)!important}
+.climb{background:radial-gradient(130% 120% at 85% 0%,#3a0d10 0%,#17181b 60%)!important;color:#fff;overflow:hidden}.climb .tl{color:#ff6b63}.climb .cmuted{color:#b9b3b5}.climb .cmuted b{color:#fff}
+.cpeak{color:#b9b3b5;margin-top:-4px}.cpeak b{color:#fff}.csvg{width:100%;height:auto;display:block;margin:2px 0}.cbar{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.cbar i{display:block;height:100%;background:linear-gradient(90deg,#ff3b30,#e10600);border-radius:3px}
 /* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
 :root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
 body:not(.wkOn):not(.dk){background:#f3f4f6}
@@ -675,8 +677,9 @@ const ownerNo = (log, j) => { let k = j; while (k > 0 && log[k].t === "d") k--; 
 const e1rm = (kg, reps) => reps <= 1 ? kg : kg * (1 + reps / 30);
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { if (!store.warned) { store.warned = 1; setTimeout(() => toast("אין מקום באחסון של הדפדפן: האימון הפתוח עלול לא להישמר. כדאי לגבות"), 0); } } }
 };
+try { navigator.storage?.persisted?.().then(p => p || navigator.storage.persist?.()).catch(() => {}); } catch {} // ask the browser not to evict the on-device data (iPhone clears unused site storage)
 const ICON = {
   daily: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="1"/><path d="M4 10h16M9 3v4M15 3v4M8.5 14.5l2 2 4-4"/></svg>',
   settings: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
@@ -1198,7 +1201,7 @@ function vToday() {
   const exRows = L => `<div class="hlist">${L.map(e => `<div><b>${esc(dn(e.name))}</b><span class="n muted"><bdi dir="ltr">${e.sets} × ${repTxt(e)}</bdi></span></div>`).join("")}</div>`;
   let wc;
   if (D) { const all = D.exercises.reduce((a, e) => a + e.log.length, 0), dsets = D.exercises.reduce((a, e) => a + e.log.filter(s => s.done).length, 0), ci = Math.max(0, curIdx(D)), mins = Math.max(0, Math.round((Date.now() - D.start) / 60000));
-    wc = `<div class="row sb"><span class="tl">האימון להיום</span><span class="hchip n">${mins} דק׳</span></div><h2 class="th">${esc(D.dayName)}</h2>
+    wc = `<div class="row sb"><span class="tl">${D.date && D.date !== today() ? `אימון פתוח מ־${fmtDay(D.date)}` : "האימון להיום"}</span><span class="hchip n">${mins > 300 ? "פתוח" : `${mins} דק׳`}</span></div><h2 class="th">${esc(D.dayName)}</h2>
       <div class="small muted n">תרגיל ${Math.min(ci + 1, D.exercises.length)} מתוך ${D.exercises.length} · ${dsets}/${all} סטים</div><div class="hprog"><i style="width:${all ? Math.round(dsets / all * 100) : 0}%"></i></div>
       ${exRows(D.exercises.slice(ci, ci + 3))}<button class="btn primary block big2 hgo" data-resume="1">${IC.play}המשך אימון</button>`; }
   else if (doneT) { const w = [...S.workouts].reverse().find(x => x.date === today()), ns = (w.exercises || []).reduce((a, e) => a + e.sets.filter(x => x.t !== "w" && x.t !== "d").length, 0);
@@ -1224,6 +1227,7 @@ function vToday() {
       <div class="wk2">${LET.map((l, i) => { const d = addDays(wk, i), w = S.workouts.find(x => x.date === d), isT = d === today();
         const cls = w ? "done" : isT ? "today" : pl[d] ? "plan" : d < today() ? "rest" : "";
         return `<div><span class="${isT ? "cur" : ""}">${l}</span><i class="${cls}" title="${esc(w ? w.dayName || "" : pl[d] || "")}">${w ? IC.check : isT ? "•" : cls === "rest" ? "–" : ""}</i></div>`; }).join("")}</div></div>
+    ${climbCard()}
     <div class="tiles">
       ${tile("קלוריות", T ? Math.round(tot.kcal).toLocaleString("he-IL") : "—", T ? T.kcal.toLocaleString("he-IL") : "", T ? tot.kcal / T.kcal * 100 : 0, "var(--accent)", left == null ? "אין יעד" : left >= 0 ? `נותרו ${left.toLocaleString("he-IL")}` : `${Math.abs(left).toLocaleString("he-IL")} מעל היעד`, `data-tab="food"`)}
       ${tile("משקל", wt ? wt.kg : lastW ? lastW.kg : "—", "", wt ? 100 : 0, "var(--ink)", wt ? `ממוצע 7 ימים ${a7 ? r1(a7) : "—"}` : "לחיצה לשקילת בוקר", `data-qweigh="1"`)}
@@ -1231,6 +1235,26 @@ function vToday() {
     <div class="tcard"><div class="row sb"><b>הרגלים היום</b><span class="small muted n">${hn} מתוך ${hab.length}</span></div>
       <div class="chips">${hab.map(x => { const on = x.v === "y" || x.v === "rest", no = x.v === "n"; return `<button class="chip ${on ? "on" : no ? "no" : ""}" aria-label="${esc(x.short)}: ${on ? "בוצע" : no ? "לא בוצע" : "לא סומן"}" data-dc="${x.k}">${on ? IC.check : no ? IC.x : IC.ring}${esc(x.short)}</button>`; }).join("")}</div></div>
     ${S.loaded ? ciCard() : ""}</div>`;
+}
+const PEAKS = [[5, "גבעה"], [15, "הר תבור"], [40, "הר מירון"], [100, "החרמון"], [250, "מון בלאן"], [500, "קילימנג׳רו"], [1000, "האוורסט"], [1e9, "החלל"]];
+function climbCard() { // "One Way Up": every workout is a step; the line is your lifetime volume climbing toward the next peak
+  const W = [...S.workouts].sort((a, b) => a.date < b.date ? -1 : 1), vol = w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0);
+  let c = 0; const cum = W.map(w => (c += vol(w)) / 1000), tot = c / 1000, k = PEAKS.findIndex(([t]) => tot < t), [goal, name] = PEAKS[k], prev = k ? PEAKS[k - 1][0] : 0;
+  const pts = cum.slice(-14), n = Math.max(pts.length, 1), lo = pts.length > 1 ? pts[0] : 0, hi = Math.max(goal, lo + .001), X = i => 12 + i * (276 / Math.max(n - 1, 1)), Y = v => 104 - (v - lo) / (hi - lo) * 84;
+  let d = `M12 ${Y(lo).toFixed(1)}`; pts.forEach((v, i) => { const x = X(i); d += ` H${x.toFixed(1)} V${Y(v).toFixed(1)}`; });
+  const ex = pts.length ? X(pts.length - 1) : 12, ey = pts.length ? Y(pts[pts.length - 1]) : 104, pc = Math.round((tot - prev) / (goal - prev) * 100);
+  const fmt = t => t >= 100 ? Math.round(t).toLocaleString("he-IL") : t.toFixed(1);
+  return `<div class="tcard climb"><div class="row sb"><span class="tl">הטיפוס שלך</span><span class="small n cmuted">${W.length} אימונים · ${fmt(tot)} טון</span></div>
+    <div class="cpeak small n">⛰ הפסגה הבאה: <b>${name}</b> · ${goal >= 1e9 ? "∞" : goal} טון</div>
+    <svg viewBox="0 0 300 120" class="csvg" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e10600" stop-opacity=".45"/><stop offset="1" stop-color="#e10600" stop-opacity="0"/></linearGradient>
+      <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity=".02"/></linearGradient></defs>
+      <path d="M150 120 L214 46 L236 62 L262 16 L300 58 V120 Z" fill="url(#mg)"/><path d="M252 30 L262 16 L270 27 L264 24 L258 30 Z" fill="#fff" fill-opacity=".5"/>
+      <line x1="12" x2="288" y1="20" y2="20" stroke="#fff" stroke-opacity=".25" stroke-dasharray="3 5"/>
+      ${pts.length ? `<path d="${d} V120 H12 Z" fill="url(#cg)"/><path d="${d}" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="9" fill="#e10600" fill-opacity=".25"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="4.5" fill="#fff"/>
+      <path d="M${ex.toFixed(1)} ${(ey - 12).toFixed(1)} l-5 6 m5 -6 l5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>` : `<path d="M12 104 H60 V90 H108 V76 H156 V62 H204 V48" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2" stroke-dasharray="4 4"/>`}</svg>
+    <div class="row sb"><span class="small cmuted">${pts.length ? `עוד <b class="n">${fmt(goal - tot)} טון</b> עד ${name}` : "האימון הראשון הוא הצעד הראשון"}</span><span class="small n cmuted">${pts.length ? `${pc}%` : ""}</span></div>
+    <div class="cbar"><i style="width:${Math.max(0, Math.min(100, pc))}%"></i></div></div>`;
 }
 function focusIdx() { return curIdx(S.draft); }
 const ssGroup = (D, i) => { const g = D.exercises[i]?.ss; if (!g) return [i]; return D.exercises.map((e, k) => e.ss === g ? k : -1).filter(k => k >= 0); };
@@ -1588,7 +1612,7 @@ function toggleSet(i, j) {
   const ex = S.draft.exercises[i], s = ex.log[j], R = S.draft.run;
   if (R && R.i === i && R.j === j) { S.draft.run = null; if (!s.done) { const sec = Math.round((Date.now() - R.t0) / 1000); s.sec = sec; if (SEC.has(ex.name) && s.reps === "") s.reps = String(sec); } }
   if (!s.done) { if (s.kg === "") s.kg = (s.t !== "w" ? carry(ex, j, "kg") : null) ?? ex.sug?.kg ?? ""; if (s.reps === "" && !ex.amrap) s.reps = (s.t !== "w" ? carry(ex, j, "reps") : null) ?? (ex.sug?.reps || ex.repMin); } // confirm the placeholder values, like Hevy
-  s.done = !s.done; if (!s.done) { delete s.rir; if (ex.tip?.j === j) ex.tip = null; S.rirAsk = null; }
+  s.done = !s.done; if (s.done) s.at = Date.now(); if (!s.done) { delete s.rir; delete s.at; if (ex.tip?.j === j) ex.tip = null; S.rirAsk = null; }
   if (s.done && s.t !== "w" && s.t !== "d") { if (CFG("askRir") && !SEC.has(ex.name)) S.rirAsk = `${i}-${j}`; nextTip(i, j); livePR(i, j); }
   if (!s.done && s.pr) { delete s.pr; if (S.livePR?.k === `${i}-${j}`) S.livePR = null; }
   store.set("draft", S.draft);
@@ -1607,7 +1631,9 @@ async function finishWorkout1() {
   const D = S.draft; if (!D) return;
   const exercises = D.exercises.map(e => ({ name: e.name, ...(e.ss ? { ss: e.ss } : {}), ...(e.ssT ? { ssT: e.ssT } : {}), sets: e.log.filter(s => s.done || (D.editId && s.reps !== "")).map(s => ({ kg: num(s.kg) ?? 0, reps: parseInt(s.reps) || 0, ...(s.t ? { t: s.t } : {}), ...(s.sec ? { sec: s.sec } : {}), ...(s.rir != null ? { rir: s.rir } : {}) })).filter(s => s.reps) })).filter(e => e.sets.length);
   if (!exercises.length) { S.endAsk = true; render(); scrollTo({ top: 0 }); return; }
-  const now = Date.now(), minutes = Math.round((now - (D.start || now)) / 60000);
+  const now = Date.now(), lastAt = Math.max(0, ...D.exercises.flatMap(e => e.log.map(s => s.done && s.at || 0)));
+  let minutes = Math.round((now - (D.start || now)) / 60000); // forgot to tap "finish"? count until the last set (+2 min), not until now
+  if (!D.editId && minutes > 150 && lastAt > (D.start || 0)) minutes = Math.round((lastAt - D.start) / 60000) + 2;
   const prs = []; exercises.forEach(e => { const b = bestBefore(e.name, now); if (!b.e) return;
     const ws = e.sets.filter(work); if (!ws.length) return; const e1 = Math.max(...ws.map(st => e1rm(st.kg, st.reps))), kg = Math.max(...ws.map(st => st.kg));
     if (kg > b.kg) prs.push({ name: e.name, kind: "kg", kg, prev: b.kg }); else if (e1 > b.e + 0.1) prs.push({ name: e.name, kind: "e1", e: e1, prev: b.e }); });
