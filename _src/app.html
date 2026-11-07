@@ -1007,7 +1007,8 @@ function plansBlock() { // all plans in one place: the active one on top, then s
       <span class="row" style="gap:6px"><button class="btn small" data-pnew="copy">שכפול</button><button class="btn small del" data-pdelact="1">מחיקה</button></span></div></div>
     ${S.plans.map(p => `<div class="pcard"><div class="grow" style="min-width:0"><div class="t">${esc(p.title || "תוכנית")}</div><div class="small muted n">${sub(p)}${p.archivedAt ? ` · נשמרה ${fmtDate(new Date(p.archivedAt - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10))}` : ""}</div></div>
       <span class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn small primary" data-puse="${esc(p.id)}">הפעלה</button><button class="btn small del" data-pdel="${esc(p.id)}">מחיקה</button></span></div>`).join("")}
-    <span class="small muted">כל תוכנית נשמרת כאן. מחיקה אפשר לבטל מיד בהודעה שמופיעה למטה.</span></div>`;
+    ${(T => T.length ? `<details class="ptrash"><summary class="small muted">🗑️ נמחקו לאחרונה (${T.length})</summary><div style="display:grid;gap:8px;margin-top:8px">${T.map(p => `<div class="pcard"><div class="grow" style="min-width:0"><div class="t">${esc(p.title || "תוכנית")}</div><div class="small muted n">${sub(p)} · נמחקה ${fmtDate(new Date(p.deletedAt - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10))}</div></div><button class="btn small" data-prest="${esc(p.id)}">שחזור</button></div>`).join("")}</div></details>` : "")((S.planTrash || []).filter(p => Date.now() - p.deletedAt < 30 * 864e5))}
+    <span class="small muted">מחיקה אפשר לבטל מיד בהודעה למטה, ותוכנית שנמחקה נשארת 30 יום ב"נמחקו לאחרונה".</span></div>`;
 }
 const planPid = p => p.pid || "p" + (p.created || 0);
 async function archivePlan() { const { id: _i, ...cur } = S.plan || {}; if (!cur.days) return true; cur.created ??= 0; return await save("plans/" + planPid(cur), { ...cur, pid: planPid(cur), title: cur.title || "התוכנית שלי", archivedAt: Date.now() }); }
@@ -1250,8 +1251,8 @@ function climbCard() { // one number to break: your best single-workout volume (
   const last = vs.length ? vs[vs.length - 1] : 0, bar = D ? (rec ? Math.min(100, live / rec * 100) : 0) : rec ? Math.min(100, last / rec * 100) : 0;
   const gw = S.workouts.filter(w => w.date <= addDays(today(), -21) && w.date >= addDays(today(), -45)).sort((a, b) => Math.abs(Date.parse(a.date) - Date.parse(addDays(today(), -30))) - Math.abs(Date.parse(b.date) - Date.parse(addDays(today(), -30))))[0];
   const ghost = gw ? (gw.exercises || []).reduce((b, e) => b + vol(e), 0) : 0, gp = rec && ghost ? Math.min(100, ghost / Math.max(rec, live) * 100) : null, big = broke ? live : rec, eq = equiv(big);
-  return `<div class="tcard climb simple"><div class="row sb"><span class="tl">🎯 השיא שלך באימון</span>${storyBox(at, nm, STORY, k => `־${kg(k * STEP)} ק״ג`, `רמה ${at + 1} · ${STOP_IC[at % STOP_IC.length]} ${nm(at)}`)}</div>
-    <b class="cbig n">${broke ? `🏆 ${kg(live)}` : rec ? kg(rec) : "—"} <small>ק״ג</small></b>${eq ? `<span class="ceq">${eq[1]} כמו להרים ${eq[2]}${big >= eq[0] * 2 ? ` × ${Math.floor(big / eq[0])}` : ""} באימון אחד</span>` : ""}
+  return `<div class="tcard climb simple"><div class="row sb"><span class="tl">🎯 השיא שלך באימון</span></div>
+    <b class="cbig n">${broke ? `🏆 ${kg(live)}` : rec ? kg(rec) : D ? kg(live) : "0"} <small>ק״ג</small></b>${eq ? `<span class="ceq">${eq[1]} כמו להרים ${eq[2]}${big >= eq[0] * 2 ? ` × ${Math.floor(big / eq[0])}` : ""} באימון אחד</span>` : ""}
     <div class="cbar big"><i style="width:${broke ? 100 : bar}%"></i>${gp != null ? `<u class="cghost" style="inset-inline-start:calc(${gp}% - 11px)" title="אתה מלפני חודש">👻</u>` : ""}</div><div class="cbl n">${D ? (broke ? "שברת את השיא!" : rec ? `היום ${kg(live)} · עוד ${kg(rec - live)}` : `היום ${kg(live)}`) : rec ? "האימון הבא: לשבור אותו" : "האימון הראשון קובע שיא"}</div>
     ${gp != null ? `<div class="small cmuted" style="text-align:center">👻 אתה מלפני חודש: <b class="n">${kg(ghost)}</b> ק״ג${D ? (live > ghost ? " · עקפת אותו!" : ` · עוד ${kg(ghost - live)} כדי לעקוף`) : ""}</div>` : ""}
     <div class="chow">איך זה עובד: כל סט = משקל × חזרות. מחברים את כל הסטים באימון, והמטרה לעבור את האימון הכי חזק שלך.</div></div>`;
@@ -1266,7 +1267,7 @@ function sculptCard() { // one number to break: days in a row on target. Never r
   let best = 0, run = 0; res.forEach(([d, r], k) => { run = r.n === 2 ? (k && res[k - 1][0] === addDays(d, -1) ? run + 1 : 1) : 0; best = Math.max(best, run); });
   const t = dayStars(today(), T), now = streak + (t.n === 2 ? 1 : 0), broke = best > 0 && now > best, lv = Math.floor(stars / SC_STEP), nm = k => SC_ST[k % SC_ST.length] + (k >= SC_ST.length ? ` ${Math.floor(k / SC_ST.length) + 1}` : "");
   const left = Math.round(T.kcal - t.k.kcal), pneed = Math.max(0, Math.round(T.protein - t.k.p)), todo = [t.kc ? "" : left > 0 ? `עוד ${left.toLocaleString("he-IL")} קק״ל` : "עברת את הקלוריות", t.pr ? "" : `עוד ${pneed} ג׳ חלבון`].filter(Boolean).join(" · ");
-  return `<div class="tcard climb sculpt simple"><div class="row sb"><span class="tl">🔥 ימים ברצף ביעד</span>${storyBox(lv, nm, SC_TXT, k => `־${k * SC_STEP} ⭐`, `שלב ${lv + 1} · ${SC_IC[lv % SC_IC.length]} ${nm(lv)}`)}</div>
+  return `<div class="tcard climb sculpt simple"><div class="row sb"><span class="tl">🔥 ימים ברצף ביעד</span></div>
     <b class="cbig n">${broke ? "🏆 " : ""}${now} <small>${best ? `/ שיא ${Math.max(best, now)}` : "ימים"}</small></b>${(() => { const r = [...STREAK_T].reverse().find(([n]) => now >= n), nx = STREAK_T.find(([n]) => n > now); return `<span class="ceq">${r ? `🔥 דרגה: <b>${r[1]}</b>` : "🔥 אין עדיין דרגה"}${nx ? ` · עוד ${nx[0] - now} ${nx[0] - now === 1 ? "יום" : "ימים"} ל<b>${nx[1]}</b>` : ""}</span>`; })()}
     <div class="cbar big"><i style="width:${best ? Math.min(100, now / (best + 1) * 100) : t.n * 50}%"></i><s class="n">${t.n === 2 ? "היום ביעד ✓" : `היום: ${todo}`}</s></div>
     <div class="chow">איך זה עובד: יום נספר כשאכלת את הקלוריות בלי לעבור את היעד, והגעת לחלבון. יום שמפספסים מתחיל את הרצף מחדש.</div></div>`;
@@ -1735,7 +1736,7 @@ function summaryCard() {
   const W = S.summary; if (!W) return "";
   const dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
   return `<div class="sumhero"><div class="row sb"><span class="sumdone">הושלם · ${fmtDate(today())}</span><button class="bsx" data-sumclose="1" aria-label="סגירה">${IC.x}</button></div><h2>${esc(W.dayName)}</h2>
-      <div class="sumchips n">${W.up > 0 ? `<span class="pr">🧗 עלית ${W.up === 1 ? "רמה" : W.up + " רמות"}</span>` : ""}<span>${W.sets} סטים</span><span>${W.minutes} דק׳</span>${W.prs.length ? `<span class="pr">${W.prs.length === 1 ? "שיא חדש" : W.prs.length + " שיאים חדשים"}</span>` : ""}${dv != null ? `<span><bdi dir="ltr">${dv >= 0 ? "+" : ""}${dv}%</bdi> נפח</span>` : ""}<span>${Math.round(W.volume).toLocaleString("he-IL")} ק״ג סה״כ</span></div><button class="sumshare" data-sumshare="1">${IC.up}תמונה לשיתוף</button></div>
+      <div class="sumchips n"><span>${W.sets} סטים</span><span>${W.minutes} דק׳</span>${W.prs.length ? `<span class="pr">${W.prs.length === 1 ? "שיא חדש" : W.prs.length + " שיאים חדשים"}</span>` : ""}${dv != null ? `<span><bdi dir="ltr">${dv >= 0 ? "+" : ""}${dv}%</bdi> נפח</span>` : ""}<span>${Math.round(W.volume).toLocaleString("he-IL")} ק״ג סה״כ</span></div><button class="sumshare" data-sumshare="1">${IC.up}תמונה לשיתוף</button></div>
     <div class="list">
     ${W.prs.map(p => `<div class="item"><div class="grow"><div class="t"><span style="color:var(--accent);font-weight:600">שיא חדש</span> · ${esc(p.name)}</div><div class="s n">${p.kind === "kg" ? `שיא משקל: ${p.kg} ק״ג` : `שיא 1RM משוער: ${r1(p.e)} ק״ג`} (קודם ${r1(p.prev)})</div></div></div>`).join("")}
     ${W.pain != null && W.pain >= 3 && WR() ? `<div class="item"><div class="grow s" style="color:var(--bad)">דיווחת על כאב ${W.pain}/10 בשורש כף היד.</div></div>` : ""}</div>`.replace(/<div class="list">\s*<\/div>/, "");
@@ -2400,12 +2401,14 @@ document.addEventListener("click", async ev => {
     const np = ds.pnew === "copy" ? { ...S.plan, title: (S.plan?.title || "התוכנית שלי") + " (עותק)" } : { title: "תוכנית חדשה", perWeek: S.plan?.perWeek ?? 4, days: [{ id: "d" + Date.now(), name: "יום 1", exercises: [] }] };
     delete np.id; np.created = Date.now(); np.pid = "p" + np.created; S.pickDay = null; await savePlan(np, "נוצרה תוכנית חדשה. הקודמת שמורה"); render(); return; }
   if (ds.puse) { if (S.draft) { toast("יש אימון פתוח. סיים או בטל אותו קודם"); return; } return switchPlan(ds.puse); }
-  if (ds.pdel) { const p = S.plans.find(x => x.id === ds.pdel); if (!p) return; const { id: _i, ...keep } = p; await remove("plans/" + p.id); toast(`"${p.title || "התוכנית"}" נמחקה`, async () => { await save("plans/" + p.id, keep); toast("שוחזר"); }); return; }
+  if (ds.pdel) { const p = S.plans.find(x => x.id === ds.pdel); if (!p) return; const { id: _i, ...keep } = p; await save("plans/" + p.id, { ...keep, deletedAt: Date.now() }); toast(`"${p.title || "התוכנית"}" עברה ל"נמחקו לאחרונה"`, async () => { await save("plans/" + p.id, keep); toast("שוחזר"); }); return; }
+  if (ds.prest) { const p = (S.planTrash || []).find(x => x.id === ds.prest); if (!p) return; const { id, deletedAt: _d, ...k } = p; if (await save("plans/" + id, k)) toast("חזרה לרשימת התוכניות"); return; }
   if (ds.pdelact) { if (S.draft) { toast("יש אימון פתוח. סיים או בטל אותו קודם"); return; } if (!ds.sure) { ds.sure = 1; t.textContent = "למחוק?"; return; }
     const { id: _i, ...cur } = S.plan || {}, nx = [...S.plans].sort((a, b) => (b.archivedAt || 0) - (a.archivedAt || 0))[0], now = Date.now();
+    const pidC = cur.pid || "p" + (cur.created || now); if (cur.days && !(await save("plans/" + pidC, { ...cur, pid: pidC, title: cur.title || "התוכנית שלי", deletedAt: now }))) return; // never lost: it waits in "נמחקו לאחרונה"
     let np; if (nx) { const { id, archivedAt: _a, ...p } = nx; np = { ...p, pid: p.pid || id }; await remove("plans/" + nx.id); } else np = { title: "תוכנית חדשה", perWeek: cur.perWeek ?? 3, created: now, pid: "p" + now, days: [{ id: "d" + now, name: "יום 1", exercises: [] }] };
     if (!(await savePlan(np, ""))) return; S.pickDay = null; render();
-    toast(`"${cur.title || "התוכנית"}" נמחקה${nx ? `, עברת ל"${nx.title || "תוכנית"}"` : ""}`, async () => { if (nx) { const { id, ...k } = nx; await save("plans/" + id, k); } await savePlan(cur, "שוחזר"); render(); }); return; }
+    toast(`"${cur.title || "התוכנית"}" נמחקה${nx ? `, עברת ל"${nx.title || "תוכנית"}"` : ""}`, async () => { if (nx) { const { id, ...k } = nx; await save("plans/" + id, k); } await remove("plans/" + pidC); await savePlan(cur, "שוחזר"); render(); }); return; }
   if (ds.demo) { S.picker = { mode: "view", cat: "chest", q: "", prev: ds.demo }; return renderSheet(); }
   if (ds.pickday) { S.pickDay = ds.pickday; render(); return; }
   if (ds.wu && S.draft) { const D = S.draft, v = ds.wu; D.wuSeen = 1;
@@ -2876,7 +2879,7 @@ render();
   }
   const byDate = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.ts || 0) - (b.ts || 0);
   const col = (name, sort) => db.collection(name).onSnapshot(s => { S[name] = s.docs.map(d => ({ id: d.id, ...d.data() })).sort(sort); soon(); }, () => toast("החיבור נקטע"));
-  db.collection("plans").onSnapshot(s => { if (S.planBusy) return; S.plans = s.docs.map(d => ({ id: d.id, ...d.data() })); soon(); }); col("weights", byDate); col("measures", byDate); col("food", byDate); col("workouts", byDate); col("photos", byDate); col("daily", byDate);
+  db.collection("plans").onSnapshot(s => { if (S.planBusy) return; const all = s.docs.map(d => ({ id: d.id, ...d.data() })); S.plans = all.filter(p => !p.deletedAt); S.planTrash = all.filter(p => p.deletedAt).sort((a, b) => b.deletedAt - a.deletedAt); soon(); }); col("weights", byDate); col("measures", byDate); col("food", byDate); col("workouts", byDate); col("photos", byDate); col("daily", byDate);
   col("meals", (a, b) => (a.name || "").localeCompare(b.name || "", "he"));
   db.collection("chat").onSnapshot(s => { if (!S.chatBusy) { S.chat = [...s.docs.map(d => ({ id: d.id, ...d.data() })), ...S.chat.filter(m => m.local)].sort((a, b) => a.ts - b.ts); soon(); } });
   db.doc("settings/profile").onSnapshot(s => { S.profile = s.exists ? s.data() : null; S.loaded = true; soon(); });
