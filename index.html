@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="83443e1f77";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="027df40318";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -1270,7 +1270,7 @@ function vToday() {
       <div class="wk2">${LET.map((l, i) => { const d = addDays(wk, i), w = S.workouts.find(x => x.date === d), isT = d === today();
         const cls = w ? "done" : isT ? "today" : pl[d] ? "plan" : d < today() ? "rest" : "";
         return `<div><span class="${isT ? "cur" : ""}">${l}</span><i class="${cls}" title="${esc(w ? w.dayName || "" : pl[d] || "")}">${w ? IC.check : isT ? "•" : cls === "rest" ? "–" : ""}</i></div>`; }).join("")}</div></div>
-    ${S.loaded ? weekReport() : ""}${climbCard()}
+    ${S.loaded ? weekReport() : ""}${climbCard()}${sculptCard()}
     <div class="tiles">
       ${tile("קלוריות", T ? Math.round(tot.kcal).toLocaleString("he-IL") : "—", T ? T.kcal.toLocaleString("he-IL") : "", T ? tot.kcal / T.kcal * 100 : 0, "var(--accent)", left == null ? "אין יעד" : left >= 0 ? `נותרו ${left.toLocaleString("he-IL")}` : `${Math.abs(left).toLocaleString("he-IL")} מעל היעד`, `data-tab="food"`)}
       ${tile("משקל", wt ? wt.kg : lastW ? lastW.kg : "—", "", null, "var(--ink)", wt ? `ממוצע 7 ימים ${a7 ? r1(a7) : "—"}` : lastW ? "לא נשקלת היום · לחיצה" : "לחיצה לשקילה ראשונה", `data-qweigh="1"`)}
