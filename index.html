@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="027df40318";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="bf5eb0bd3f";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -1582,7 +1582,7 @@ async function obNext(dir) { const o = S.ob; obRead();
       if (await save("settings/profile", prof)) { await save("weights/" + today(), { date: today(), kg: o.kg }); S.profile = prof; S.ob = null; S.tab = "goals"; S.goalSeg = "goal"; toast("מוכן. היעדים חושבו"); render(); scrollTo({ top: 0 }); } return; } }
   o.step = Math.max(0, o.step + dir); render(); scrollTo({ top: 0 }); }
 function vFood() {
-  return `<div class="stack">${head("תזונה", `<div class="segm" role="group" aria-label="תצוגה">${[["log","יומן"],["menu","תפריט"]].map(([v, t]) => `<button data-seg="foodSeg:${v}" aria-pressed="${S.foodSeg === v}">${t}</button>`).join("")}</div>`)}${S.foodSeg === "menu" ? planMenu() : tFood() + sculptCard()}</div>`;
+  return `<div class="stack">${head("תזונה", `<div class="segm" role="group" aria-label="תצוגה">${[["log","יומן"],["menu","תפריט"]].map(([v, t]) => `<button data-seg="foodSeg:${v}" aria-pressed="${S.foodSeg === v}">${t}</button>`).join("")}</div>`)}${S.foodSeg === "menu" ? planMenu() : tFood()}</div>`;
 }
 function vTrain() {
   const days = S.plan?.days || [], nx = nextDay(), pd = days.find(d => d.id === (S.pickDay || S.daily.find(x => x.date === today())?.answers?.pick)) || nx;
