@@ -534,6 +534,7 @@ body:not(.wkOn) .wubtn{border-color:var(--line);background:var(--soft);color:var
 .wrepx{width:32px;height:32px;border-radius:16px;border:0;background:var(--soft);color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none}.wrepx .ic{width:16px;height:16px}
 .wstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.wstats>div{display:grid;gap:2px;text-align:center;background:var(--soft);border-radius:12px;padding:10px 4px;min-width:0}
 .wstats b{font-size:1.2rem;font-weight:800;line-height:1.1}.wstats span{font-size:.7rem;color:var(--muted);line-height:1.25}.wstats i{font-style:normal;font-weight:700;white-space:nowrap}.wstats i.up{color:var(--ok)}.wstats i.dn{color:var(--bad)}
+.ctip{font-size:.85rem;line-height:1.45;color:var(--ink);background:var(--soft);border-radius:14px;padding:10px 14px;border-inline-start:3px solid var(--accent)}
 /* ===== Design system v2 (6.11): one radius scale, soft depth, tactile press, calm hierarchy ===== */
 :root{--r-s:10px;--r-m:14px;--r-l:20px;--sh-1:0 1px 2px rgba(20,21,24,.04),0 2px 8px rgba(20,21,24,.05);--sh-2:0 2px 4px rgba(20,21,24,.04),0 10px 28px rgba(20,21,24,.09);--ease:cubic-bezier(.2,.8,.2,1)}
 body:not(.wkOn):not(.dk){background:#f3f4f6}
@@ -1168,7 +1169,7 @@ function vToday() {
   const tile = (lbl, big, of, pc, c, sub, act) => `<button class="tcard tile" ${act}><span class="tlb">${lbl}</span><span class="tbig n"><b>${big}</b>${of ? ` <span class="muted">/ ${of}</span>` : ""}</span><div class="track" style="--c:${c}${pc == null ? ";visibility:hidden" : ""}"><i style="width:${Math.max(0, Math.min(100, pc || 0))}%"></i></div><span class="small muted n">${sub}</span></button>`;
   return `<div class="stack">
     <div class="top tall"><div><h1>${greet}${nm ? `, ${esc(nm)}` : ""}</h1><span class="hpill n">${flame}<b>${st.cur}</b> אימונים השבוע${st.eod ? ` · מתוך ${st.max}` : ""}</span></div></div>
-    <div class="tcard hero1">${wc}</div>
+    <div class="tcard hero1">${wc}</div>${coachTip(h)}
     <div class="tcard"><div class="row sb"><b>השבוע</b><span class="small muted">${st.eod ? "יום אימון, יום מנוחה" : `${st.cur} מתוך ${st.max} אימונים`}</span></div>
       <div class="wk2">${LET.map((l, i) => { const d = addDays(wk, i), w = S.workouts.find(x => x.date === d), isT = d === today();
         const cls = w ? "done" : isT ? "today" : pl[d] ? "plan" : d < today() ? "rest" : "";
@@ -1199,6 +1200,16 @@ function weekReport() { // Sun–Tue: last week in four numbers. One tap closes 
     <div class="wstats">${stat(`${wc}/${per}`, "אימונים")}${stat(tons, v >= 1000 ? "טון הורמו" : "ק״ג הורמו", dv != null ? ` <i class="${dv >= 0 ? "up" : "dn"} n">${dv >= 0 ? "▲" : "▼"}${Math.abs(dv)}%</i>` : "")}${stat(prs, prs === 1 ? "שיא" : "שיאים")}${stat(nd != null ? `${nd}/7` : "—", "ימים ביעד")}</div>
     ${dw != null ? `<div class="small muted n">משקל: <bdi dir="ltr">${dw > 0 ? "+" : ""}${dw}</bdi> ק״ג בממוצע השבועי</div>` : ""}</div>`;
 }
+function coachTip(h) { // one line: the single most useful thing right now (or nothing)
+  if (S.draft || !S.loaded) return ""; const T = targets(), tot = dayTotals(today()), td = today(), last = S.workouts[S.workouts.length - 1], doneT = S.workouts.some(w => w.date === td);
+  const pick = (S.daily.find(x => x.date === td)?.answers || {}).pick, gap = last ? daysBetween(last.date, td) : null, g = goalOf(S.profile || {});
+  let t = "";
+  if (T && h >= 18 && tot.kcal > 0 && tot.p < T.protein * .75) { const need = Math.round(T.protein - tot.p); t = need >= 25 ? `חסרים ${need} ג׳ חלבון היום, זה בערך ${Math.round(need / .31 / 50) * 50} ג׳ חזה עוף.` : `חסרים ${need} ג׳ חלבון היום. יוגורט חלבון יסגור את זה.`; }
+  else if (!doneT && pick !== "rest" && S.plan?.days?.length && gap != null && gap >= 3) t = `עברו ${gap} ימים מהאימון האחרון. היום יום טוב לחזור.`;
+  else if (h < 12 && !S.weights.some(w => w.date === td) && S.weights.length) t = "שקילת בוקר: אחרי השירותים ולפני האוכל. לחיצה על המשקל למטה.";
+  else { const r = weeklyRate(); if (g === "cut" && r != null && r > -0.05 && S.weights.length >= 10) t = "המשקל לא ירד השבוע. זה קורה, בעיקר מים. אם זה נמשך שבוע נוסף, היעד יתעדכן לבד.";
+    else if (g === "cut" && r != null && r < -1.2) t = "יורד מהר מדי. כדי לשמור על השריר, שווה להוסיף קצת פחמימות סביב האימון."; }
+  return t ? `<div class="ctip">💡 ${esc(t)}</div>` : ""; }
 function bkNudge() { // data lives only on this phone: a quiet reminder on Home when the last backup is a week old and something changed
   if (!S.pwa) return ""; const last = store.get("lastBackup", null), dirty = (() => { try { return !!localStorage.getItem("dirty"); } catch { return false; } })();
   if (!dirty || (last && Date.now() - last < 7 * 864e5)) return ""; const d = last ? Math.floor((Date.now() - last) / 864e5) : null;
