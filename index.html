@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="bac5412993";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="d6346c6ba9";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -577,6 +577,8 @@ body.wkOn .restbar .in{padding:6px 10px;border-radius:18px}body.wkOn .restbar .b
 .wowc textarea{width:100%;border-radius:10px;border:0;background:rgba(255,255,255,.1);color:#fff;font:500 .9rem var(--font);padding:8px 10px}.wowc textarea::placeholder{color:#b9a9ab}
 .fst{border-radius:12px;background:var(--card2,rgba(127,127,127,.1));padding:10px 4px;display:grid;gap:2px;text-align:center}.fst b{font-size:1.1rem}.fst span{font-size:.72rem;color:var(--muted)}
 .wowd{display:grid;gap:4px;justify-items:center}.wowd>span{font-size:.8rem;color:#d9b9bb;font-weight:600}.wowd>b{font-size:1.5rem;font-weight:800}.wowdb{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.wowdb span{font-size:.75rem;background:rgba(255,255,255,.08);border-radius:999px;padding:3px 9px;color:#e9dfe0}
+.wdots{border:0;background:var(--chip,rgba(127,127,127,.12));color:inherit;border-radius:10px;min-width:40px;min-height:30px;font:700 .8rem var(--font);cursor:pointer}
+.fpl{display:flex;justify-content:space-between;gap:8px;font-size:.92rem;line-height:1.5}.fpl span:first-child{font-weight:600}.fprow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center}.fprow input{min-width:0}.fprow span{white-space:nowrap}
 .wowa{display:grid;gap:10px;margin-top:6px}.wowa .btn{min-height:50px;font-size:1rem}.wowa .btn:not(.primary){background:rgba(255,255,255,.1);color:#fff;border-color:transparent}
 .sumhero .bsx{background:rgba(255,255,255,.1);color:#fff}.sumdone{font-size:.78rem;font-weight:700;color:#8fe3ad}
 .sumchips{display:flex;flex-wrap:wrap;gap:8px}.sumchips span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px;font-size:.82rem;font-weight:600}.sumchips .pr{background:rgba(225,6,0,.3);border-color:rgba(255,120,110,.5)}
@@ -1635,8 +1637,8 @@ function vTrain() {
   const days = S.plan?.days || [], nx = nextDay(), pd = days.find(d => d.id === (S.pickDay || S.daily.find(x => x.date === today())?.answers?.pick)) || nx;
   const ex = pd ? pd.exercises.filter(e => e.name) : [];
   const pl = `<div class="dchips pchips" role="group" aria-label="בחירת תוכנית">${allPlans().map(p => p.act ? `<button aria-pressed="true">${esc(p.title || "התוכנית שלי")}</button>` : `<button aria-pressed="false" data-puse="${esc(p.id)}">${esc(p.title || "תוכנית")}</button>`).join("")}<button class="pnew" data-seg="trainSeg:plan">+ תוכנית חדשה</button></div>`;
-  const dw = S.workouts.filter(w => w.date === today()), done = dw.map(w => `<div class="tcard" style="gap:10px"><div class="row sb"><span class="tl">בוצע היום</span><span class="small muted n">${(w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).length, 0)} סטים</span></div><h2 class="th2">${esc(w.dayName || "אימון")}</h2>
-      <div class="row" style="flex-wrap:nowrap"><button class="btn block" data-wedit="${esc(w.id)}">עריכה</button><button class="btn block" style="color:#c40500;background:#fdeceb" data-delw="${esc(w.id)}">ביטול האימון</button></div></div>`).join("");
+  const dw = S.workouts.filter(w => w.date === today()), done = dw.map(w => `<div class="tcard" style="gap:10px"><div class="row sb"><span class="tl">בוצע היום</span><span class="row" style="gap:8px"><span class="small muted n">${(w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).length, 0)} סטים</span><button class="wdots" data-wdm="${esc(w.id)}" aria-label="אפשרויות" aria-expanded="${S.wdMenu === w.id}">•••</button></span></div><h2 class="th2">${esc(w.dayName || "אימון")}</h2>
+      ${S.wdMenu === w.id ? `<div class="row small" style="gap:14px"><button class="btn link small" data-wedit="${esc(w.id)}">עריכה</button><button class="btn link small" style="color:#c40500" data-delw="${esc(w.id)}">ביטול אימון</button></div>` : ""}</div>`).join("");
   const RC = recovery();
   return `<div class="stack">${summaryCard()}${deloadAdvice()}${pl}${done}${recoveryCard(days)}
     ${days.length ? `<div class="dchips" role="group" aria-label="בחירת יום">${days.map(d => `<button aria-pressed="${pd && pd.id === d.id}" data-pickday="${esc(d.id)}">${esc(d.name)}${RC._any && dayReady(d, RC) != null ? ` <small class="n rdy">${dayReady(d, RC)}%</small>` : ""}</button>`).join("")}</div>` : ""}
@@ -2123,6 +2125,9 @@ const NUT_IDX = NUT.flatMap(([names, ...v]) => names.map(n => [n, v])).sort((a, 
 const UNIT = { "כפית": 5, "כפיות": 5, "כף": 15, "כפות": 15 };
 const NUMW = { "חצי": 0.5, "אחד": 1, "אחת": 1, "שתי": 2, "שני": 2, "שניים": 2, "שתיים": 2, "שלוש": 3, "שלושה": 3, "ארבע": 4, "ארבעה": 4, "חמש": 5, "חמישה": 5, "שש": 6, "שבע": 7, "שמונה": 8, "עשר": 10 };
 function nutPart(txt) { // one food phrase → {kcal,p,c,f,label} or null
+  const ek = String(txt).match(/(\d+(?:\.\d+)?)\s*(?:קלוריות|קק["״]?ל)/); if (ek) { // the person wrote the calories: trust them
+    const ep = String(txt).match(/(\d+(?:\.\d+)?)\s*(?:ג['׳]?|גרם)?\s*חלבון/), n = String(txt).replace(/[()]/g, " ").replace(/\d+(?:\.\d+)?\s*(?:קלוריות|קק["״]?ל)/, "").replace(/(\d+(?:\.\d+)?)\s*(?:ג['׳]?|גרם)?\s*חלבון/, "").replace(/\s+/g, " ").trim();
+    return { kcal: +ek[1], p: ep ? +ep[1] : 0, c: 0, f: 0, n, g: 0, label: `${n} (${ek[1]} קק״ל)`, own: 1 }; }
   let t = " " + txt.replace(/[()]/g, " ").replace(/(^|\s)ו(?=\d)/g, "$1") + " "; for (const [w, v] of Object.entries(NUMW)) t = t.replace(new RegExp(`(\\s)${w}(?=\\s)`, "g"), `$1${v}`);
   t = t.replace(/^(\s\d+(?:\.\d+)?\s+)חלבון(?=\s*$)/, "$1חלבונים"); // "3 חלבון" = 3 egg whites
   const hit = NUT_IDX.find(([n]) => t.includes(n)); if (!hit) return null;
@@ -2213,6 +2218,12 @@ function sheetHtml() { // bottom sheets: menu, add food, weigh-in
 function sumHtml(A) { const T = targets(), r = A.manual ? null : nutParts(A.txt), tot = r ? r.reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p }), { kcal: 0, p: 0 }) : { kcal: num(A.kcal), p: num(A.p) };
   const left = T ? Math.round(T.kcal - dayTotals(S.foodDate).kcal - (tot.kcal || 0)) : null;
   return `<div><span class="small muted">סה״כ</span><span class="n" style="font-size:1.1rem"><b>${tot.kcal == null ? "—" : Math.round(tot.kcal)}</b> קק״ל · <b>${tot.p == null ? "—" : Math.round(tot.p)}</b> ג׳ חלבון</span></div><span class="small muted n" style="text-align:end">יישארו<br><b style="color:var(--ink)">${left ?? "—"}</b> קק״ל</span>`; }
+function foodParts(f, any) { const ps = nutSplit(f.name); if (ps.length < 2 && !any) return null; if (!ps.length) return null; return ps.length < 2 && any ? null : ps.map(txt => ({ txt, r: nutPart(txt) })); }
+const partRow = txt => { const r = nutPart(txt); return `<div class="fprow"><input data-fpi="1" value="${esc(txt)}" aria-label="רכיב"><span class="small muted n">${r ? `${Math.round(r.kcal)} קק״ל · ח ${Math.round(r.p)}` : "לא במאגר"}</span><button class="btn small del" data-fpdel="1" aria-label="מחיקת רכיב">✕</button></div>`; };
+function partsSync() { // rows → name → totals (when every part is known; otherwise the numbers stay for manual edit)
+  const rows = [...document.querySelectorAll("#eParts .fprow")], txts = rows.map(r => r.querySelector("input").value.trim()).filter(Boolean), name = txts.join(" + "), n = $("#eName"); if (n) n.value = name;
+  rows.forEach(r => { const v = r.querySelector("input").value.trim(), x = v && nutPart(v); r.querySelector("span").textContent = x ? `${Math.round(x.kcal)} קק״ל · ח ${Math.round(x.p)}` : "לא במאגר"; });
+  nutFill("e", name); }
 function nutParts(txt) { const ps = nutSplit(txt); if (!ps.length) return null; const rs = ps.map(nutPart); return rs.some(x => !x) ? null : rs; }
 function partsHtml(r, txt) {
   if (!String(txt || "").trim()) return `<span class="small muted">גרמים אחרי בישול. כמה מאכלים מחברים עם +</span>`;
@@ -2231,10 +2242,11 @@ function tFood() {
     ${favBlock(d, items)}
     ${MEALS.map(m => { const l = items.filter(f => f.meal === m); if (!l.length && m === "נשנוש") return "";
       return `<div class="group" style="gap:6px"><div class="row sb" style="padding-inline:4px"><b class="small" style="font-weight:700">${m}</b><span class="small muted n">${l.length ? `${Math.round(l.reduce((a, f) => a + (f.kcal||0), 0))} קק״ל` : "—"}</span></div>
-      ${l.length ? `<div class="list">${l.map(f => S.editF === f.id ? `<div class="item" style="display:grid;gap:8px"><input id="eName" data-nutin="e" value="${esc(f.name)}">
+      ${l.length ? `<div class="list">${l.map(f => S.editF === f.id ? `<div class="item" style="display:grid;gap:8px">${(P => P ? `<input id="eName" type="hidden" value="${esc(f.name)}"><div id="eParts" style="display:grid;gap:6px">${P.map(x => partRow(x.txt)).join("")}</div><button class="btn link small" style="justify-self:start" data-fpadd="1">+ רכיב</button>` : `<input id="eName" data-nutin="e" value="${esc(f.name)}"><button class="btn link small" style="justify-self:start" data-fpadd="1">+ רכיב נוסף</button>`)(foodParts(f, 1))}
           <div class="fields" style="grid-template-columns:repeat(4,1fr)"><label class="f">קלוריות<input id="eKcal" class="n" inputmode="numeric" value="${f.kcal}"></label><label class="f">חלבון<input id="eP" class="n" inputmode="decimal" value="${f.p}"></label><label class="f">פחמימה<input id="eC" class="n" inputmode="decimal" value="${f.c}"></label><label class="f">שומן<input id="eF" class="n" inputmode="decimal" value="${f.f}"></label></div>
           <div class="small muted" id="eHint"></div><div class="row sb"><button class="btn del" data-delf="${f.id}">מחיקה</button><span class="row" style="gap:6px"><button class="btn" data-editf="">ביטול</button><button class="btn primary" data-savef="${f.id}">שמירה</button></span></div></div>`
-        : `<button class="item frow" data-editf="${f.id}"><div class="grow"><div class="t">${esc(f.name)}</div><div class="s n">ח ${f.p} · פ ${f.c} · ש ${f.f}</div></div><b class="n">${f.kcal}</b></button>`).join("")}</div>`
+        : (P => P ? `<button class="item frow fparts" data-editf="${f.id}"><div class="grow">${P.map(x => `<div class="fpl n"><span>${esc(x.txt)}</span><span class="muted">${x.r ? `${Math.round(x.r.kcal)} · ח ${Math.round(x.r.p)}` : "—"}</span></div>`).join("")}<div class="s n">סה״כ · ח ${f.p} · פ ${f.c} · ש ${f.f}</div></div><b class="n">${f.kcal}</b></button>`
+          : `<button class="item frow" data-editf="${f.id}"><div class="grow"><div class="t">${esc(f.name)}</div><div class="s n">ח ${f.p} · פ ${f.c} · ש ${f.f}</div></div><b class="n">${f.kcal}</b></button>`)(foodParts(f))).join("")}</div>`
         : `<button class="addempty" data-addfood="${m}"><span>עוד לא נרשם</span><b>+ הוספה</b></button>`}</div>`; }).join("")}
     ${items.length ? `<div class="row" style="justify-content:center">${S.resetAsk === d ? `<span class="small">למחוק את כל ${items.length} הפריטים של היום?</span><button class="btn del" data-fresetgo="1">כן, לאפס</button><button class="btn link" data-freset="0">ביטול</button>` : `<button class="btn link small" style="color:var(--muted)" data-freset="1">איפוס היום</button>`}</div>` : ""}`;
 }
@@ -2586,6 +2598,7 @@ document.addEventListener("click", async ev => {
   if (ds.exmv && S.draft) { const [i, d] = ds.exmv.split(":").map(Number), y0 = document.querySelector(`[data-exmenu="${i}"]`)?.getBoundingClientRect().top, ex = S.draft.exercises[i];
     moveEx(i, d); const k = S.draft.exercises.indexOf(ex); S.exMenu = k; render(); const y1 = document.querySelector(`[data-exmenu="${k}"]`)?.getBoundingClientRect().top; if (y0 != null && y1 != null) scrollBy(0, y1 - y0); return; } // the moved card stays under the finger
   if (ds.exnow && S.draft) { moveEx(+ds.exnow, "now"); toast(`${S.draft.exercises[curIdx(S.draft)]?.name || "התרגיל"} עכשיו`); return; }
+  if (ds.wdm) { S.wdMenu = S.wdMenu === ds.wdm ? null : ds.wdm; render(); return; }
   if (ds.exmenu) { const i = +ds.exmenu; S.exMenu = S.exMenu === i ? null : i; render(); return; }
   if (ds.exopen) { S.openEx = +ds.exopen; render(); return; }
   if (ds.rir) { const [i, j, v] = ds.rir.split("-").map(Number), s = S.draft?.exercises[i]?.log[j]; if (!s) return; s.rir = v; S.rirAsk = null; nextTip(i, j); store.set("draft", S.draft); rirBar(); return; }
@@ -2728,7 +2741,10 @@ document.addEventListener("click", async ev => {
   if (ds.fssave) { S.foodScan.meal = $("#fsMeal").value; await logScan(); if (S.foodScan?.logged) { S.foodScan = null; render(); } return; }
   if (ds.quick) { const m = S.meals.find(x => x.id === ds.quick); if (m && await addTo("food", { date: S.foodDate, meal: $("#fMeal")?.value || guessMeal(), name: m.name, kcal: m.kcal, p: m.p, c: m.c, f: m.f, photoId: m.photoId || null, ts: Date.now() })) toast("נוסף"); return; }
   if (ds.delf) return remove("food/" + ds.delf);
-  if (ds.editf != null) { S.editF = ds.editf || null; render(); return; }
+  if (ds.fpdel) { const row = t.closest(".fprow"), wrap = $("#eParts"); if (wrap && wrap.children.length > 1) { row.remove(); partsSync(); } else toast("זה הרכיב האחרון. למחיקת כל הרישום: מחיקה למטה"); return; }
+  if (ds.fpadd) { let w = $("#eParts"); if (!w) { const n = $("#eName"), cur = n.value.trim(); n.type = "hidden"; n.removeAttribute("data-nutin"); n.insertAdjacentHTML("afterend", `<div id="eParts" style="display:grid;gap:6px">${partRow(cur)}</div>`); t.remove(); w = $("#eParts"); }
+    w.insertAdjacentHTML("beforeend", partRow("")); w.lastElementChild.querySelector("input").focus(); return; }
+  if (ds.editf != null) { S.editF = ds.editf || null; render(); if ($("#eParts")) partsSync(); return; } // numbers follow the rows
   if (ds.savef) { const f = S.food.find(x => x.id === ds.savef), name = $("#eName").value.trim(), kcal = num($("#eKcal").value); if (!f || !name || kcal == null) return toast("חסר שם או קלוריות");
     const { id, ...rest } = f; if (await save("food/" + id, { ...rest, name, kcal: Math.round(kcal), p: Math.round(num($("#eP").value) ?? 0), c: Math.round(num($("#eC").value) ?? 0), f: Math.round(num($("#eF").value) ?? 0) })) { S.editF = null; toast("עודכן"); render(); } return; }
   if (ds.nutai) return nutAI(ds.nutai);
@@ -2785,6 +2801,7 @@ document.addEventListener("input", ev => {
     if (k.length === 1) sec.title = el.value; else { const g = sec.groups[+k[1]]; if (k[2] === "t") g.title = el.value; else if (k[2] === "g") g.target = el.value; else g.items[+k[2]] = el.value; }
     menuSave(); return; }
   if (ds.nutin === "f" && S.sheet === "food") { S.add.txt = el.value; const fp = $("#fParts"); if (fp) fp.innerHTML = partsHtml(nutParts(el.value), el.value); const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); }
+  if (ds.fpi) { clearTimeout(S.nutT); S.nutT = setTimeout(partsSync, 200); return; }
   if (ds.addk && S.add) { S.add[ds.addk] = el.value; const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); return; }
   if (ds.nutin) { clearTimeout(S.nutT); S.nutT = setTimeout(() => nutFill(ds.nutin, el.value), 250); return; }
   if (el.id === "chatIn") { el.style.height = "auto"; el.style.height = Math.min(140, el.scrollHeight) + "px"; return; }
