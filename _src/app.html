@@ -100,7 +100,7 @@ label.f{display:grid;gap:4px;font-size:.8rem;color:var(--muted)}
 .sr.done input{background:transparent}
 .chk{width:40px;height:36px;border-radius:2px;border:0;background:var(--soft);cursor:pointer;color:var(--muted);font-size:1rem;font-weight:700}
 .sr.done .chk{background:var(--ok);color:#fff}
-.hint{font-size:.82rem;color:var(--ok)}
+.hint{font-size:.82rem;color:var(--ok)}.hint.dn{color:#ff8a84}
 .mus{display:inline-block;font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:.02em;margin-bottom:2px}
 .exmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.exmeta span{font-size:.8rem;background:var(--soft);border-radius:2px;padding:2px 7px;color:var(--ink)}.exmeta span b{font-weight:600}
 .ex.cur{box-shadow:inset 3px 0 0 var(--accent)}.ex.fin{opacity:.6}.ex.fin .name::after{content:" ✓";color:var(--ok)}
@@ -659,7 +659,7 @@ const CFG = k => { const v = num(S.profile?.cfg?.[k]); return v != null && v >= 
 const CFG_UI = [ // [key, label, kind, step, unit] kind: t=toggle, s=seconds, n=number
   ["אימון וטיימר", [["restWork", "מנוחה אחרי סט עבודה", "s", 15], ["restWarm", "מנוחה אחרי סט חימום", "s", 15], ["alertBeeps", "צפצופים בסוף המנוחה", "n", 1, "פעמים"], ["countdown", "ספירה 3-2-1 לפני סוף המנוחה", "t"], ["wakeLock", "המסך נשאר דולק באימון", "t"], ["restStep", "קפיצה בכפתורי ± בטיימר", "n", 15, "שנ׳"]]],
   ["לוח אימונים", [["eod", "יום כן יום לא (שבוע של 3 ושבוע של 4)", "t"]]],
-  ["מאמן בזמן אימון", [["askRir", "לשאול כמה חזרות נשארו אחרי כל סט", "t"], ["smartNext", "להציע משקל לסט הבא", "t"], ["tips", "הנחיות למתחילים (פעם ראשונה בתרגיל)", "t"]]],
+  ["מאמן בזמן אימון", [["askRir", "לשאול אחרי כל סט כמה חזרות עוד יכולת (לחישוב המשקל הבא)", "t"], ["smartNext", "להציע משקל לסט הבא", "t"], ["tips", "הנחיות למתחילים (פעם ראשונה בתרגיל)", "t"]]],
   ["מראה", [["darkMode", "מצב כהה בכל האפליקציה", "t"]]]];
 const CFG_ADV = [["מוט ריק", "barReps"], ["מוט · שלב 1", "b1r", "b1"], ["מוט · שלב 2", "b2r", "b2"], ["מוט · שלב 3", "b3r", "b3"], ["דאמבל/מכונה · שלב 1", "d1r", "d1"], ["דאמבל/מכונה · שלב 2", "d2r", "d2"], ["שריר שכבר התחמם", "fdR", "fdP"]];
 const cfgStep = (k, st, txt) => `<span class="stepper"><button data-cfgstep="${k}:${-st}" aria-label="פחות">−</button><b class="n">${txt}</b><button data-cfgstep="${k}:${st}" aria-label="יותר">+</button></span>`;
@@ -734,21 +734,27 @@ function targets() {
 function dayTotals(date) { return S.food.filter(f => f.date === date).reduce((a, f) => ({ kcal: a.kcal + (f.kcal||0), p: a.p + (f.p||0), c: a.c + (f.c||0), f: a.f + (f.f||0) }), { kcal:0, p:0, c:0, f:0 }); }
 
 /* ---------- progression ---------- */
-function lastSessionFor(name) {
-  for (let i = S.workouts.length - 1; i >= 0; i--) {
+function sessionsFor(name, n = 3) { // newest first: [{ date, sets }] of real working sets
+  const out = []; for (let i = S.workouts.length - 1; i >= 0 && out.length < n; i--) {
     const ex = (S.workouts[i].exercises || []).find(e => e.name === name && e.sets?.some(s => s.reps && work(s)));
-    if (ex) return { date: S.workouts[i].date, sets: ex.sets.filter(s => s.reps && work(s)) };
-  }
-  return null;
+    if (ex) out.push({ date: S.workouts[i].date, sets: ex.sets.filter(s => s.reps && work(s)) }); }
+  return out;
 }
-function suggest(ex) {
-  const last = lastSessionFor(ex.name);
+function lastSessionFor(name) { return sessionsFor(name, 1)[0] || null; }
+const sessE = x => Math.max(0, ...x.sets.map(s => e1rm(s.kg || 0, s.reps || 0)));
+function suggest(ex) { // reads the last sessions: weight, reps, how many reps were left (RIR), and the trend
+  const H = sessionsFor(ex.name, 3), last = H[0];
   if (!last) return { kg: ex.startKg ?? "", reps: ex.amrap ? "" : ex.repMin, hint: "", first: ex.startKg == null && !SEC.has(ex.name) };
-  const top = Math.max(...last.sets.map(s => s.kg || 0));
-  const work = last.sets.filter(s => (s.kg || 0) === top);
-  const rs = work.filter(s => s.rir != null), easy = rs.length && rs.reduce((a, s) => a + s.rir, 0) / rs.length >= 3;
-  if (work.length >= ex.sets && work.every(s => s.reps >= ex.repMax)) { const kg = r1(top + (ex.inc || 2.5) * (easy ? 2 : 1)); return { kg, reps: ex.repMin, hint: `↑ עלייה ל-${kg} ק״ג` }; }
-  return { kg: top, reps: Math.min(ex.repMax, Math.min(...work.map(s => s.reps)) + 1), hint: "" };
+  const inc = ex.inc || 2.5, top = Math.max(...last.sets.map(s => s.kg || 0)), work = last.sets.filter(s => (s.kg || 0) === top);
+  const rs = work.filter(s => s.rir != null), rir = rs.length ? rs.reduce((a, s) => a + s.rir, 0) / rs.length : null, easy = rir != null && rir >= 3, minR = Math.min(...work.map(s => s.reps));
+  const lo = ex.repMin || 1, hi = ex.repMax || lo, down = H.length >= 3 && sessE(H[0]) < sessE(H[1]) * .98 && sessE(H[1]) < sessE(H[2]) * .98;
+  if (!SEC.has(ex.name) && top > 0) {
+    if (work.length >= ex.sets && work.every(s => s.reps >= hi)) { const kg = r1(top + inc * (easy ? 2 : 1)); return { kg, reps: lo, hint: `↑ עלייה ל-${kg} ק״ג: בפעם הקודמת עשית ${hi} חזרות בכל הסטים${easy ? " והיה קל" : ""}` }; }
+    if (easy && minR >= Math.ceil((lo + hi) / 2)) { const kg = r1(top + inc); return { kg, reps: lo, hint: `↑ עלייה ל-${kg} ק״ג: בפעם הקודמת נשארו לך ${Math.round(rir)}+ חזרות` }; }
+    if (minR < lo && (rir == null || rir <= 1)) { const kg = r1(Math.max(inc, top - inc)); return { kg, reps: lo, hint: `↓ ירידה ל-${kg} ק״ג: בפעם הקודמת יצאו ${minR} חזרות, מתחת לטווח ${lo}–${hi}`, dn: 1 }; }
+    if (down) { const kg = r1(Math.max(inc, top - inc)); return { kg, reps: lo, hint: `↓ ${kg} ק״ג היום: הביצועים ירדו פעמיים ברצף. שווה לבדוק שינה ואוכל`, dn: 1 }; }
+  }
+  return { kg: top, reps: Math.min(hi, minR + (easy ? 2 : 1)), hint: "" };
 }
 function nextDay() {
   const days = S.plan?.days || []; if (!days.length) return null;
@@ -1143,7 +1149,7 @@ function weekPlan() { // planned sessions for the rest of this week, spread over
 const short = n => String(n || "").split(/[\s·]+/)[0].slice(0, 7);
 const estMin = ex => Math.round(ex.reduce((a, e) => a + (+e.sets || 0) * ((e.rest || 120) + 40), 0) / 300) * 5;
 function sugTxt(e) { const sg = suggest(e); if (sg.kg === "" || sg.kg == null) return `<span class="muted n"><bdi dir="ltr">${e.sets}×${repTxt(e)}</bdi></span>`;
-  return sg.hint ? `<b class="up n">${IC.up}<bdi dir="ltr">${sg.kg} × ${sg.reps || repTxt(e)}</bdi></b>` : `<b class="n"><bdi dir="ltr">${sg.kg} × ${sg.reps || repTxt(e)}</bdi></b>`; }
+  return sg.hint && !sg.dn ? `<b class="up n">${IC.up}<bdi dir="ltr">${sg.kg} × ${sg.reps || repTxt(e)}</bdi></b>` : `<b class="n"><bdi dir="ltr">${sg.kg} × ${sg.reps || repTxt(e)}</bdi></b>`; }
 const IC = {
   play: '<svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5v14L6 12z"/></svg>',
   up: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
@@ -1525,7 +1531,7 @@ function vTrain() {
       ${pd.note ? `<div class="dnote2">${IC.trend}<span>${esc(pd.note)}</span></div>` : ""}</div>
       <div class="list">${ex.map(e => { const sg = suggest(e), l = lastSessionFor(e.name), ls = l?.sets[0];
         return `<button class="item exrow" data-wprev="${esc(e.name)}">${thumb(e.name, "sm")}<div class="grow"><div class="t">${esc(e.name)}</div>${e.muscle || EX_INDEX[e.name] ? `<div class="s">${esc(e.muscle || EX_INDEX[e.name].p.map(mLabel).join(" · "))}</div>` : ""}</div>
-          <div class="exr"><b class="n"><bdi dir="ltr">${e.sets} × ${repTxt(e)}</bdi></b>${sg.hint ? `<span class="up n">${IC.up}${sg.kg} ק״ג</span>` : ls ? `<span class="n muted">קודם <bdi dir="ltr">${ls.kg}×${ls.reps}</bdi></span>` : ""}</div></button>`; }).join("")}</div>` : ""}
+          <div class="exr"><b class="n"><bdi dir="ltr">${e.sets} × ${repTxt(e)}</bdi></b>${sg.hint && !sg.dn ? `<span class="up n">${IC.up}${sg.kg} ק״ג</span>` : ls ? `<span class="n muted">קודם <bdi dir="ltr">${ls.kg}×${ls.reps}</bdi></span>` : ""}</div></button>`; }).join("")}</div>` : ""}
     ${!days.length ? `<div class="list pad muted small">${S.loaded ? "אין עדיין ימי אימון. מוסיפים אותם ב\"עריכת תוכנית\"." : "טוען…"}</div>` : ""}
     <div class="list"><button class="item" data-hist="1"><div class="grow">אימונים קודמים ושיאים</div><span class="small muted n">${S.workouts.length}</span>${S.histOpen ? "" : IC.chev}</button></div>
     ${S.histOpen ? `${S.workouts.length ? `<div class="list">${[...S.workouts].reverse().slice(0, 15).map(w => { const vol = w.exercises.reduce((a, e) => a + e.sets.reduce((b, s) => b + (s.kg||0) * (s.reps||0), 0), 0);
@@ -1536,7 +1542,7 @@ function vTrain() {
     ${pd ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}">${IC.play}התחלת אימון ${esc(pd.name)}</button></div>` : ""}</div>`;
 }
 function exHead(ex, i, tag = "") { return `        <div class="row exh" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;row-gap:4px"><button class="btn" style="padding:0;background:none" data-wprev="${esc(ex.name)}">${thumb(ex.name, "sm")}</button><div style="min-width:0;flex:1">${ex.muscle ? `<div class="mus">${esc(ex.muscle)}</div>` : ""}${S.renOpen === i ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;margin:4px 0"><input id="ren-${i}" value="${esc(ex.name)}" aria-label="שם חדש" enterkeyhint="done"><button class="btn small primary" data-rensave="${i}">שמירה</button><button class="btn small" data-rensave="x">ביטול</button></div>` : ""}<div class="name">${tag ? `<b class="sstl">${tag}</b> ` : ""}${esc(ex.name)}${ex.wrist && WR() ? `<span class="flag">יד שמאל</span>` : ""}</div>
-        <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}${S.draft && !S.draft.editId ? prChip(ex) : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint">${ex.sug.hint}</div>` : ex.sug?.first && CFG("tips") && S.draft && !S.draft.editId ? `<div class="hint">פעם ראשונה בתרגיל: עצור 2–3 חזרות לפני כישלון. מהפעם הבאה האפליקציה תציע משקל וחזרות.</div>` : ""}</div>
+        <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}${S.draft && !S.draft.editId ? prChip(ex) : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint${ex.sug.dn ? " dn" : ""}">${ex.sug.hint}</div>` : ex.sug?.first && CFG("tips") && S.draft && !S.draft.editId ? `<div class="hint">פעם ראשונה בתרגיל: עצור 2–3 חזרות לפני כישלון. מהפעם הבאה האפליקציה תציע משקל וחזרות.</div>` : ""}</div>
           ${ex.opts?.length > 1 && S.draft ? `<div class="optseg wide" role="radiogroup" aria-label="איזה תרגיל היום">${ex.opts.map(o => `<button role="radio" aria-checked="${o === ex.name}" class="${o === ex.name ? "on" : ""}" data-optpick="${i}" data-opt="${esc(o)}">${esc(dn(o))}</button>`).join("")}</div>` : ""}<button class="exdots" data-exmenu="${i}" aria-label="פעולות לתרגיל" aria-expanded="${S.exMenu === i}">•••</button>${S.exMenu !== i ? "" : `<span class="stmenu exmenu" style="flex-basis:100%">${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? "" : `<button data-noteopen="${esc(ex.name)}">הערה</button>`}<button data-exren="${i}">שינוי שם</button><button data-wswap="${i}">החלפת תרגיל</button>${ex.ss ? `<button data-ssoff="${i}">${ex.ssT === "alt" ? "ביטול לסירוגין" : "ביטול סופר סט"}</button>` : `<button data-ss="${i}">סופר סט</button><button data-ssalt="${i}">סטים לסירוגין</button>`}<button class="xdel" data-wdel="${i}">הסרה מהאימון</button></span>`}</div>
 `; }
 function setRow(ex, i, j, last, best, tag = "") { const s = ex.log[j]; const p = s.t === "w" ? null : last?.sets[ex.log.slice(0, j).filter(work).length], isPR = s.done && s.t !== "w" && best.e && e1rm(num(s.kg) || 0, parseInt(s.reps) || 0) > best.e + 0.1;
@@ -1553,7 +1559,7 @@ function livePR(i, j) { // like Hevy: a trophy the moment a set beats every earl
   if (e1rm(kg, reps) > b + .01) { s.pr = 1; S.livePR = { k: `${i}-${j}`, txt: `🏆 שיא חדש · <bdi dir="ltr">${kg}×${reps}</bdi>` }; try { navigator.vibrate?.([30, 60, 30]); } catch {} } }
 function rirBar() { // reps-left chips + next-set tip live in the fixed rest bar, so the workout list never shifts
   const el = $("#rest .rrir"); if (!el) return; const D = S.draft; let h = "";
-  if (D && S.rirAsk) { const [i, j] = S.rirAsk.split("-").map(Number), s = D.exercises[i]?.log[j]; if (s?.done && s.rir == null) h = `<div class="rirask" role="group" aria-label="כמה חזרות נשארו"><span>כמה חזרות נשארו?</span>${[0, 1, 2, 3, 4].map(v => `<button data-rir="${i}-${j}-${v}">${v === 4 ? `<bdi dir="ltr">4+</bdi>` : v}</button>`).join("")}</div>`; }
+  if (D && S.rirAsk) { const [i, j] = S.rirAsk.split("-").map(Number), s = D.exercises[i]?.log[j]; if (s?.done && s.rir == null) h = `<div class="rirask" role="group" aria-label="כמה עוד יכולת"><span>כמה חזרות עוד יכולת לעשות?</span>${[0, 1, 2, 3, 4].map(v => `<button data-rir="${i}-${j}-${v}">${v === 4 ? `<bdi dir="ltr">4+</bdi>` : v}</button>`).join("")}</div>`; }
   if (D && S.livePR) { const [i, j] = S.livePR.k.split("-").map(Number); if (D.exercises[i]?.log[j]?.pr) h = `<div class="rpr">${S.livePR.txt}</div>` + h; }
   if (!h.includes("rirask") && D) { const ex = D.exercises[curIdx(D)]; if (ex?.tip) h = `<div class="rtip n">${ex.tip.txt}</div>`; }
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
