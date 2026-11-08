@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="d6346c6ba9";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="4ef8f33817";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -579,6 +579,8 @@ body.wkOn .restbar .in{padding:6px 10px;border-radius:18px}body.wkOn .restbar .b
 .wowd{display:grid;gap:4px;justify-items:center}.wowd>span{font-size:.8rem;color:#d9b9bb;font-weight:600}.wowd>b{font-size:1.5rem;font-weight:800}.wowdb{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.wowdb span{font-size:.75rem;background:rgba(255,255,255,.08);border-radius:999px;padding:3px 9px;color:#e9dfe0}
 .wdots{border:0;background:var(--chip,rgba(127,127,127,.12));color:inherit;border-radius:10px;min-width:40px;min-height:30px;font:700 .8rem var(--font);cursor:pointer}
 .fpl{display:flex;justify-content:space-between;gap:8px;font-size:.92rem;line-height:1.5}.fpl span:first-child{font-weight:600}.fprow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center}.fprow input{min-width:0}.fprow span{white-space:nowrap}
+.wlines{display:grid;gap:4px}.wrep{gap:10px}
+.dlalt{display:block;margin:6px auto 0;color:var(--muted)}
 .wowa{display:grid;gap:10px;margin-top:6px}.wowa .btn{min-height:50px;font-size:1rem}.wowa .btn:not(.primary){background:rgba(255,255,255,.1);color:#fff;border-color:transparent}
 .sumhero .bsx{background:rgba(255,255,255,.1);color:#fff}.sumdone{font-size:.78rem;font-weight:700;color:#8fe3ad}
 .sumchips{display:flex;flex-wrap:wrap;gap:8px}.sumchips span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px;font-size:.82rem;font-weight:600}.sumchips .pr{background:rgba(225,6,0,.3);border-color:rgba(255,120,110,.5)}
@@ -840,7 +842,7 @@ function dayTotals(date) { return S.food.filter(f => f.date === date).reduce((a,
 
 /* ---------- progression ---------- */
 function sessionsFor(name, n = 3) { // newest first: [{ date, sets }] of real working sets
-  const out = []; for (let i = S.workouts.length - 1; i >= 0 && out.length < n; i--) {
+  const out = []; for (let i = S.workouts.length - 1; i >= 0 && out.length < n; i--) { if (S.workouts[i].deload) continue;
     const ex = (S.workouts[i].exercises || []).find(e => e.name === name && e.sets?.some(s => s.reps && work(s)));
     if (ex) out.push({ date: S.workouts[i].date, sets: ex.sets.filter(s => s.reps && work(s)).map(s => isBW(name) && s.bw ? { ...s, kg: addOf(name, s) } : s) }); }
   return out;
@@ -1319,10 +1321,10 @@ function vToday() {
       <div class="chips">${hab.map(x => { const on = x.v === "y" || x.v === "rest", no = x.v === "n"; return `<button class="chip ${on ? "on" : no ? "no" : ""}" aria-label="${esc(x.short)}: ${on ? "בוצע" : no ? "לא בוצע" : "לא סומן"}" data-dc="${x.k}">${on ? IC.check : no ? IC.x : IC.ring}${esc(x.short)}</button>`; }).join("")}</div></div>
     ${S.loaded ? ciCard() : ""}${bkNudge()}</div>`;
 }
-function weekReport() { // Sun–Tue: last week in four numbers. One tap closes it until next week.
-  const now = new Date(); if (now.getDay() > 2) return ""; const wk = addDays(today(), -now.getDay() - 7), end = addDays(wk, 6);
+function weekReport() { // Saturday: this week's summary (stays until Tuesday). One tap closes it until next week.
+  const now = new Date(), dw0 = now.getDay(); if (dw0 > 2 && dw0 < 6) return ""; const wk = dw0 === 6 ? addDays(today(), -6) : addDays(today(), -dw0 - 7), end = addDays(wk, 6);
   if (store.get("wrepSeen", "") === wk) return "";
-  const ws = S.workouts.filter(w => w.date >= wk && w.date <= end); if (!ws.length && !S.food.some(f => f.date >= wk && f.date <= end)) return "";
+  const ws = S.workouts.filter(w => w.date >= wk && w.date <= end && !w.deload), nDl = S.workouts.filter(w => w.date >= wk && w.date <= end && w.deload).length; if (!ws.length && !nDl && !S.food.some(f => f.date >= wk && f.date <= end)) return "";
   const vol = L => L.reduce((a, w) => a + (w.exercises || []).reduce((b, e) => b + (e.sets || []).filter(work).reduce((c, x) => c + (x.kg || 0) * (x.reps || 0), 0), 0), 0);
   const v = vol(ws), pv = vol(S.workouts.filter(w => w.date >= addDays(wk, -7) && w.date < wk)), dv = pv ? Math.round((v - pv) / pv * 100) : null;
   let prs = 0; ws.forEach(w => (w.exercises || []).forEach(e => { const b = bestBefore(e.name, w.ts || Date.parse(w.date)).e; if (b && (e.sets || []).filter(work).some(x => e1rm(x.kg || 0, x.reps || 0) > b + .1)) prs++; }));
@@ -1331,10 +1333,15 @@ function weekReport() { // Sun–Tue: last week in four numbers. One tap closes 
   const sc = Math.min(1, wc / per) * 45 + (nd != null ? nd / 7 * 30 : 15) + (dv == null || dv >= 0 ? 12 : 4) + (prs ? 13 : 0);
   const grade = sc >= 85 ? "שבוע אגדי 🔥" : sc >= 65 ? "שבוע חזק 💪" : sc >= 40 ? "שבוע סביר 👍" : "השבוע מתקנים 🔧";
   const tons = v >= 1000 ? `${r1(v / 1000)}` : Math.round(v), stat = (b, l, x = "") => `<div><b class="n">${b}</b><span>${l}${x}</span></div>`;
-  return `<div class="tcard wrep"><div class="row sb"><span class="tl n">השבוע שעבר · <bdi dir="ltr">${fmtDate(wk)}–${fmtDate(end)}</bdi></span><button class="wrepx" data-wrepx="${wk}" aria-label="סגירה">${IC.x}</button></div>
+  return `<div class="tcard wrep"><div class="row sb"><span class="tl n">${dw0 === 6 ? "סיכום השבוע" : "השבוע שעבר"} · <bdi dir="ltr">${fmtDate(wk)}–${fmtDate(end)}</bdi></span><button class="wrepx" data-wrepx="${wk}" aria-label="סגירה">${IC.x}</button></div>
     <b class="wgrade">${grade}</b>
     <div class="wstats">${stat(`${wc}/${per}`, "אימונים")}${stat(tons, v >= 1000 ? "טון הורמו" : "ק״ג הורמו", dv != null ? ` <i class="${dv >= 0 ? "up" : "dn"} n">${dv >= 0 ? "▲" : "▼"}${Math.abs(dv)}%</i>` : "")}${stat(prs, prs === 1 ? "שיא" : "שיאים")}${stat(nd != null ? `${nd}/7` : "—", "ימים ביעד")}</div>
-    ${dw != null ? `<div class="small muted n">משקל: <bdi dir="ltr">${dw > 0 ? "+" : ""}${dw}</bdi> ק״ג בממוצע השבועי</div>` : ""}</div>`;
+    ${(() => { const days = Array.from({ length: 7 }, (_, i) => addDays(wk, i)).map(dayTotals).filter(t => t.kcal > 0), ak = days.length ? Math.round(days.reduce((a, t) => a + t.kcal, 0) / days.length) : null, ap = days.length ? Math.round(days.reduce((a, t) => a + t.p, 0) / days.length) : null;
+      const R = [...ws].filter(w => w.rpe), rpe = R.length ? r1(R.reduce((a, w) => a + w.rpe, 0) / R.length) : null, RA = ws.filter(w => w.restAvg), ra = RA.length ? Math.round(RA.reduce((a, w) => a + w.restAvg, 0) / RA.length) : null, mins = ws.reduce((a, w) => a + (w.minutes || 0), 0), DD = deloadDue();
+      const next = DD ? `שבוע הבא: דילואד (${DD.why[0]}).` : wc < per ? `שבוע הבא: להגיע ל-${per} אימונים, זה המנוע של ההתקדמות.` : T && ap != null && ap < T.protein * .9 ? `שבוע הבא: חלבון. ממוצע ${ap} ג׳ מול יעד ${T.protein}.` : T && nd != null && nd < 4 ? "שבוע הבא: יותר ימים ביעד הקלוריות." : "שבוע הבא: להמשיך בדיוק ככה, ולהעלות משקל איפה שהאפליקציה מציעה.";
+      S.wrepTxt = [`סיכום שבועי ${fmtDate(wk)}–${fmtDate(end)}: ${grade}`, `אימונים ${wc}/${per}${nDl ? ` + ${nDl} דילואד` : ""}, ${mins} דק׳, ${Math.round(v).toLocaleString("he-IL")} ק״ג${dv != null ? ` (${dv >= 0 ? "+" : ""}${dv}%)` : ""}, שיאים ${prs}`, ak != null ? `תזונה: ממוצע ${ak} קק״ל, ${ap} ג׳ חלבון, ${nd ?? "—"}/7 ימים ביעד` : "", dw != null ? `משקל: ${dw > 0 ? "+" : ""}${dw} ק״ג בממוצע השבועי` : "", rpe != null ? `קושי ממוצע ${rpe}/5` : "", ra != null ? `מנוחה ממוצעת ${mmss(ra * 1000)}` : "", next].filter(Boolean).join("\n");
+      return `<div class="wlines small n">${ak != null ? `<div>🍗 ממוצע <b>${ak}</b> קק״ל · <b>${ap}</b> ג׳ חלבון ביום</div>` : ""}${dw != null ? `<div>⚖️ משקל: <bdi dir="ltr">${dw > 0 ? "+" : ""}${dw}</bdi> ק״ג בממוצע השבועי</div>` : ""}${mins ? `<div>⏱️ ${hm(mins)} אימון${ra != null ? ` · מנוחה ממוצעת ${mmss(ra * 1000)}` : ""}</div>` : ""}${rpe != null ? `<div>💬 קושי ממוצע ${rpe}/5</div>` : ""}${nDl ? `<div>🧘 ${nDl} אימוני דילואד</div>` : ""}</div>
+        <div class="ctip" style="margin:0">🎯 ${esc(next)}</div><button class="btn small" style="justify-self:start" data-wrepshare="1">📤 שיתוף הסיכום</button>`; })()}</div>`;
 }
 function rings(L, label) { // three activity rings: static SVG, no animation
   const c = 46, sw = 7, gap = 2;
@@ -1638,7 +1645,7 @@ function vTrain() {
   const ex = pd ? pd.exercises.filter(e => e.name) : [];
   const pl = `<div class="dchips pchips" role="group" aria-label="בחירת תוכנית">${allPlans().map(p => p.act ? `<button aria-pressed="true">${esc(p.title || "התוכנית שלי")}</button>` : `<button aria-pressed="false" data-puse="${esc(p.id)}">${esc(p.title || "תוכנית")}</button>`).join("")}<button class="pnew" data-seg="trainSeg:plan">+ תוכנית חדשה</button></div>`;
   const dw = S.workouts.filter(w => w.date === today()), done = dw.map(w => `<div class="tcard" style="gap:10px"><div class="row sb"><span class="tl">בוצע היום</span><span class="row" style="gap:8px"><span class="small muted n">${(w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).length, 0)} סטים</span><button class="wdots" data-wdm="${esc(w.id)}" aria-label="אפשרויות" aria-expanded="${S.wdMenu === w.id}">•••</button></span></div><h2 class="th2">${esc(w.dayName || "אימון")}</h2>
-      ${S.wdMenu === w.id ? `<div class="row small" style="gap:14px"><button class="btn link small" data-wedit="${esc(w.id)}">עריכה</button><button class="btn link small" style="color:#c40500" data-delw="${esc(w.id)}">ביטול אימון</button></div>` : ""}</div>`).join("");
+      ${S.wdMenu === w.id ? `<div class="row small" style="gap:14px"><button class="btn link small" data-wedit="${esc(w.id)}">עריכה</button><button class="btn link small" data-wdl="${esc(w.id)}">${w.deload ? "ביטול סימון דילואד" : "סימון כדילואד"}</button><button class="btn link small" style="color:#c40500" data-delw="${esc(w.id)}">ביטול אימון</button></div>` : ""}</div>`).join("");
   const RC = recovery();
   return `<div class="stack">${summaryCard()}${deloadAdvice()}${pl}${done}${recoveryCard(days)}
     ${days.length ? `<div class="dchips" role="group" aria-label="בחירת יום">${days.map(d => `<button aria-pressed="${pd && pd.id === d.id}" data-pickday="${esc(d.id)}">${esc(d.name)}${RC._any && dayReady(d, RC) != null ? ` <small class="n rdy">${dayReady(d, RC)}%</small>` : ""}</button>`).join("")}</div>` : ""}
@@ -1655,10 +1662,10 @@ function vTrain() {
         <div style="margin-top:8px;display:grid;gap:4px">${w.exercises.map(e => `<div class="row small" style="justify-content:space-between"><span>${esc(e.name)}${e.ss ? ` <span class="muted">· סופר סט</span>` : ""}</span><span class="n muted"><bdi dir="ltr">${e.sets.map(s => `${s.t === "w" ? "ח " : s.t === "d" ? "↓" : ""}${s.kg}×${s.reps}`).join("  ")}</bdi></span></div>`).join("")}
         ${w.note ? `<div class="small muted">${esc(w.note)}</div>` : ""}<div class="row"><button class="btn" data-wedit="${w.id}">עריכת האימון</button><button class="btn del" data-delw="${w.id}">מחיקה</button></div></div></details>`; }).join("")}</div>` : `<div class="list pad muted small">האימונים שתסיים יופיעו כאן.</div>`}
       ${painCard()}${strengthTable()}` : ""}
-    ${pd && !S.workouts.some(w => w.date === today()) ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}">${IC.play}התחלת אימון ${esc(pd.name)}</button></div>` : ""}</div>`;
+    ${pd && !S.workouts.some(w => w.date === today()) ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}" ${deloadDue() || S.profile?.deloadUntil >= today() ? `data-dl="1"` : ""}>${IC.play}התחלת ${deloadDue() || S.profile?.deloadUntil >= today() ? "אימון דילואד" : "אימון"} ${esc(pd.name)}</button><button class="btn link small dlalt" data-start="${esc(pd.id)}" data-dl="${deloadDue() || S.profile?.deloadUntil >= today() ? "0" : "1"}">${deloadDue() || S.profile?.deloadUntil >= today() ? "בכל זאת אימון רגיל" : "או: אימון דילואד (קל)"}</button></div>` : ""}</div>`;
 }
 function exHead(ex, i, tag = "") { return `        <div class="row exh" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;row-gap:4px"><button class="btn" style="padding:0;background:none" data-wprev="${esc(ex.name)}">${thumb(ex.name, "sm")}</button><div style="min-width:0;flex:1">${ex.muscle ? `<div class="mus">${esc(ex.muscle)}</div>` : ""}${S.renOpen === i ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;margin:4px 0"><input id="ren-${i}" value="${esc(ex.name)}" aria-label="שם חדש" enterkeyhint="done"><button class="btn small primary" data-rensave="${i}">שמירה</button><button class="btn small" data-rensave="x">ביטול</button></div>` : ""}<div class="name">${tag ? `<b class="sstl">${tag}</b> ` : ""}${esc(ex.name)}${ex.wrist && WR() ? `<span class="flag">יד שמאל</span>` : ""}</div>
-        <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}${isBW(ex.name) && bodyKg() ? (r => `<span>משקל גוף ${r[1] < 1 ? `${bodyKg()} × ${Math.round(r[1] * 100)}% = ` : ""}<b>${bwOf(ex.name)}</b> ק״ג נספר לבד${r[1] < 1 ? " (הערכה)" : ""} · רושמים רק תוספת</span>`)(bwRule(ex.name)) : ""}${S.draft && !S.draft.editId ? prChip(ex) : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint${ex.sug.dn ? " dn" : ""}">${ex.sug.hint}</div>` : ex.sug?.first && CFG("tips") && S.draft && !S.draft.editId ? `<div class="hint">פעם ראשונה בתרגיל: עצור 2–3 חזרות לפני כישלון. מהפעם הבאה האפליקציה תציע משקל וחזרות.</div>` : ""}</div>
+        <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}${isBW(ex.name) && bodyKg() ? (r => `<span>משקל גוף ${r[1] < 1 ? `${bodyKg()} × ${Math.round(r[1] * 100)}% = ` : ""}<b>${bwOf(ex.name)}</b> ק״ג נספר לבד${r[1] < 1 ? " (הערכה)" : ""} · רושמים רק תוספת</span>`)(bwRule(ex.name)) : ""}${S.draft && !S.draft.editId && !S.draft.deload ? prChip(ex) : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint${ex.sug.dn ? " dn" : ""}">${ex.sug.hint}</div>` : ex.sug?.first && CFG("tips") && S.draft && !S.draft.editId ? `<div class="hint">פעם ראשונה בתרגיל: עצור 2–3 חזרות לפני כישלון. מהפעם הבאה האפליקציה תציע משקל וחזרות.</div>` : ""}</div>
           ${ex.opts?.length > 1 && S.draft ? `<div class="optseg wide" role="radiogroup" aria-label="איזה תרגיל היום">${ex.opts.map(o => `<button role="radio" aria-checked="${o === ex.name}" class="${o === ex.name ? "on" : ""}" data-optpick="${i}" data-opt="${esc(o)}">${esc(dn(o))}</button>`).join("")}</div>` : ""}<button class="exdots" data-exmenu="${i}" aria-label="פעולות לתרגיל" aria-expanded="${S.exMenu === i}">•••</button>${S.exMenu !== i ? "" : `<span class="stmenu exmenu" style="flex-basis:100%">${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? "" : `<button data-noteopen="${esc(ex.name)}">הערה</button>`}${i !== curIdx(S.draft) && !S.draft.exercises[i].log.every(x => x.done) ? `<button data-exnow="${i}">▶ לעשות עכשיו</button>` : ""}${i > 0 ? `<button data-exmv="${i}:-1">▲ למעלה</button>` : ""}${i < S.draft.exercises.length - 1 ? `<button data-exmv="${i}:1">▼ למטה</button>` : ""}<button data-exren="${i}">שינוי שם</button><button data-wswap="${i}">החלפת תרגיל</button>${ex.ss ? `<button data-ssoff="${i}">${ex.ssT === "alt" ? "ביטול לסירוגין" : "ביטול סופר סט"}</button>` : `<button data-ss="${i}">סופר סט</button><button data-ssalt="${i}">סטים לסירוגין</button>`}<button class="xdel" data-wdel="${i}">הסרה מהאימון</button></span>`}</div>
 `; }
 function setRow(ex, i, j, last, best, tag = "") { const s = ex.log[j]; const p = s.t === "w" ? null : last?.sets[ex.log.slice(0, j).filter(work).length], isPR = s.done && s.t !== "w" && best.e && e1rm(num(s.kg) || 0, parseInt(s.reps) || 0) > best.e + 0.1;
@@ -1668,9 +1675,9 @@ function setRow(ex, i, j, last, best, tag = "") { const s = ex.log[j]; const p =
           <button class="chk" aria-label="סט בוצע" data-done="${i}-${j}">✓</button></div>${S.stMenu === `${i}-${j}` ? `<div class="stmenu" role="group" aria-label="סוג הסט">${[["", "רגיל"], ["w", "חימום"], ["f", "עד כשל"], ["d", "דרופ"]].map(([k, l]) => `<button class="${k} ${(s.t || "") === k ? "on" : ""}" data-stset="${i}-${j}-${k}">${l}</button>`).join("")}<button data-ss="${i}">סופר סט</button></div>` : ""}`; }
 const SSL = ["א", "ב", "ג", "ד"];
 const roundKg = (kg, inc) => { const st = inc >= 2.5 ? 1.25 : .5; return Math.round(kg / st) * st; };
-function histBest(name) { let b = 0; for (const w of S.workouts) for (const e of w.exercises || []) if (e.name === name) for (const st of e.sets || []) if (work(st) && st.kg > 0 && st.reps > 0) b = Math.max(b, e1rm(st.kg, st.reps)); return b; }
+function histBest(name) { let b = 0; for (const w of S.workouts.filter(w => !w.deload)) for (const e of w.exercises || []) if (e.name === name) for (const st of e.sets || []) if (work(st) && st.kg > 0 && st.reps > 0) b = Math.max(b, e1rm(st.kg, st.reps)); return b; }
 function livePR(i, j) { // like Hevy: a trophy the moment a set beats every earlier one (estimated 1RM)
-  const ex = S.draft.exercises[i], s = ex.log[j], B = bwOf(ex.name), kg = (num(s.kg) || 0) + B, reps = parseInt(s.reps); if (!kg || !reps || SEC.has(ex.name)) return;
+  if (S.draft.deload) return; const ex = S.draft.exercises[i], s = ex.log[j], B = bwOf(ex.name), kg = (num(s.kg) || 0) + B, reps = parseInt(s.reps); if (!kg || !reps || SEC.has(ex.name)) return;
   let b = histBest(ex.name); if (!b) return; ex.log.forEach((x, k) => { if (k !== j && x.done && x.t !== "w" && x.t !== "d" && parseInt(x.reps) && (num(x.kg) || B)) b = Math.max(b, e1rm((num(x.kg) || 0) + B, parseInt(x.reps))); });
   if (e1rm(kg, reps) > b + .01) { s.pr = 1; S.livePR = { k: `${i}-${j}`, txt: `🏆 שיא חדש · <bdi dir="ltr">${B ? (num(s.kg) ? "+" + num(s.kg) : "BW") : kg}×${reps}</bdi>` }; try { navigator.vibrate?.([30, 60, 30]); } catch {} } }
 function rirBar() { // reps-left chips + next-set tip live in the fixed rest bar, so the workout list never shifts
@@ -1748,9 +1755,11 @@ const asOpt = (ex, to) => { const m = EX_INDEX[to] || {}, o = { ...ex, name: to,
 function optPick(e) { // a slot with options (e.g. hack squat or another): you choose in the workout; default = the one done longest ago
   if (!e.alts?.length) return e; const opts = [e.name, ...e.alts], pick = [...opts].sort((a, b) => (lastDone(a) || "").localeCompare(lastDone(b) || ""))[0];
   const ex = { ...e, opts, base: { startKg: e.startKg, wt: e.wt, muscle: e.muscle, repMin: e.repMin, repMax: e.repMax, inc: e.inc, rest: e.rest } }; return pick === e.name ? ex : asOpt(ex, pick); }
-function startWorkout(id) {
-  const d = S.plan.days.find(x => x.id === id); if (!d) return;
-  S.draft = { date: today(), start: Date.now(), dayId: d.id, dayName: d.name, note: "", exercises: d.exercises.filter(e => e.name).map(optPick).map(e => ({ ...e, sug: suggest(e), log: Array.from({ length: S.profile?.deloadUntil >= today() ? Math.max(1, Math.ceil(e.sets / 2)) : e.sets }, () => ({ kg: "", reps: "", done: false })) })) };
+function deloadSug(e, sg) { // deload: ~half the sets, ~12% less weight, reps at the bottom of the range, far from failure
+  const kg = num(sg.kg), inc = e.inc || 2.5; return { kg: kg > 0 ? r1(Math.max(inc, Math.round(kg * .88 / inc) * inc)) : sg.kg, reps: e.repMin || sg.reps, hint: "דילואד: פחות משקל וסטים, 3–4 חזרות ברזרבה", dl: 1 }; }
+function startWorkout(id, dl) {
+  const d = S.plan.days.find(x => x.id === id); if (!d) return; dl = dl || S.profile?.deloadUntil >= today();
+  S.draft = { date: today(), start: Date.now(), dayId: d.id, dayName: d.name, note: "", ...(dl ? { deload: true } : {}), exercises: d.exercises.filter(e => e.name).map(optPick).map(e => { const sg = suggest(e); return { ...e, sug: dl ? deloadSug(e, sg) : sg, log: Array.from({ length: dl ? Math.max(1, Math.ceil(e.sets / 2)) : e.sets }, () => ({ kg: "", reps: "", done: false })) }; }) };
   store.set("draft", S.draft); S.tab = "train"; render(); scrollTo({ top: 0 });
 }
 const carry = (ex, j, f) => { for (let k = j - 1; k >= 0; k--) if (ex.log[k][f] !== "" && ex.log[k].t !== "w") return ex.log[k][f]; return null; }; // last value typed in this exercise
@@ -1780,17 +1789,17 @@ async function finishWorkout1() {
   const now = Date.now(), lastAt = Math.max(0, ...D.exercises.flatMap(e => e.log.map(s => s.done && s.at || 0)));
   let minutes = Math.round((now - (D.start || now)) / 60000); // forgot to tap "finish"? count until the last set (+2 min), not until now
   if (!D.editId && minutes > 150 && lastAt > (D.start || 0)) minutes = Math.round((lastAt - D.start) / 60000) + 2;
-  const prs = []; exercises.forEach(e => { const b = bestBefore(e.name, now); if (!b.e) return;
+  const prs = []; if (!D.deload) exercises.forEach(e => { const b = bestBefore(e.name, now); if (!b.e) return;
     const ws = e.sets.filter(work); if (!ws.length) return; const e1 = Math.max(...ws.map(st => e1rm(st.kg, st.reps))), kg = Math.max(...ws.map(st => st.kg));
     if (kg > b.kg) prs.push({ name: e.name, kind: "kg", kg, prev: b.kg }); else if (e1 > b.e + 0.1) prs.push({ name: e.name, kind: "e1", e: e1, prev: b.e }); });
   const volume = exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + st.kg * st.reps, 0), 0);
   const prevW = [...S.workouts].reverse().find(w => w.dayId === D.dayId);
   const prevVolume = prevW ? prevW.exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + (st.kg||0) * (st.reps||0), 0), 0) : 0;
   const restS = restStats(D), setsSec = D.exercises.reduce((a, e) => a + (e.log || []).filter(x => x.done).reduce((b, x) => b + (x.sec || 35), 0), 0);
-  const lvBefore = D.editId ? null : Math.floor(lifeVol() / STEP), recBefore = Math.max(0, ...S.workouts.filter(w => w.ts !== now).map(w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0)));
-  const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, exercises, minutes, ...(restS ? { restAvg: restS.avg, restOver: restS.over } : {}), ts: now }));
+  const lvBefore = D.editId ? null : Math.floor(lifeVol() / STEP), recBefore = D.deload ? 0 : Math.max(0, ...S.workouts.filter(w => w.ts !== now && !w.deload).map(w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0)));
+  const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, ...(D.deload ? { deload: true } : {}), exercises, minutes, ...(restS ? { restAvg: restS.avg, restOver: restS.over } : {}), ts: now }));
   if (await (D.editId ? (x => save("workouts/" + D.editId, x)) : (x => addTo("workouts", x)))(doc)) {
-    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, rest: restS, dur: { wu: D.wuMin || 0, sets: Math.round(setsSec / 60), rest: restS?.total || 0, est: D.exercises.some(e => (e.log || []).some(x => x.done && !x.sec)) }, recBefore, wow: !D.editId, ts: now, note: D.note || "", up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
+    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, dl: !!D.deload, rest: restS, dur: { wu: D.wuMin || 0, sets: Math.round(setsSec / 60), rest: restS?.total || 0, est: D.exercises.some(e => (e.log || []).some(x => x.done && !x.sec)) }, recBefore, wow: !D.editId, ts: now, note: D.note || "", up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
     if (COACH_ON && !D.editId) setTimeout(() => { const sets = S.summary?.sets ?? 0, wk = streak().cur;
       const t = (prs.length ? `${prs.length === 1 ? "שיא חדש" : prs.length + " שיאים חדשים"} היום, ` : "") + `סיימת ${esc(D.dayName || "אימון")}: ${sets === 1 ? "סט אחד" : sets + " סטים"}${minutes > 0 ? ` ב-${minutes} דקות` : ""}. ` + (wk >= 4 ? "היעד השבועי הושג, כל הכבוד על ההתמדה." : `זה אימון ${wk} מתוך 4 השבוע.`) + " איך הגוף מרגיש?";
       const msg = { role: "coach", text: t, ts: Date.now(), nudge: "w" + now }; S.chat.push(msg); S.coachUnread = true; store.set("coachUnread", true); addTo("chat", msg); render(); }, 1500);
@@ -1851,7 +1860,7 @@ function warmupCard(D) {
 }
 function bestBefore(name, beforeTs) {
   let e = 0, kg = 0;
-  S.workouts.filter(w => (w.ts || 0) < beforeTs).forEach(w => (w.exercises || []).filter(x => x.name === name).forEach(x => x.sets.filter(work).forEach(st => { e = Math.max(e, e1rm(st.kg || 0, st.reps || 0)); kg = Math.max(kg, st.kg || 0); })));
+  S.workouts.filter(w => (w.ts || 0) < beforeTs && !w.deload).forEach(w => (w.exercises || []).filter(x => x.name === name).forEach(x => x.sets.filter(work).forEach(st => { e = Math.max(e, e1rm(st.kg || 0, st.reps || 0)); kg = Math.max(kg, st.kg || 0); })));
   return { e, kg };
 }
 function prTarget(ex, kgPlan) { // the set that would be a new record today: planned weight × the reps that beat your best (estimated 1RM)
@@ -1926,8 +1935,8 @@ function restHtml(X, dark) { if (!X) return ""; const sg = v => (v > 0 ? "+" : v
     ${verdict ? `<span class="small" style="opacity:.85">${verdict}</span>` : ""}${X.est ? `<span class="small" style="opacity:.6">סטים שלא הופעלו עם "התחלת סט" מחושבים בהערכה.</span>` : ""}</div>`; }
 function wowHtml() { // full-screen "you did it" right after finishing. Static: no motion, nothing jumps.
   const W = S.summary; if (!W?.wow) return ""; const kg = v => Math.round(v).toLocaleString("he-IL"), eq = equiv(W.volume);
-  const rec = W.volume > 0 && W.volume > W.recBefore, dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
-  const line = rec ? (W.recBefore ? `🏆 שיא אימון חדש! קודם: ${kg(W.recBefore)} ק״ג` : "🏆 האימון הראשון קבע את השיא שלך") : W.recBefore ? `עוד ${kg(W.recBefore - W.volume)} ק״ג לשיא שלך` : "";
+  const rec = !W.dl && W.volume > 0 && W.volume > W.recBefore, dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
+  const line = W.dl ? "🧘 אימון דילואד: לא נספר בשיאים ובהתקדמות. ההתאוששות היא חלק מהתוכנית" : rec ? (W.recBefore ? `🏆 שיא אימון חדש! קודם: ${kg(W.recBefore)} ק״ג` : "🏆 האימון הראשון קבע את השיא שלך") : W.recBefore ? `עוד ${kg(W.recBefore - W.volume)} ק״ג לשיא שלך` : "";
   return `<div class="wowov" role="dialog" aria-label="אימון הושלם"><div class="wowin">
     <div class="wowk">💪 אימון הושלם</div><h2>${esc(W.dayName || "אימון")}</h2>${durHtml(W)}
     <div class="wowl">הרמת היום</div><div class="wown n">${kg(W.volume)}<small>ק״ג</small></div>
@@ -1944,7 +1953,7 @@ function painCard() {
     <div class="list pad"><div style="display:flex;gap:4px;align-items:flex-end;height:64px;direction:ltr">${P.map(w => `<div title="${fmtDate(w.date)}: ${w.pain}" style="flex:1;max-width:28px;height:${Math.max(4, w.pain * 6)}px;background:${painColor(w.pain)};border-radius:2px"></div>`).join("")}</div>
     <div class="row small muted n" style="justify-content:space-between;margin-top:6px;direction:ltr"><span>${fmtDate(P[0].date)}</span><span>${fmtDate(P[P.length-1].date)}</span></div></div></div>`;
 }
-function exHistory(name) { return S.workouts.map(w => { const x0 = (w.exercises||[]).find(z => z.name === name); if (!x0) return null; const x = { ...x0, sets: x0.sets.filter(work) }; const v = Math.max(0, ...x.sets.map(st => e1rm(st.kg||0, st.reps||0))); return v ? { date: w.date, v, top: x.sets.reduce((a, st) => (st.kg||0) > (a.kg||0) ? st : a, {}) } : null; }).filter(Boolean); }
+function exHistory(name) { return S.workouts.filter(w => !w.deload).map(w => { const x0 = (w.exercises||[]).find(z => z.name === name); if (!x0) return null; const x = { ...x0, sets: x0.sets.filter(work) }; const v = Math.max(0, ...x.sets.map(st => e1rm(st.kg||0, st.reps||0))); return v ? { date: w.date, v, top: x.sets.reduce((a, st) => (st.kg||0) > (a.kg||0) ? st : a, {}) } : null; }).filter(Boolean); }
 function lineChart(pts, unit) {
   if (pts.length < 2) return `<div class="small muted pad">צריך לפחות שתי מדידות לגרף.</div>`;
   const W = 340, H = 160, pl = 32, pr = 10, pt = 14, pb = 22, vs = pts.map(p => p.v);
@@ -1955,13 +1964,17 @@ function lineChart(pts, unit) {
     <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${pts.map(p => `<circle cx="${X(p.date).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" fill="var(--accent)"/>`).join("")}
     <text x="${X(L.date)}" y="${H-5}" text-anchor="end">${fmtDate(L.date)}</text><text x="${X(d0)}" y="${H-5}" text-anchor="start">${fmtDate(d0)}</text></svg>`;
 }
+function deloadDue() { // a coach's call, not a weekly ritual: every ~6 hard weeks, or earlier when the body says so
+  if (S.profile?.deloadUntil >= today()) return null; const W = S.workouts, lastDl = [...W].reverse().find(w => w.deload)?.date || "";
+  const hard = new Set(W.filter(w => !w.deload && w.date > lastDl).map(w => addDays(w.date, -new Date(w.date + "T12:00:00").getDay()))).size;
+  const keys = [...new Set((S.plan?.days || []).flatMap(d => d.exercises.map(e => e.name)))], down = keys.filter(n => { const h = exHistory(n); if (h.length < 4) return false; const best = Math.max(...h.slice(0, -2).map(x => x.v)); return h.slice(-2).every(x => x.v < best * 0.96); });
+  const F = feelStats(), pain = S.workouts.slice(-3).filter(w => w.pain >= 4).length >= 2, why = [];
+  if (hard >= 6) why.push(`${hard} שבועות אימון ברצף בלי הקלה`); if (down.length >= 2) why.push(`ירידה בכוח ב-${down.length} תרגילים`); if (F?.tired) why.push("3 אימונים קשים ברצף עם אנרגיה נמוכה"); if (pain) why.push("כאב חוזר");
+  return why.length ? { why, hard, down } : null; }
 function deloadAdvice() {
-  if (S.profile?.deloadUntil && S.profile.deloadUntil >= today()) return `<div class="list" style="border-inline-start:3px solid var(--prot)"><div class="item"><div class="grow"><div class="t">שבוע קל פעיל עד ${fmtDate(S.profile.deloadUntil)}</div><div class="s">חצי מהסטים, אותם משקלים. הגוף מתאושש ואז ממשיכים לעלות.</div></div><button class="btn" data-deload="off">סיום</button></div></div>`;
-  const keys = [...new Set((S.plan?.days || []).flatMap(d => d.exercises.filter(e => e.key).map(e => e.name)))];
-  const down = keys.filter(n => { const h = exHistory(n); if (h.length < 4) return false; const best = Math.max(...h.slice(0, -2).map(x => x.v)); return h.slice(-2).every(x => x.v < best * 0.96); });
-  const pain = S.workouts.slice(-3).filter(w => w.pain >= 4).length >= 2;
-  if (!down.length && !pain) return "";
-  return `<div class="list" style="border-inline-start:3px solid var(--carb)"><div class="item"><div class="grow"><div class="t">מומלץ שבוע קל</div><div class="s">${down.length ? `ירידה בכוח בשני אימונים ברצף: ${down.map(esc).join(", ")}. ` : ""}${pain ? "כאב חוזר ביד שמאל. " : ""}שבוע עם חצי מהסטים בדרך כלל מחזיר את הביצועים.</div></div><button class="btn primary" data-deload="on">הפעלה</button></div></div>`;
+  if (S.profile?.deloadUntil && S.profile.deloadUntil >= today()) return `<div class="list" style="border-inline-start:3px solid var(--prot)"><div class="item"><div class="grow"><div class="t">שבוע קל פעיל עד ${fmtDate(S.profile.deloadUntil)}</div><div class="s">חצי מהסטים, ~12% פחות משקל, 3–4 חזרות ברזרבה. לא נספר בשיאים.</div></div><button class="btn" data-deload="off">סיום</button></div></div>`;
+  const D = deloadDue(); if (!D) return "";
+  return `<div class="list" style="border-inline-start:3px solid var(--carb)"><div class="item"><div class="grow"><div class="t">המאמן: הגיע הזמן לשבוע דילואד</div><div class="s">${D.why.map(esc).join(" · ")}. שבוע עם חצי מהסטים ו-~12% פחות משקל מוריד עייפות, ואחריו הכוח קופץ.</div></div><button class="btn primary" data-deload="on">שבוע דילואד</button></div></div>`;
 }
 function topSet(sets) { return sets.reduce((a, s) => !a || (s.kg || 0) > (a.kg || 0) || ((s.kg || 0) === (a.kg || 0) && (s.reps || 0) > (a.reps || 0)) ? s : a, null); }
 function progressReport() { // per exercise: heaviest set each session, last vs previous and vs first, best ever
@@ -2589,7 +2602,7 @@ document.addEventListener("click", async ev => {
   if (ds.exchart != null) { S.exChart = ds.exchart || null; render(); return; }
   if (ds.deload) { const on = ds.deload === "on"; if (await save("settings/profile", { ...(S.profile || {}), deloadUntil: on ? addDays(today(), 6) : null })) toast(on ? "שבוע קל הופעל" : "חזרה לאימון רגיל"); return; }
   if (ds.seg) { const [k, v] = ds.seg.split(":"); S[k] = v; store.set(k, v); render(); return; }
-  if (ds.start) { if (S.draft) { toast("יש אימון פתוח"); S.tab = "train"; render(); return; } startWorkout(ds.start); return; }
+  if (ds.start) { if (S.draft) { toast("יש אימון פתוח"); S.tab = "train"; render(); return; } startWorkout(ds.start, ds.dl === "1"); return; }
   if (ds.resume) { S.tab = "train"; S.trainSeg = "now"; store.set("tab", "train"); render(); scrollTo({ top: 0 }); return; }
   if (ds.ssswap && S.draft) { const D = S.draft, G = ssGroup(D, +ds.ssswap), M = G.map(k => D.exercises[k]); M.push(M.shift()); G.forEach((k, n) => { D.exercises[k] = M[n]; }); if (D.run && G.includes(D.run.i)) D.run = null; S.rirAsk = null; S.exMenu = null; S.renOpen = null; store.set("draft", D); render(); toast("ראשון עכשיו: " + dn(M[0].name)); return; }
   if (ds.pkalt) { const [d, e] = ds.pkalt.split("-").map(Number); return openPicker("alt", [d, e]); }
@@ -2598,6 +2611,8 @@ document.addEventListener("click", async ev => {
   if (ds.exmv && S.draft) { const [i, d] = ds.exmv.split(":").map(Number), y0 = document.querySelector(`[data-exmenu="${i}"]`)?.getBoundingClientRect().top, ex = S.draft.exercises[i];
     moveEx(i, d); const k = S.draft.exercises.indexOf(ex); S.exMenu = k; render(); const y1 = document.querySelector(`[data-exmenu="${k}"]`)?.getBoundingClientRect().top; if (y0 != null && y1 != null) scrollBy(0, y1 - y0); return; } // the moved card stays under the finger
   if (ds.exnow && S.draft) { moveEx(+ds.exnow, "now"); toast(`${S.draft.exercises[curIdx(S.draft)]?.name || "התרגיל"} עכשיו`); return; }
+  if (ds.wdl) { const w = S.workouts.find(x => x.id === ds.wdl); if (!w) return; if (await upd("workouts/" + w.id, { deload: !w.deload })) toast(w.deload ? "סומן כאימון רגיל" : "סומן כדילואד: לא נספר בשיאים"); return; }
+  if (ds.wrepshare) { const txt = S.wrepTxt || ""; try { if (navigator.share) { await navigator.share({ text: txt }); return; } } catch (e) { if (e?.name === "AbortError") return; } try { await navigator.clipboard.writeText(txt); toast("הסיכום הועתק"); } catch { if (S.downloads) { try { await S.downloads.save({ filename: `week-${today()}.txt`, data: txt }); toast("נשמר"); } catch {} } } return; }
   if (ds.wdm) { S.wdMenu = S.wdMenu === ds.wdm ? null : ds.wdm; render(); return; }
   if (ds.exmenu) { const i = +ds.exmenu; S.exMenu = S.exMenu === i ? null : i; render(); return; }
   if (ds.exopen) { S.openEx = +ds.exopen; render(); return; }
