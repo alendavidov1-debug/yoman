@@ -488,6 +488,7 @@ body.wkOn .restbar .in{padding:6px 10px;border-radius:18px}body.wkOn .restbar .b
 .wdots{border:0;background:var(--chip,rgba(127,127,127,.12));color:inherit;border-radius:10px;min-width:40px;min-height:30px;font:700 .8rem var(--font);cursor:pointer}
 .fpl{display:flex;justify-content:space-between;gap:8px;font-size:.92rem;line-height:1.5}.fpl span:first-child{font-weight:600}.fprow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center}.fprow input{min-width:0}.fprow span{white-space:nowrap}
 .wlines{display:grid;gap:4px}.wrep{gap:10px}
+.beast{display:block;font-weight:600;color:var(--ink,inherit)}
 .dlalt{display:block;margin:6px auto 0;color:var(--muted)}
 .wowa{display:grid;gap:10px;margin-top:6px}.wowa .btn{min-height:50px;font-size:1rem}.wowa .btn:not(.primary){background:rgba(255,255,255,.1);color:#fff;border-color:transparent}
 .sumhero .bsx{background:rgba(255,255,255,.1);color:#fff}.sumdone{font-size:.78rem;font-weight:700;color:#8fe3ad}
@@ -1278,6 +1279,16 @@ const STOP_IC = ["⛺", "💧", "🌲", "🔭", "🪨", "🦇", "🌊", "⛩️"
 const lifeVol = () => S.workouts.reduce((a, w) => a + (w.exercises || []).reduce((b, e) => b + (e.sets || []).filter(work).reduce((c, x) => c + (x.kg || 0) * (x.reps || 0), 0), 0), 0);
 const STOPS = ["נקודת היציאה", "המעיין", "חורשת האורנים", "תצפית העמק", "גבעת הסלעים", "מערת הנטיפים", "המפל", "שער ההר", "מצדה", "הכרמל", "הגלבוע", "הר תבור", "הר מירון", "קרן חטין", "החרמון", "מעל העננים", "מון בלאן", "המטרהורן", "קילימנג׳רו", "אקונקגואה", "דנאלי", "K2", "האוורסט", "החלל"], STEP = 2500;
 const EQUIV = [[300, "🐻", "דוב חום"], [600, "🐄", "פרה"], [1000, "🚗", "מכונית"], [2000, "🦏", "קרנף"], [3500, "🚙", "ג׳יפ"], [5000, "🐘", "פיל"], [7000, "🦖", "טי־רקס"], [11000, "🚌", "אוטובוס"], [18000, "🚒", "כבאית"], [30000, "🐋", "לוויתן"], [45000, "✈️", "מטוס"]];
+const BEAST = [[0, "🐹", "אוגר", "מתחילים מאיפשהו. גם אוגר הרים פעם משהו"], [15, "🐈", "חתול", "חזק כמו חתול רחוב קשוח"], [30, "🦝", "דביבון", "חזק כמו דביבון שפותח פחים של 100 ליטר"],
+  [50, "🦦", "סמור", "חזק כמו סמור. סמור מאוד, מאוד מאומן"], [70, "🦘", "קנגורו", "חזק כמו קנגורו שמתאמן בסטודיו"], [90, "🐺", "זאב", "חזק כמו זאב אלפא. הלהקה מסתכלת עליך"],
+  [110, "🐼", "פנדה", "חזק כמו פנדה שוויתרה על הבמבוק בשביל חלבון"], [140, "🐻", "דוב", "חזק כמו דוב אחרי שינת חורף שלמה"], [170, "🦍", "גורילה", "חזק יותר מגורילה כועסת"],
+  [200, "🦁", "אריה", "מלך הג׳ונגל מבקש ממך ספוט"], [250, "🦏", "קרנף", "קרנף. אל תעמדו לו בדרך"], [300, "🐘", "פיל", "הפיל מתקשר לבקש טיפים"]];
+const BEAST_S = [[0, "🐭", "עכבר", "עכבר עם חלומות גדולים"], [5, "🐿️", "סנאי", "חזק כמו סנאי שסוחב אגוז קוקוס"], [8, "🐈", "חתול", "חזק כמו חתול רחוב קשוח"], [12, "🦝", "דביבון", "חזק כמו דביבון שפותח פחים של 100 ליטר"],
+  [16, "🦦", "סמור", "חזק כמו סמור. סמור מאוד, מאוד מאומן"], [20, "🦊", "שועל", "חזק כמו שועל שעושה חזרות שליליות"], [25, "🐺", "זאב", "חזק כמו זאב אלפא. הלהקה מסתכלת עליך"], [30, "🐼", "פנדה", "חזק כמו פנדה שוויתרה על הבמבוק בשביל חלבון"],
+  [40, "🦍", "גורילה", "חזק יותר מגורילה כועסת"], [50, "🦁", "אריה", "מלך הג׳ונגל מבקש ממך ספוט"]];
+const bigLift = n => !!EX_INDEX[n]?.b || /סקוואט|דדליפט|לחיצת רגליים|חתירה|לחיצת חזה במוט|מתח|מקבילים|פולי עליון|היפ טראסט/.test(n || ""); // isolation and per-hand dumbbells get their own, lighter ladder
+const beast = (kg, n) => { const T = n && !bigLift(n) ? BEAST_S : BEAST; let k = 0; T.forEach((b, i) => { if (kg >= b[0]) k = i; }); return { cur: T[k], next: T[k + 1] || null }; }; // fun rank for one lift (top set kg, body weight included)
+const beastTxt = (kg, n) => { const B = beast(kg, n); return `${B.cur[1]} ${B.cur[3]}`; };
 const equiv = v => { let e = null; for (const x of EQUIV) if (v >= x[0]) e = x; return e; };
 const STREAK_T = [[1, "ניצוץ"], [3, "מתחמם"], [7, "בוער"], [14, "מכונה"], [30, "אגדה"], [60, "בלתי עציר"]];
 function climbCard() { // one number to break: your best single-workout volume (weight × reps). Level/story stay one small line.
@@ -1587,7 +1598,7 @@ function histBest(name) { let b = 0; for (const w of S.workouts.filter(w => !w.d
 function livePR(i, j) { // like Hevy: a trophy the moment a set beats every earlier one (estimated 1RM)
   if (S.draft.deload) return; const ex = S.draft.exercises[i], s = ex.log[j], B = bwOf(ex.name), kg = (num(s.kg) || 0) + B, reps = parseInt(s.reps); if (!kg || !reps || SEC.has(ex.name)) return;
   let b = histBest(ex.name); if (!b) return; ex.log.forEach((x, k) => { if (k !== j && x.done && x.t !== "w" && x.t !== "d" && parseInt(x.reps) && (num(x.kg) || B)) b = Math.max(b, e1rm((num(x.kg) || 0) + B, parseInt(x.reps))); });
-  if (e1rm(kg, reps) > b + .01) { s.pr = 1; S.livePR = { k: `${i}-${j}`, txt: `🏆 שיא חדש · <bdi dir="ltr">${B ? (num(s.kg) ? "+" + num(s.kg) : "BW") : kg}×${reps}</bdi>` }; try { navigator.vibrate?.([30, 60, 30]); } catch {} } }
+  if (e1rm(kg, reps) > b + .01) { s.pr = 1; S.livePR = { k: `${i}-${j}`, txt: `🏆 שיא חדש · <bdi dir="ltr">${B ? (num(s.kg) ? "+" + num(s.kg) : "BW") : kg}×${reps}</bdi> · ${beast(kg, ex.name).cur[1]} ${beast(kg, ex.name).cur[2]}` }; try { navigator.vibrate?.([30, 60, 30]); } catch {} } }
 function rirBar() { // reps-left chips + next-set tip live in the fixed rest bar, so the workout list never shifts
   const el = $("#rest .rrir"); if (!el) return; const D = S.draft; let h = "";
   if (D && S.rirAsk) { const [i, j] = S.rirAsk.split("-").map(Number), s = D.exercises[i]?.log[j]; if (s?.done && s.rir == null) h = `<div class="rirask" role="group" aria-label="כמה עוד יכולת"><span>כמה חזרות עוד יכולת לעשות?</span>${[0, 1, 2, 3, 4].map(v => `<button data-rir="${i}-${j}-${v}">${v === 4 ? `<bdi dir="ltr">4+</bdi>` : v}</button>`).join("")}</div>`; }
@@ -1851,7 +1862,7 @@ function wowHtml() { // full-screen "you did it" right after finishing. Static: 
     ${eq ? `<div class="wowe">${eq[1]} כמו להרים ${eq[2]}${W.volume >= eq[0] * 2 ? ` × ${Math.floor(W.volume / eq[0])}` : ""}</div>` : ""}
     ${line ? `<div class="wowr${rec ? " on" : ""} n">${line}</div>` : ""}
     <div class="wows n"><div><b>${W.sets}</b><span>סטים</span></div><div><b>${W.prs.length}</b><span>${W.prs.length === 1 ? "שיא בתרגיל" : "שיאים בתרגילים"}</span></div><div><b>${(W.exercises || []).length}</b><span>תרגילים</span></div></div>${dv > 0 ? `<div class="wowe n" style="font-size:.95rem">📈 <bdi dir="ltr">+${dv}%</bdi> מול הפעם הקודמת ביום הזה</div>` : ""}
-    ${W.prs.length ? `<div class="wowp"><b>${W.prs.length === 1 ? "שיא חדש בתרגיל" : W.prs.length + " שיאים חדשים בתרגילים"}</b>${W.prs.slice(0, 3).map(p => `<div class="row sb"><span>${esc(p.name)}</span><span class="n">${p.kind === "kg" ? `${p.kg} ק״ג` : `1RM ${r1(p.e)}`}</span></div>`).join("")}</div>` : ""}
+    ${W.prs.length ? `<div class="wowp"><b>${W.prs.length === 1 ? "שיא חדש בתרגיל" : W.prs.length + " שיאים חדשים בתרגילים"}</b>${W.prs.slice(0, 3).map(p => { const kg = p.kind === "kg" ? p.kg : Math.max(...((W.exercises || []).find(e => e.name === p.name)?.sets || []).filter(work).map(x => x.kg || 0)); return `<div style="display:grid;gap:2px"><div class="row sb"><span>${esc(p.name)}</span><span class="n">${p.kind === "kg" ? `${p.kg} ק״ג` : `1RM ${r1(p.e)}`}</span></div><span class="small" style="opacity:.85">${beastTxt(kg, p.name)}</span></div>`; }).join("")}</div>` : ""}
     ${restHtml(W.rest, 1)}${checkinHtml(W)}<div class="wowa"><button class="btn primary" data-wowx="1">שמירה וסגירה</button><button class="btn" data-sumshare="1">📸 שיתוף תמונה</button></div></div></div>`;
 }
 function painCard() {
@@ -1893,8 +1904,8 @@ function progressReport() { // per exercise: heaviest set each session, last vs 
   const dlt = (v, u) => v ? `<span style="color:${v > 0 ? "var(--ok)" : "var(--bad)"}"><bdi dir="ltr">${v > 0 ? "+" : ""}${r1(v)}</bdi>${u}</span>` : `<span class="muted">=</span>`;
   const rows = names.map(n => { const H = by[n], L = H[H.length - 1], P = H[H.length - 2], F = H[0], best = topSet(H.map(h => h.top)), open = S.repOpen === n;
     const cmp = P ? (L.top.kg !== P.top.kg ? dlt((L.top.kg || 0) - (P.top.kg || 0), " ק״ג") : dlt((L.top.reps || 0) - (P.top.reps || 0), " חז׳")) : `<span class="muted">ראשון</span>`;
-    return `<button class="item prow" data-repopen="${esc(n)}">${thumb(n, "sm")}<div class="grow"><div class="t">${esc(n)}</div><div class="s n">${H.length} אימונים · שיא <bdi dir="ltr">${best.kg}×${best.reps}</bdi>${H.length > 1 ? ` · מההתחלה ${dlt((L.top.kg || 0) - (F.top.kg || 0), " ק״ג")}` : ""}</div></div><div class="r n" style="text-align:end"><b><bdi dir="ltr">${L.top.kg}×${L.top.reps}</bdi></b><div class="small">${cmp}</div></div></button>
-    ${open ? `<div class="item" style="display:block">${H.length > 1 ? lineChart(H.map(h => ({ date: h.date, v: h.top.kg || 0 })), "ק״ג") : ""}<div class="ptbl n"><span class="h">תאריך</span><span class="h">סטים (ק״ג×חזרות)</span><span class="h">נפח</span>${[...H].reverse().slice(0, 12).map(h => `<span>${fmtDate(h.date)}</span><span><bdi dir="ltr">${h.sets.map(st => `${st.t === "d" ? "↓" : ""}${st.kg}×${st.reps}`).join("  ")}</bdi>${h.ss ? ` <span class="small muted">סופר סט</span>` : ""}</span><span>${Math.round(h.sets.reduce((a, st) => a + (st.kg || 0) * st.reps, 0)).toLocaleString("he-IL")}</span>`).join("")}</div></div>` : ""}`; }).join("");
+    return `<button class="item prow" data-repopen="${esc(n)}">${thumb(n, "sm")}<div class="grow"><div class="t">${esc(n)}</div><div class="s n">${SEC.has(n) ? "" : (B => `<span class="beast">${B.cur[1]} ${B.cur[2]}${B.next ? ` · עוד ${r1(B.next[0] - best.kg)} ל${B.next[1]}` : " · הכי חזק שיש"}</span> `)(beast(best.kg || 0, n))}${H.length} אימונים · שיא <bdi dir="ltr">${best.kg}×${best.reps}</bdi>${H.length > 1 ? ` · מההתחלה ${dlt((L.top.kg || 0) - (F.top.kg || 0), " ק״ג")}` : ""}</div></div><div class="r n" style="text-align:end"><b><bdi dir="ltr">${L.top.kg}×${L.top.reps}</bdi></b><div class="small">${cmp}</div></div></button>
+    ${open ? `<div class="item" style="display:block"><div style="font-weight:700;margin-bottom:8px">${SEC.has(n) ? "" : beastTxt(best.kg || 0, n)}</div>${H.length > 1 ? lineChart(H.map(h => ({ date: h.date, v: h.top.kg || 0 })), "ק״ג") : ""}<div class="ptbl n"><span class="h">תאריך</span><span class="h">סטים (ק״ג×חזרות)</span><span class="h">נפח</span>${[...H].reverse().slice(0, 12).map(h => `<span>${fmtDate(h.date)}</span><span><bdi dir="ltr">${h.sets.map(st => `${st.t === "d" ? "↓" : ""}${st.kg}×${st.reps}`).join("  ")}</bdi>${h.ss ? ` <span class="small muted">סופר סט</span>` : ""}</span><span>${Math.round(h.sets.reduce((a, st) => a + (st.kg || 0) * st.reps, 0)).toLocaleString("he-IL")}</span>`).join("")}</div></div>` : ""}`; }).join("");
   return `<div class="group">${head}<div class="list">${rows}</div></div>`;
 }
 function strengthTable() {
