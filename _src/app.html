@@ -1654,7 +1654,7 @@ function toggleSet(i, j) {
   store.set("draft", S.draft);
   const nx = ex.log[j + 1];
   const isAlt = ex.ssT === "alt", ssNext = s.done && s.t !== "w" && ex.ss && ssGroup(S.draft, i).some(k => k > i && S.draft.exercises[k].log.some(x => !x.done && x.t !== "w"));
-  if (s.done && nx?.t !== "d" && (!ssNext || isAlt)) startRest(s.t === "w" ? CFG("restWarm") : REST());
+  if (s.done && nx?.t !== "d" && (!ssNext || isAlt)) { const rs = s.t === "w" ? CFG("restWarm") : REST(); s.rp = rs; startRest(rs); }
   if (ssNext) { toast((isAlt ? "אחרי המנוחה: " : "סופר סט: עכשיו ") + S.draft.exercises[curIdx(S.draft)]?.name); } // like Hevy: no rest before a drop set, short rest after a warm-up
   render();
 }
@@ -1676,10 +1676,11 @@ async function finishWorkout1() {
   const volume = exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + st.kg * st.reps, 0), 0);
   const prevW = [...S.workouts].reverse().find(w => w.dayId === D.dayId);
   const prevVolume = prevW ? prevW.exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + (st.kg||0) * (st.reps||0), 0), 0) : 0;
+  const restS = restStats(D);
   const lvBefore = D.editId ? null : Math.floor(lifeVol() / STEP), recBefore = Math.max(0, ...S.workouts.filter(w => w.ts !== now).map(w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0)));
-  const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, exercises, minutes, ts: now }));
+  const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, exercises, minutes, ...(restS ? { restAvg: restS.avg, restOver: restS.over } : {}), ts: now }));
   if (await (D.editId ? (x => save("workouts/" + D.editId, x)) : (x => addTo("workouts", x)))(doc)) {
-    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, recBefore, wow: !D.editId, ts: now, note: D.note || "", up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
+    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, rest: restS, recBefore, wow: !D.editId, ts: now, note: D.note || "", up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
     if (COACH_ON && !D.editId) setTimeout(() => { const sets = S.summary?.sets ?? 0, wk = streak().cur;
       const t = (prs.length ? `${prs.length === 1 ? "שיא חדש" : prs.length + " שיאים חדשים"} היום, ` : "") + `סיימת ${esc(D.dayName || "אימון")}: ${sets === 1 ? "סט אחד" : sets + " סטים"}${minutes > 0 ? ` ב-${minutes} דקות` : ""}. ` + (wk >= 4 ? "היעד השבועי הושג, כל הכבוד על ההתמדה." : `זה אימון ${wk} מתוך 4 השבוע.`) + " איך הגוף מרגיש?";
       const msg = { role: "coach", text: t, ts: Date.now(), nudge: "w" + now }; S.chat.push(msg); S.coachUnread = true; store.set("coachUnread", true); addTo("chat", msg); render(); }, 1500);
@@ -1759,7 +1760,7 @@ function summaryCard() {
       <div class="sumchips n"><span>${W.sets} סטים</span><span>${W.minutes} דק׳</span>${W.prs.length ? `<span class="pr">${W.prs.length === 1 ? "שיא חדש" : W.prs.length + " שיאים חדשים"}</span>` : ""}${dv != null ? `<span><bdi dir="ltr">${dv >= 0 ? "+" : ""}${dv}%</bdi> נפח</span>` : ""}<span>${Math.round(W.volume).toLocaleString("he-IL")} ק״ג סה״כ</span></div><button class="sumshare" data-sumshare="1">${IC.up}תמונה לשיתוף</button></div>
     <div class="list">
     ${W.prs.map(p => `<div class="item"><div class="grow"><div class="t"><span style="color:var(--accent);font-weight:600">שיא חדש</span> · ${esc(p.name)}</div><div class="s n">${p.kind === "kg" ? `שיא משקל: ${p.kg} ק״ג` : `שיא 1RM משוער: ${r1(p.e)} ק״ג`} (קודם ${r1(p.prev)})</div></div></div>`).join("")}
-    ${W.pain != null && W.pain >= 3 && WR() ? `<div class="item"><div class="grow s" style="color:var(--bad)">דיווחת על כאב ${W.pain}/10 בשורש כף היד.</div></div>` : ""}</div>`.replace(/<div class="list">\s*<\/div>/, "");
+    ${restHtml(W.rest)}${W.pain != null && W.pain >= 3 && WR() ? `<div class="item"><div class="grow s" style="color:var(--bad)">דיווחת על כאב ${W.pain}/10 בשורש כף היד.</div></div>` : ""}</div>`.replace(/<div class="list">\s*<\/div>/, "");
 }
 const RPE_L = ["קל", "בינוני", "קשה", "קשה מאוד", "עד הקצה"], FEEL_L = [["😴", "עייף"], ["😐", "רגיל"], ["💪", "חזק"], ["🔥", "מעולה"]];
 const SLEEP_L = ["פחות מ-6", "6–7", "7–8", "8 ומעלה"];
@@ -1791,6 +1792,22 @@ function feelCard() { const F = feelStats(); if (!F) return `<div class="tcard">
     ${F.gv != null ? `<span class="small">באימונים שהרגשת חזק הרמת <b class="n">${F.gv >= 0 ? "+" : ""}${F.gv}%</b> מאשר כשהיית עייף.</span>` : ""}
     ${F.sleepHit ? `<span class="small">שינה: קושי ממוצע אחרי לילה קצר מול לילה טוב: <b class="n">${F.sleepHit}</b>.</span>` : ""}
     ${F.notes.length ? `<div class="small muted">${F.notes.map(w => `<div>${fmtDate(w.date)}: ${esc(w.note)}</div>`).join("")}</div>` : ""}</div>`; }
+function restStats(D) { // real rest: from tapping a set done until the next set really started (set timer start, or done time minus the set's length)
+  const L = D.exercises.flatMap(e => (e.log || []).filter(x => x.done && x.at).map(x => ({ ...x, name: e.name }))).sort((a, b) => a.at - b.at), R = [];
+  for (let k = 1; k < L.length; k++) { const a = L[k - 1], b = L[k]; if (b.t === "d") continue;
+    const st = b.go && b.go > a.at ? b.go : b.sec ? b.at - b.sec * 1000 : b.at - 35000, r = Math.round((st - a.at) / 1000);
+    if (r > 0 && r < 20 * 60) R.push({ r, plan: a.rp || null, est: !(b.go && b.go > a.at) && !b.sec, name: b.name }); }
+  if (!R.length) return null; const W = R.filter(x => x.plan), sum = A => A.reduce((a, x) => a + x.r, 0);
+  const over = W.length ? Math.round(W.reduce((a, x) => a + (x.r - x.plan), 0) / W.length) : null, mx = R.reduce((a, x) => x.r > a.r ? x : a);
+  return { n: R.length, avg: Math.round(sum(R) / R.length), plan: W.length ? Math.round(W.reduce((a, x) => a + x.plan, 0) / W.length) : null, over, total: Math.round(sum(R) / 60), max: mx.r, maxName: mx.name, est: R.some(x => x.est) }; }
+function restHtml(X, dark) { if (!X) return ""; const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + mmss(Math.abs(v) * 1000);
+  const verdict = X.over == null ? "" : X.over > 45 ? "נחת יותר מהטיימר. מנוחה ארוכה לא פוגעת בשריר, אבל מאריכה את האימון. אם הזמן חשוב, קום כשהטיימר מצפצף." : X.over < -20 ? "נחת פחות מהמתוכנן. בתרגילים הכבדים מנוחה מלאה (2–3 דק׳) שומרת על הביצועים." : "המנוחה קרובה לתוכנן. מצוין.";
+  return `<div class="${dark ? "wowp" : "item"}" style="display:grid;gap:6px"><b>⏱️ מנוחה בפועל</b>
+    <div class="row sb n"><span>ממוצע בין סטים</span><b>${mmss(X.avg * 1000)}${X.plan ? ` <small style="opacity:.7">(טיימר ${mmss(X.plan * 1000)})</small>` : ""}</b></div>
+    ${X.over != null ? `<div class="row sb n"><span>אחרי שהטיימר נגמר</span><b style="color:${X.over > 45 ? "#ff8a84" : "inherit"}">${sg(X.over)} בממוצע</b></div>` : ""}
+    <div class="row sb n"><span>סה״כ מנוחה</span><b>${X.total} דק׳</b></div>
+    <div class="row sb n"><span>הכי ארוכה</span><b>${mmss(X.max * 1000)} <small style="opacity:.7">לפני ${esc(X.maxName)}</small></b></div>
+    ${verdict ? `<span class="small" style="opacity:.85">${verdict}</span>` : ""}${X.est ? `<span class="small" style="opacity:.6">סטים שלא הופעלו עם "התחלת סט" מחושבים בהערכה.</span>` : ""}</div>`; }
 function wowHtml() { // full-screen "you did it" right after finishing. Static: no motion, nothing jumps.
   const W = S.summary; if (!W?.wow) return ""; const kg = v => Math.round(v).toLocaleString("he-IL"), eq = equiv(W.volume);
   const rec = W.volume > 0 && W.volume > W.recBefore, dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
@@ -1802,7 +1819,7 @@ function wowHtml() { // full-screen "you did it" right after finishing. Static: 
     ${line ? `<div class="wowr${rec ? " on" : ""} n">${line}</div>` : ""}
     <div class="wows n"><div><b>${W.minutes}</b><span>דקות</span></div><div><b>${W.sets}</b><span>סטים</span></div><div><b>${W.prs.length}</b><span>${W.prs.length === 1 ? "שיא בתרגיל" : "שיאים בתרגילים"}</span></div></div>${dv > 0 ? `<div class="wowe n" style="font-size:.95rem">📈 <bdi dir="ltr">+${dv}%</bdi> מול הפעם הקודמת ביום הזה</div>` : ""}
     ${W.prs.length ? `<div class="wowp"><b>${W.prs.length === 1 ? "שיא חדש בתרגיל" : W.prs.length + " שיאים חדשים בתרגילים"}</b>${W.prs.slice(0, 3).map(p => `<div class="row sb"><span>${esc(p.name)}</span><span class="n">${p.kind === "kg" ? `${p.kg} ק״ג` : `1RM ${r1(p.e)}`}</span></div>`).join("")}</div>` : ""}
-    ${checkinHtml(W)}<div class="wowa"><button class="btn primary" data-wowx="1">שמירה וסגירה</button><button class="btn" data-sumshare="1">📸 שיתוף תמונה</button></div></div></div>`;
+    ${restHtml(W.rest, 1)}${checkinHtml(W)}<div class="wowa"><button class="btn primary" data-wowx="1">שמירה וסגירה</button><button class="btn" data-sumshare="1">📸 שיתוף תמונה</button></div></div></div>`;
 }
 function painCard() {
   const P = S.workouts.filter(w => w.pain != null).slice(-12); if (!P.length || !WR()) return "";
@@ -1862,7 +1879,7 @@ setInterval(() => document.querySelectorAll("[data-t0]").forEach(el => { el.text
 function startSet(i, j) { // set timer: runs until "סיום סט", then the rest timer starts by itself
   const D = S.draft, s = D?.exercises[i]?.log[j]; if (!s || s.done) return;
   restEnd = 0; stopRest(); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.(); } catch {}
-  D.run = { i, j, t0: Date.now() }; store.set("draft", D); render();
+  D.run = { i, j, t0: Date.now() }; s.go = D.run.t0; store.set("draft", D); render();
 }
 function endSet() { const R = S.draft?.run; if (!R) return; const s = S.draft.exercises[R.i]?.log[R.j]; if (!s) { S.draft.run = null; return render(); } if (!s.done) toggleSet(R.i, R.j); else { S.draft.run = null; store.set("draft", S.draft); render(); } }
 const setBtns = (i, j) => { const R = S.draft?.run, on = R && R.i === i && R.j === j, s = S.draft.exercises[i].log[j];
