@@ -248,7 +248,7 @@ input,select,textarea{border-radius:8px}
 .iconbtn{border-radius:22px;width:44px;height:44px}
 .sugg button{border-radius:18px}
 .seg button{border-radius:0}
-.toast span{border-radius:8px}
+.toast span{border-radius:8px;max-width:min(92vw,440px);text-align:center;line-height:1.45}
 .toast{top:auto;bottom:calc(var(--tabbar) + 14px + env(safe-area-inset-bottom,0px))}
 body.hasRes .toast{bottom:calc(var(--tabbar) + 70px + env(safe-area-inset-bottom,0px))}
 /* open-workout bar (Hevy-style): visible on every tab while a workout is running */
@@ -820,7 +820,7 @@ async function upload(file) {
 const src = id => window.__BLOB?.[id] || "/_blob/" + id;
 function pickImage(cam) { return new Promise(res => { const f = $(cam === "env" ? "#camEnv" : cam === "user" ? "#camUser" : "#filePick"); f.value = ""; f.onchange = () => res(f.files[0] || null); f.click(); }); }
 let toastT;
-function toast(msg, undo) { const t = $("#toast"), sp = t.firstElementChild; sp.innerHTML = esc(msg) + (undo ? ` <button class="tundo" data-undo="1">ביטול</button>` : ""); sp.style.pointerEvents = undo ? "auto" : ""; S.undo = undo || null; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; S.undo = null; }, undo ? 4500 : 2200); }
+function toast(msg, undo, ms) { const t = $("#toast"), sp = t.firstElementChild; sp.innerHTML = esc(msg) + (undo ? ` <button class="tundo" data-undo="1">ביטול</button>` : ""); sp.style.pointerEvents = undo ? "auto" : ""; S.undo = undo || null; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; S.undo = null; }, ms || (undo ? 4500 : 2200)); }
 
 /* ---------- shell ---------- */
 function chatBottom() { const go = () => scrollTo(0, document.documentElement.scrollHeight); go(); requestAnimationFrame(go); setTimeout(go, 120); }
@@ -2844,22 +2844,52 @@ async function addWeight() {
   const near = S.weights.filter(w => w.date < date && w.date >= addDays(date, -14)).slice(-7), ref = near.length ? near.reduce((a, w) => a + w.kg, 0) / near.length : null;
   if (ref && Math.abs(kg - ref) > 3 && S.wSure !== kg) { S.wSure = kg; const b = $("#wAdd"); if (b) b.textContent = `${kg} ק״ג? לחץ שוב לאישור`; toast(`רחוק ${r1(Math.abs(kg - ref))} ק״ג מהממוצע שלך. אולי טעות הקלדה?`); return; }
   S.wSure = null;
-  if (await save("weights/" + date, waist ? { date, kg, waist } : { date, kg })) { if (S.sheet === "w") { S.sheet = null; render(); } toast("נשמר"); }
+  if (await save("weights/" + date, waist ? { date, kg, waist } : { date, kg })) { if (S.sheet === "w") { S.sheet = null; render(); } const wf = weightFb(date, kg); toast(wf || "נשמר", null, wf ? 7000 : 0); }
 }
 async function addPhoto(cam) {
   const f = await pickImage(cam); if (!f) return; toast("מעלה…");
   const id = await upload(f); if (!id) return;
   if (await addTo("photos", { kind: "progress", pose: S.pose || "front", date: today(), assetId: id, weight: latestWeight(), ts: Date.now() })) toast("נשמר");
 }
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const FB_GOOD = ["אש. ככה עובדים.", "זה מה שרצינו לראות.", "העבודה משתלמת. תמשיך בדיוק ככה.", "שינוי אמיתי. גאה בך."];
+const FB_BAD = ["לא נעים, אבל זה נתון ולא פסק דין. שבוע אחד לא מגדיר אותך.", "יום רע במדידה, לא בדרך. חוזרים למסלול מחר בבוקר.", "זה קורה לכולם. מי שמתמיד מנצח, ואתה מתמיד.", "רגע של אמת. עכשיו מתקנים ולא מתייאשים."];
+function measFb(data) { // coach line after logging measurements: honest when it goes the wrong way, praise when it improves
+  const cut = goalOf(S.profile) === "cut", good = [], bad = [];
+  for (const [k, t] of MEAS) {
+    if (!data[k]) continue; const pr = [...S.measures].filter(m => m.date < data.date && m[k]).sort((a, b) => a.date < b.date ? 1 : -1)[0]; if (!pr) continue;
+    const d = r1(data[k] - pr[k]), lbl = t.replace("היקף ", ""); if (Math.abs(d) < 0.5) continue; // under 0.5 cm is tape noise
+    if (k === "arm") (d > 0 ? good : bad).push(d > 0 ? `יד +${d} ס״מ` : `יד ${d} ס״מ`);
+    else if (k === "waist" || cut) (d < 0 ? good : bad).push(`${lbl} ${d > 0 ? "+" : ""}${d} ס״מ`);
+  }
+  if (!good.length && !bad.length) return null;
+  let tip = "";
+  if (bad.some(x => x.startsWith("יד"))) tip = cut ? "ירידה ביד בחיטוב היא חלקית שומן, אבל תשמור על חלבון מלא ועל משקלי האימון." : "תוודא חלבון מלא ועודף קלורי קטן.";
+  else if (bad.length) tip = cut ? "תבדוק שהיית ביעד הקלוריות השבוע, ותמדוד שוב באותה שעה ובאותו מצב." : "תמדוד שוב באותה שעה ובאותו מצב לפני שמסיקים.";
+  return bad.length ? `${bad.join(", ")}${good.length ? " · " + good.join(", ") : ""}. ${pick(FB_BAD)} ${tip}` : `${good.join(", ")}. ${pick(FB_GOOD)}`;
+}
+function weightFb(date, kg) { // judge by the 7-day average, not one weigh-in (water, salt and carbs move the scale 1-2 kg)
+  const g = goalOf(S.profile); if (g !== "cut" && g !== "bulk") return null;
+  const W = [...S.weights.filter(w => w.date !== date), { date, kg }].sort((x, y) => x.date < y.date ? -1 : 1); // the snapshot may not include the new weigh-in yet
+  const av = t => { const l = W.filter(w => w.date <= t && daysBetween(w.date, t) < 7); return l.reduce((s, x) => s + x.kg, 0) / l.length; };
+  const prev = W.filter(w => w.date < date).slice(-1)[0], wk = W.filter(w => w.date <= addDays(date, -7) && w.date >= addDays(date, -13));
+  const a = av(date), b = wk.length >= 2 ? av(wk[wk.length - 1].date) : null, up = g === "cut" ? 1 : -1;
+  const td = b != null ? r1(a - b) : null, dd = prev ? r1(kg - prev.kg) : 0, dir = x => x < 0 ? "ירד" : "עלה";
+  if (td != null && td * up >= 0.3) return `הממוצע השבועי ${dir(td)} ${Math.abs(td)} ק״ג. ${pick(FB_BAD)} ${g === "cut" ? "תחזור ליעד הקלוריות ותספור הכל, גם ביסים." : "תעלה קצת קלוריות."}`;
+  if (dd * up >= 0.5) return `${dd > 0 ? "+" : ""}${dd} ק״ג מהשקילה הקודמת. זה כנראה מים, מלח או פחמימות, לא שומן. ${td != null && td * up <= -0.2 ? `הממוצע השבועי עדיין ${dir(td)} ${Math.abs(td)} ק״ג, אתה בכיוון.` : `מה שקובע זה הממוצע: ${r1(a)} ק״ג. לא נבהלים.`}`;
+  if (td != null && td * up <= -0.2) return `הממוצע השבועי ${dir(td)} ${Math.abs(td)} ק״ג. ${pick(FB_GOOD)}`;
+  if (dd * up <= -0.5) return `${dd > 0 ? "+" : ""}${dd} ק״ג. ${pick(FB_GOOD)}`;
+  return null;
+}
 async function saveMeasures() {
   const d = /^\d{4}-\d{2}-\d{2}$/.test($("#m-date")?.value || "") && $("#m-date").value <= today() ? $("#m-date").value : today();
   const data = { date: d }; let any = false;
   for (const [k] of MEAS) { const v = num($("#m-" + k).value); if (v) { data[k] = v; any = true; } }
   const kg = num($("#m-kg")?.value || "");
-  if (kg) { const { id: _w, ...pw } = S.weights.find(x => x.date === d) || {}; if (!(await save("weights/" + d, { ...pw, date: d, kg }))) return; if (!any) { S.measOpen = false; toast("נשמר"); return; } }
+  if (kg) { const { id: _w, ...pw } = S.weights.find(x => x.date === d) || {}; if (!(await save("weights/" + d, { ...pw, date: d, kg }))) return; if (!any) { S.measOpen = false; const wf = weightFb(d, kg); toast(wf || "נשמר", null, wf ? 7000 : 0); return; } }
   if (!any) { toast("לא הוזנו מידות"); return; }
   const { id: _id, ...prev } = S.measures.find(m => m.date === data.date) || {};
-  if (await save("measures/" + data.date, { ...prev, ...data })) { S.measOpen = false; toast("נשמר"); }
+  if (await save("measures/" + data.date, { ...prev, ...data })) { S.measOpen = false; const f = [measFb(data), kg ? weightFb(d, kg) : null].filter(Boolean).join(" · "); toast(f || "נשמר", null, f ? 7500 : 0); }
 }
 async function estimateBF(id) {
   if (!S.sample) { toast("זמין רק כשנכנסים מחוברים"); return; }
