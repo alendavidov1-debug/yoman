@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="59bcd12124";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="336d5e4052";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -1476,11 +1476,21 @@ function progCards() { // body: one weight card (weekly average, pace, goal, for
       ${S.weights.length >= 2 ? chart() + `<span class="small muted" style="margin-top:-4px">נקודות = שקילות · קו = ממוצע 7 ימים · גע בגרף לפרטי יום</span>` : `<span class="small muted">הגרף יופיע אחרי שתי שקילות.</span>`}
       <div class="stat3"><div><span>נשארו ליעד</span><b class="n">${left == null ? "—" : r1(Math.abs(left))} <small>ק״ג</small></b></div><div><span>תחזית</span><b class="n">${wks ? `~${Math.max(1, Math.round(wks))}` : "—"} <small>שבועות</small></b></div><div><span>תאריך משוער</span><b class="n">${wks ? fmtDate(addDays(today(), Math.round(wks * 7))) : "—"}</b></div></div>
       ${msg ? `<div class="note ${msg[0]}">${msg[0] === "ok" ? IC.check : ""}<span>${msg[1]}</span></div>` : ""}</div>
-    <div class="tiles"><div class="tcard"><span class="small muted">${H ? esc(H.name) : "תרגיל מוביל"} · 1RM משוער</span><b class="tv n">${eh.length ? Math.round(eh[eh.length - 1].v) : "—"} <small>ק״ג</small></b><span class="small n" style="font-weight:700;color:${dE == null ? "var(--muted)" : dE >= 0 ? "var(--ok)" : "var(--bad)"}">${dE == null ? "אחרי שני אימונים" : `${sg(dE)} ק״ג ב-${eh.length} אימונים`}</span>${spark(eh.map(x => x.v))}</div>
+    ${cutCard()}<div class="tiles"><div class="tcard"><span class="small muted">${H ? esc(H.name) : "תרגיל מוביל"} · 1RM משוער</span><b class="tv n">${eh.length ? Math.round(eh[eh.length - 1].v) : "—"} <small>ק״ג</small></b><span class="small n" style="font-weight:700;color:${dE == null ? "var(--muted)" : dE >= 0 ? "var(--ok)" : "var(--bad)"}">${dE == null ? "אחרי שני אימונים" : `${sg(dE)} ק״ג ב-${eh.length} אימונים`}</span>${spark(eh.map(x => x.v))}</div>
       <div class="tcard"><span class="small muted">עקביות · 8 שבועות</span><b class="tv n">${tot} <small>/ ${goalN} אימונים</small></b><div class="cbars" aria-hidden="true">${weeks.map(x => `<div>${Array.from({ length: per }, (_, k) => `<i class="${per - 1 - k < x.n ? (x.cur ? "cur" : "on") : ""}"></i>`).join("")}</div>`).join("")}</div></div></div>
-    <div class="list"><button class="item" data-pv="meas"><div class="grow"><div class="t">היקפים</div><div class="s n">${(m => m ? `טבור ${m.waist ?? "—"} ס״מ${S.measures.length > 1 && S.measures[0].waist && m.waist ? ` · ${sg(r1(m.waist - S.measures[0].waist))} מההתחלה` : ""}` : "עוד אין מדידות")(S.measures[S.measures.length - 1])}</div></div>${IC.chev}</button>
+    <div class="list"><button class="item" data-pv="meas"><div class="grow"><div class="t">📏 תיעוד היקפים</div><div class="s n">${(m => m ? `טבור ${m.waist ?? "—"} ס״מ${S.measures.length > 1 && S.measures[0].waist && m.waist ? ` · ${sg(r1(m.waist - S.measures[0].waist))} מההתחלה` : ""}` : "עוד אין מדידות")(S.measures[S.measures.length - 1])}</div></div>${IC.chev}</button>
       <button class="item" data-pv="all"><div class="grow"><div class="t">כל השקילות</div><div class="s n">${S.weights.length ? `${S.weights.length} שקילות · אחרונה ${fmtDay(S.weights[S.weights.length - 1].date)}, ${S.weights[S.weights.length - 1].kg}` : "עוד אין שקילות"}</div></div>${IC.chev}</button></div>`;
 }
+const CUT_EQ = [[0.5, "🧈", "2 חבילות חמאה", "ירדו ממך 2 חבילות חמאה. מהשומן, לא מהמקרר"], [1, "🍍", "אננס", "ירד ממך אננס שלם. בלי לקלף"], [2, "🐇", "ארנב", "ארנב שלם קפץ ממך החוצה"],
+  [3, "🐈", "חתול", "סחבת חתול על הבטן כל יום. כבר לא"], [4, "🎳", "כדור באולינג", "כדור באולינג פחות. סטרייק"], [5, "🍉", "אבטיח", "אבטיח שלם. הקיץ כבר לא על הבטן"],
+  [7, "🦃", "תרנגול הודו", "תרנגול הודו שלם עזב את הבניין"], [10, "🐕", "כלב", "כלב שלם! טוב שזה לא הכלב שלך"], [15, "🐐", "תיש", "תיש שלם. המדרגות פתאום קלות"], [20, "🐼", "פנדה קטנה", "פנדה! מישהו תתקשר לגן החיות"]];
+function cutCard() { // fat-loss milestones, only when the pace is healthy (keeps muscle) — funny, static
+  const p = S.profile || {}; if (goalPct(p) >= 0 || S.weights.length < 4) return ""; const f = S.weights[0], L = S.weights[S.weights.length - 1]; if (daysBetween(f.date, L.date) < 10) return "";
+  const first = S.weights.filter(w => daysBetween(f.date, w.date) < 7), a0 = first.reduce((a, w) => a + w.kg, 0) / first.length, a1 = avg7(L.date), lost = r1(a0 - a1), rate = weeklyRate(), rp = rate != null && a1 ? rate / a1 * 100 : null;
+  const healthy = rp != null && rp <= -0.15 && rp >= -1.1, fast = rp != null && rp < -1.1; let k = -1; CUT_EQ.forEach((e, i) => { if (lost >= e[0]) k = i; }); const cur = CUT_EQ[k], nx = CUT_EQ[k + 1];
+  const pace = rp == null ? "" : healthy ? `<span style="color:var(--ok);font-weight:700">✓ קצב בריא: ${r1(Math.abs(rate))} ק״ג בשבוע. ככה שומרים על השריר.</span>` : fast ? `<span style="color:var(--bad);font-weight:700">⚠️ מהר מדי (${r1(Math.abs(rate))} ק״ג בשבוע). הנקודה הבאה תחכה עד שהקצב יירגע, כדי לשמור על השריר.</span>` : `<span class="muted">הקצב השבוע איטי. זה בסדר, הממוצע הוא מה שקובע.</span>`;
+  return `<div class="tcard" style="gap:6px"><span class="small muted">🏁 נקודות ציון בחיטוב</span>${cur && lost > 0 ? `<b style="font-size:1.15rem">${cur[1]} ${esc(cur[3])}</b><span class="small n">ירדת <b>${lost}</b> ק״ג בממוצע מההתחלה</span>` : `<b>עוד לא ירד קילו בממוצע</b>`}
+    ${nx && !fast ? `<span class="small n">הבאה: ${nx[1]} ${esc(nx[2])}, עוד <b>${r1(nx[0] - Math.max(0, lost))}</b> ק״ג</span>` : ""}<span class="small">${pace}</span></div>`; }
 function topLift() { const c = {}; S.workouts.forEach(w => (w.exercises || []).forEach(e => { if (e.sets?.some(s => s.kg > 0 && work(s))) c[e.name] = (c[e.name] || 0) + 1; })); const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return top ? { name: top[0], h: exHistory(top[0]) } : null; }
 /* ========== 2. LOG: WORKOUT ========== */
 /* ---------- v102 (3.11, research round: Fitbod recovery map, Hevy share card + monthly report) ---------- */
@@ -2332,7 +2342,7 @@ function tWeight() {
     ${S.weights.length ? `<div class="list">${[...tr].reverse().slice(0, S.wAll ? 400 : 7).map(x => { const ww = S.weights.find(y => y.date === x.date);
       return `<div class="item"><div class="grow"><div class="t n">${x.kg} ק״ג</div><div class="s">${fmtDay(x.date)}${ww.waist ? ` · מותן ${ww.waist}` : ""}</div></div><button class="btn link small" data-editwt="${x.date}">עריכה</button><button class="btn del" data-delwt="${x.date}" aria-label="מחק">✕</button></div>`; }).join("")}${tr.length > 7 ? `<div class="item"><button class="btn link grow" data-wall="1">${S.wAll ? "הצג פחות" : `הצג הכל (${tr.length})`}</button></div>` : ""}</div>` : ""}`;
 }
-const MEAS = [["arm","היקף יד"],["waist","היקף טבור"],["thighL","היקף רגל שמאל"],["hips","היקף ישבן"],["chest","היקף חזה"]];
+const MEAS = [["waist","היקף טבור"],["chest","היקף חזה"],["arm","היקף יד"],["thighL","היקף ירך"],["hips","היקף ישבן"],["neck","היקף צוואר"]];
 function navyBF(m) {
   const p = S.profile || {}, h = p.heightCm; if (!h || !m?.neck || !m?.waist) return null;
   if (p.sex === "f") { if (!m.hips) return null; return 495 / (1.29579 - 0.35004 * Math.log10(m.waist + m.hips - m.neck) + 0.221 * Math.log10(h)) - 450; }
@@ -2347,7 +2357,10 @@ function measureBlock() {
     <div class="list"><div class="kpis">
       <div class="kpi"><span class="k">טבור</span><span class="v n">${L?.waist ?? "—"}</span><span class="small n" style="color:${(dl("waist") ?? 0) <= 0 ? "var(--ok)" : "var(--bad)"}">${sg(dl("waist"))}</span></div>
       <div class="kpi"><span class="k">ישבן</span><span class="v n">${L?.hips ?? "—"}</span><span class="small n muted">${sg(dl("hips"))}</span></div>
-      <div class="kpi"><span class="k">יד</span><span class="v n">${L?.arm ?? "—"}</span><span class="small n muted">${sg(dl("arm"))}</span></div></div>
+      <div class="kpi"><span class="k">יד</span><span class="v n">${L?.arm ?? "—"}</span><span class="small n muted">${sg(dl("arm"))}</span></div>
+      <div class="kpi"><span class="k">חזה</span><span class="v n">${L?.chest ?? "—"}</span><span class="small n muted">${sg(dl("chest"))}</span></div>
+      <div class="kpi"><span class="k">ירך</span><span class="v n">${L?.thighL ?? "—"}</span><span class="small n muted">${sg(dl("thighL"))}</span></div>
+      <div class="kpi"><span class="k">% שומן</span><span class="v n">${bf ? r1(bf) : "—"}</span><span class="small n muted">${bf && bf0 && L !== F ? sg(r1(bf - bf0)) : bf ? "" : "צריך צוואר"}</span></div></div>
     ${S.measures.filter(m => m.waist).length >= 2 ? `<div class="item"><div class="grow s">היקף טבור (ס״מ)</div></div>${lineChart(S.measures.filter(m => m.waist).map(m => ({ date: m.date, v: m.waist })), "ס״מ")}` : ""}
     <details class="item" style="display:block" ${S.measOpen ? "open" : ""}><summary class="row" style="justify-content:space-between"><b style="font-weight:500">מדידה חדשה</b><span class="small muted">ס״מ</span></summary>
       <div class="fields" style="margin-top:10px"><label class="f">תאריך<input id="m-date" type="date" value="${today()}" max="${today()}"></label><label class="f">משקל (ק״ג)<input id="m-kg" inputmode="decimal" placeholder="${latestWeight() ?? ""}"></label>${MEAS.map(([k, t]) => `<label class="f">${t}<input id="m-${k}" inputmode="decimal" placeholder="${L?.[k] ?? ""}"></label>`).join("")}</div>
@@ -2751,7 +2764,7 @@ document.addEventListener("click", async ev => {
   if (ds.pg) { const [k, d] = ds.pg.split(":").map(Number), ps = nutSplit(S.add.txt), r = nutParts(S.add.txt); if (!r) return; const x = r[k];
     ps[k] = `${x.n} ${Math.max(5, Math.round(x.g + d))} גרם${x.fry ? " מטוגן" : ""}${x.raw ? " לפני בישול" : ""}`; S.add.txt = ps.join(" + "); render(); return; }
   if (ds.hist) { S.histOpen = !S.histOpen; render(); return; }
-  if (ds.pv) { S.pView = S.pView === ds.pv ? null : ds.pv; render(); if (S.pView) setTimeout(() => document.querySelector(`[data-pv="${ds.pv}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); return; }
+  if (ds.pv) { S.pView = S.pView === ds.pv ? null : ds.pv; if (S.pView === "meas") S.measOpen = !S.measures.some(m => m.date === today()); render(); if (S.pView) setTimeout(() => document.querySelector(`[data-pv="${ds.pv}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); return; }
   if (ds.fgo != null) { S.fx = +ds.fgo; render(); return; }
   if (ds.wjump) { const k = $("#wKg"); if (k) { k.scrollIntoView({ behavior: "smooth", block: "center" }); k.focus({ preventScroll: true }); } return; }
   if (ds.undo) { const u = S.undo; S.undo = null; $("#toast").hidden = true; if (u) u(); return; }
