@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="e910007b84";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="ff77ee5941";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -576,6 +576,7 @@ body.wkOn .restbar .in{padding:6px 10px;border-radius:18px}body.wkOn .restbar .b
 .ciq{display:flex;gap:6px}.ciq button{flex:1;min-height:42px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;font:600 .78rem var(--font);padding:4px 2px;cursor:pointer;display:grid;place-items:center;line-height:1.15}.ciq button span{font-size:1.05rem}.ciq button.on{background:#e10600}
 .wowc textarea{width:100%;border-radius:10px;border:0;background:rgba(255,255,255,.1);color:#fff;font:500 .9rem var(--font);padding:8px 10px}.wowc textarea::placeholder{color:#b9a9ab}
 .fst{border-radius:12px;background:var(--card2,rgba(127,127,127,.1));padding:10px 4px;display:grid;gap:2px;text-align:center}.fst b{font-size:1.1rem}.fst span{font-size:.72rem;color:var(--muted)}
+.wowd{display:grid;gap:4px;justify-items:center}.wowd>span{font-size:.8rem;color:#d9b9bb;font-weight:600}.wowd>b{font-size:1.5rem;font-weight:800}.wowdb{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.wowdb span{font-size:.75rem;background:rgba(255,255,255,.08);border-radius:999px;padding:3px 9px;color:#e9dfe0}
 .wowa{display:grid;gap:10px;margin-top:6px}.wowa .btn{min-height:50px;font-size:1rem}.wowa .btn:not(.primary){background:rgba(255,255,255,.1);color:#fff;border-color:transparent}
 .sumhero .bsx{background:rgba(255,255,255,.1);color:#fff}.sumdone{font-size:.78rem;font-weight:700;color:#8fe3ad}
 .sumchips{display:flex;flex-wrap:wrap;gap:8px}.sumchips span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px;font-size:.82rem;font-weight:600}.sumchips .pr{background:rgba(225,6,0,.3);border-color:rgba(255,120,110,.5)}
@@ -789,6 +790,12 @@ const S = {
 if (S.draft) S.tab = "train";
 
 /* ---------- numbers ---------- */
+// share of body weight actually moved (estimates from biomechanics studies, e.g. push-up ≈64% BW, Ebben 2011). You log only the added kg.
+const BW_F = [[/^(מתח|עליות מתח|צ׳ין)/, 1, "כל הגוף"], [/^(מקבילים|דיפס)/, 1, "כל הגוף"], [/^שכיבות סמיכה/, .64, "כ-64% מהגוף"], [/^כפיפות בטן.*בוסו/, .4, "פלג גוף עליון בטווח מלא"], [/^הרמות? רגליים/, .33, "משקל הרגליים"], [/^כפיפות בטן/, .3, "פלג גוף עליון"]];
+const bwRule = n => !n || /פולי|מכונה|בסיוע|גומי|כבל/.test(n) ? null : BW_F.find(([re]) => re.test(n)) || null;
+const isBW = n => !!bwRule(n), bwOf = n => { const r = bwRule(n); return r ? r1(bodyKg() * r[1]) : 0; };
+const bodyKg = () => { const L = S.weights[S.weights.length - 1], a = L ? avg7(L.date) : null; return a ? Math.round(a * 2) / 2 : latestWeight() || num(S.profile?.state?.kg) || 0; }; // 7-day average, so daily water swings don't move it
+const addOf = (name, st) => st.bw ? r1((st.kg || 0) - st.bw) : st.kg; // stored kg is total for body-weight sets; the screen works in "added" kg
 function latestWeight() { return S.weights.length ? S.weights[S.weights.length - 1].kg : null; }
 function trendSeries() { let t = null; return S.weights.map((w, i) => { t = t == null ? w.kg : t + Math.max(0.1, 1 / (i + 1)) * (w.kg - t); return { date: w.date, kg: w.kg, trend: t }; }); } // running mean early, then EMA 0.1: no first-weigh-in bias
 function weekAvgs() { // Sun–Sat weeks: the research-standard way to read a cut (daily noise ±1 kg from water/salt)
@@ -833,11 +840,11 @@ function dayTotals(date) { return S.food.filter(f => f.date === date).reduce((a,
 function sessionsFor(name, n = 3) { // newest first: [{ date, sets }] of real working sets
   const out = []; for (let i = S.workouts.length - 1; i >= 0 && out.length < n; i--) {
     const ex = (S.workouts[i].exercises || []).find(e => e.name === name && e.sets?.some(s => s.reps && work(s)));
-    if (ex) out.push({ date: S.workouts[i].date, sets: ex.sets.filter(s => s.reps && work(s)) }); }
+    if (ex) out.push({ date: S.workouts[i].date, sets: ex.sets.filter(s => s.reps && work(s)).map(s => isBW(name) && s.bw ? { ...s, kg: addOf(name, s) } : s) }); }
   return out;
 }
 function lastSessionFor(name) { return sessionsFor(name, 1)[0] || null; }
-const sessE = x => Math.max(0, ...x.sets.map(s => e1rm(s.kg || 0, s.reps || 0)));
+const sessE = x => Math.max(0, ...x.sets.map(s => e1rm((s.kg || 0) + (s.bw || 0), s.reps || 0)));
 function suggest(ex) { // reads the last sessions: weight, reps, how many reps were left (RIR), and the trend
   const H = sessionsFor(ex.name, 3), last = H[0];
   if (!last) return { kg: ex.startKg ?? "", reps: ex.amrap ? "" : ex.repMin, hint: "", first: ex.startKg == null && !SEC.has(ex.name) };
@@ -1357,7 +1364,7 @@ const equiv = v => { let e = null; for (const x of EQUIV) if (v >= x[0]) e = x; 
 const STREAK_T = [[1, "ניצוץ"], [3, "מתחמם"], [7, "בוער"], [14, "מכונה"], [30, "אגדה"], [60, "בלתי עציר"]];
 function climbCard() { // one number to break: your best single-workout volume (weight × reps). Level/story stay one small line.
   const vol = e => (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), D = S.draft;
-  const live = D ? D.exercises.reduce((a, e) => a + e.log.filter(x => x.done && x.t !== "w").reduce((b, x) => b + (num(x.kg) || 0) * (parseInt(x.reps) || 0), 0), 0) : 0;
+  const live = D ? D.exercises.reduce((a, e) => a + e.log.filter(x => x.done && x.t !== "w").reduce((b, x) => b + ((num(x.kg) || 0) + bwOf(e.name)) * (parseInt(x.reps) || 0), 0), 0) : 0;
   const tot = lifeVol() + live, at = Math.floor(tot / STEP), nm = k => STOPS[k % STOPS.length] + (k >= STOPS.length ? ` ${Math.floor(k / STOPS.length) + 1}` : ""), kg = v => Math.round(v).toLocaleString("he-IL");
   const vs = S.workouts.map(w => (w.exercises || []).reduce((b, e) => b + vol(e), 0)), rec = vs.length ? Math.max(...vs) : 0, broke = D && rec && live > rec;
   const last = vs.length ? vs[vs.length - 1] : 0, bar = D ? (rec ? Math.min(100, live / rec * 100) : 0) : rec ? Math.min(100, last / rec * 100) : 0;
@@ -1648,7 +1655,7 @@ function vTrain() {
     ${pd ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}">${IC.play}התחלת אימון ${esc(pd.name)}</button></div>` : ""}</div>`;
 }
 function exHead(ex, i, tag = "") { return `        <div class="row exh" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;row-gap:4px"><button class="btn" style="padding:0;background:none" data-wprev="${esc(ex.name)}">${thumb(ex.name, "sm")}</button><div style="min-width:0;flex:1">${ex.muscle ? `<div class="mus">${esc(ex.muscle)}</div>` : ""}${S.renOpen === i ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;margin:4px 0"><input id="ren-${i}" value="${esc(ex.name)}" aria-label="שם חדש" enterkeyhint="done"><button class="btn small primary" data-rensave="${i}">שמירה</button><button class="btn small" data-rensave="x">ביטול</button></div>` : ""}<div class="name">${tag ? `<b class="sstl">${tag}</b> ` : ""}${esc(ex.name)}${ex.wrist && WR() ? `<span class="flag">יד שמאל</span>` : ""}</div>
-        <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}${S.draft && !S.draft.editId ? prChip(ex) : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint${ex.sug.dn ? " dn" : ""}">${ex.sug.hint}</div>` : ex.sug?.first && CFG("tips") && S.draft && !S.draft.editId ? `<div class="hint">פעם ראשונה בתרגיל: עצור 2–3 חזרות לפני כישלון. מהפעם הבאה האפליקציה תציע משקל וחזרות.</div>` : ""}</div>
+        <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}${isBW(ex.name) && bodyKg() ? (r => `<span>משקל גוף ${r[1] < 1 ? `${bodyKg()} × ${Math.round(r[1] * 100)}% = ` : ""}<b>${bwOf(ex.name)}</b> ק״ג נספר לבד${r[1] < 1 ? " (הערכה)" : ""} · רושמים רק תוספת</span>`)(bwRule(ex.name)) : ""}${S.draft && !S.draft.editId ? prChip(ex) : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint${ex.sug.dn ? " dn" : ""}">${ex.sug.hint}</div>` : ex.sug?.first && CFG("tips") && S.draft && !S.draft.editId ? `<div class="hint">פעם ראשונה בתרגיל: עצור 2–3 חזרות לפני כישלון. מהפעם הבאה האפליקציה תציע משקל וחזרות.</div>` : ""}</div>
           ${ex.opts?.length > 1 && S.draft ? `<div class="optseg wide" role="radiogroup" aria-label="איזה תרגיל היום">${ex.opts.map(o => `<button role="radio" aria-checked="${o === ex.name}" class="${o === ex.name ? "on" : ""}" data-optpick="${i}" data-opt="${esc(o)}">${esc(dn(o))}</button>`).join("")}</div>` : ""}<button class="exdots" data-exmenu="${i}" aria-label="פעולות לתרגיל" aria-expanded="${S.exMenu === i}">•••</button>${S.exMenu !== i ? "" : `<span class="stmenu exmenu" style="flex-basis:100%">${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? "" : `<button data-noteopen="${esc(ex.name)}">הערה</button>`}${i !== curIdx(S.draft) && !S.draft.exercises[i].log.every(x => x.done) ? `<button data-exnow="${i}">▶ לעשות עכשיו</button>` : ""}${i > 0 ? `<button data-exmv="${i}:-1">▲ למעלה</button>` : ""}${i < S.draft.exercises.length - 1 ? `<button data-exmv="${i}:1">▼ למטה</button>` : ""}<button data-exren="${i}">שינוי שם</button><button data-wswap="${i}">החלפת תרגיל</button>${ex.ss ? `<button data-ssoff="${i}">${ex.ssT === "alt" ? "ביטול לסירוגין" : "ביטול סופר סט"}</button>` : `<button data-ss="${i}">סופר סט</button><button data-ssalt="${i}">סטים לסירוגין</button>`}<button class="xdel" data-wdel="${i}">הסרה מהאימון</button></span>`}</div>
 `; }
 function setRow(ex, i, j, last, best, tag = "") { const s = ex.log[j]; const p = s.t === "w" ? null : last?.sets[ex.log.slice(0, j).filter(work).length], isPR = s.done && s.t !== "w" && best.e && e1rm(num(s.kg) || 0, parseInt(s.reps) || 0) > best.e + 0.1;
@@ -1660,9 +1667,9 @@ const SSL = ["א", "ב", "ג", "ד"];
 const roundKg = (kg, inc) => { const st = inc >= 2.5 ? 1.25 : .5; return Math.round(kg / st) * st; };
 function histBest(name) { let b = 0; for (const w of S.workouts) for (const e of w.exercises || []) if (e.name === name) for (const st of e.sets || []) if (work(st) && st.kg > 0 && st.reps > 0) b = Math.max(b, e1rm(st.kg, st.reps)); return b; }
 function livePR(i, j) { // like Hevy: a trophy the moment a set beats every earlier one (estimated 1RM)
-  const ex = S.draft.exercises[i], s = ex.log[j], kg = num(s.kg), reps = parseInt(s.reps); if (!kg || !reps || SEC.has(ex.name)) return;
-  let b = histBest(ex.name); if (!b) return; ex.log.forEach((x, k) => { if (k !== j && x.done && x.t !== "w" && x.t !== "d" && num(x.kg) && parseInt(x.reps)) b = Math.max(b, e1rm(num(x.kg), parseInt(x.reps))); });
-  if (e1rm(kg, reps) > b + .01) { s.pr = 1; S.livePR = { k: `${i}-${j}`, txt: `🏆 שיא חדש · <bdi dir="ltr">${kg}×${reps}</bdi>` }; try { navigator.vibrate?.([30, 60, 30]); } catch {} } }
+  const ex = S.draft.exercises[i], s = ex.log[j], B = bwOf(ex.name), kg = (num(s.kg) || 0) + B, reps = parseInt(s.reps); if (!kg || !reps || SEC.has(ex.name)) return;
+  let b = histBest(ex.name); if (!b) return; ex.log.forEach((x, k) => { if (k !== j && x.done && x.t !== "w" && x.t !== "d" && parseInt(x.reps) && (num(x.kg) || B)) b = Math.max(b, e1rm((num(x.kg) || 0) + B, parseInt(x.reps))); });
+  if (e1rm(kg, reps) > b + .01) { s.pr = 1; S.livePR = { k: `${i}-${j}`, txt: `🏆 שיא חדש · <bdi dir="ltr">${B ? (num(s.kg) ? "+" + num(s.kg) : "BW") : kg}×${reps}</bdi>` }; try { navigator.vibrate?.([30, 60, 30]); } catch {} } }
 function rirBar() { // reps-left chips + next-set tip live in the fixed rest bar, so the workout list never shifts
   const el = $("#rest .rrir"); if (!el) return; const D = S.draft; let h = "";
   if (D && S.rirAsk) { const [i, j] = S.rirAsk.split("-").map(Number), s = D.exercises[i]?.log[j]; if (s?.done && s.rir == null) h = `<div class="rirask" role="group" aria-label="כמה עוד יכולת"><span>כמה חזרות עוד יכולת לעשות?</span>${[0, 1, 2, 3, 4].map(v => `<button data-rir="${i}-${j}-${v}">${v === 4 ? `<bdi dir="ltr">4+</bdi>` : v}</button>`).join("")}</div>`; }
@@ -1698,7 +1705,7 @@ function ssCard(D, i0) { // superset: one card, each set = one row per exercise 
     ex.log.forEach((s, j) => { if (s.t === "w") w.push(j); else if (s.t === "d" && R.length) R[R.length - 1].push(j); else R.push([j]); }); return { k, ex, last, best, w, R }; });
   const nR = Math.max(...M.map(m => m.R.length)), row = (m, j, n) => setRow(m.ex, m.k, j, m.last, m.best);
   return `<div class="ex ssx ${D.exercises[i0].ssT === "alt" ? "altx" : ""} ${fin ? "fin" : cur >= 0 ? "cur" : ""}"><div class="row sb" style="align-items:center"><span class="sstag">${D.exercises[i0].ssT === "alt" ? `⇆ סטים לסירוגין · מנוחה אחרי כל סט` : `סופר סט · ${G.length} תרגילים ברצף, מנוחה אחרי הסבב`}</span><button class="btn small ssswap" data-ssswap="${i0}" aria-label="החלפת הסדר בסופר סט">⇅ סדר</button></div>${cur >= 0 ? `<span class="excur"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>נוכחי: ${SSL[G.indexOf(cur)]}</span>` : fin ? `<span class="excur ok">${IC.check}הושלם</span>` : ""}
-    ${M.map((m, n) => `${exHead(m.ex, m.k, SSL[n])}<div class="settbl"><div class="sr h"><span class="i">סט</span><span>קודם</span><span style="text-align:center">ק״ג</span><span style="text-align:center">${SEC.has(m.ex.name) ? "שניות" : "חזרות"}</span><span></span></div>
+    ${M.map((m, n) => `${exHead(m.ex, m.k, SSL[n])}<div class="settbl"><div class="sr h"><span class="i">סט</span><span>קודם</span><span style="text-align:center">${isBW(m.ex.name) ? "+ק״ג" : "ק״ג"}</span><span style="text-align:center">${SEC.has(m.ex.name) ? "שניות" : "חזרות"}</span><span></span></div>
     ${m.ex.log.map((s, j) => row(m, j, n)).join("")}</div>`).join('<div class="sssep"></div>')}
     ${cur >= 0 ? setBtns(cur, D.exercises[cur].log.findIndex(s => !s.done)) : ""}
     <div class="row" style="justify-content:space-between"><span class="row" style="gap:4px"><button class="btn link" data-ssadd="${i0}">+ סט</button>${cur >= 0 ? `<button class="btn link" data-adddrop="${cur}">+ דרופ</button>` : ""}<button class="btn link del" data-ssdel="${i0}">− סט</button></span></div></div>`;
@@ -1720,7 +1727,7 @@ function activeWorkout() {
         return `<button class="ex fin exmini" data-exopen="${i}">${thumb(ex.name, "sm")}<div class="grow"><div class="name">${esc(dn(ex.name))}</div><div class="s n">${ws.length} סטים${tp && tp.kg ? ` · הכי כבד <bdi dir="ltr">${tp.kg}×${tp.reps}</bdi>` : ""}${vol ? ` · נפח ${Math.round(vol)} ק״ג` : ""}</div></div></button>`; }
       return `<div class="ex ${fin ? "fin" : cur ? "cur" : ""}">${fin && S.openEx === i && !D.editId ? `<button class="btn link small" data-exopen="-1" style="float:left">כיווץ</button>` : ""}${cur ? `<span class="excur"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>נוכחי</span>` : fin ? `<span class="excur ok">${IC.check}הושלם</span>` : ""}
 ${exHead(ex, i)}
-<div class="settbl"><div class="sr h"><span class="i">סט</span><span>קודם</span><span style="text-align:center">ק״ג</span><span style="text-align:center">${SEC.has(ex.name) ? "שניות" : "חזרות"}</span><span></span></div>
+<div class="settbl"><div class="sr h"><span class="i">סט</span><span>קודם</span><span style="text-align:center">${isBW(ex.name) ? "+ק״ג" : "ק״ג"}</span><span style="text-align:center">${SEC.has(ex.name) ? "שניות" : "חזרות"}</span><span></span></div>
         ${ex.log.map((s, j) => setRow(ex, i, j, last, best)).join("")}</div>
         ${cur ? setBtns(i, ex.log.findIndex(s => !s.done)) : ""}
         <div class="row" style="justify-content:space-between"><span class="row" style="gap:4px"><button class="btn link" data-addset="${i}">+ סט</button><button class="btn link" data-adddrop="${i}">+ דרופ</button>${ex.log.length > 1 ? `<button class="btn link del" data-delset="${i}">− סט</button>` : ""}</span>
@@ -1765,7 +1772,7 @@ async function finishWorkout(btn) {
 }
 async function finishWorkout1() {
   const D = S.draft; if (!D) return;
-  const exercises = D.exercises.map(e => ({ name: e.name, ...(e.ss ? { ss: e.ss } : {}), ...(e.ssT ? { ssT: e.ssT } : {}), sets: e.log.filter(s => s.done || (D.editId && s.reps !== "")).map(s => ({ kg: num(s.kg) ?? 0, reps: parseInt(s.reps) || 0, ...(s.t ? { t: s.t } : {}), ...(s.sec ? { sec: s.sec } : {}), ...(s.rir != null ? { rir: s.rir } : {}) })).filter(s => s.reps) })).filter(e => e.sets.length);
+  const exercises = D.exercises.map(e => ({ name: e.name, ...(e.ss ? { ss: e.ss } : {}), ...(e.ssT ? { ssT: e.ssT } : {}), sets: e.log.filter(s => s.done || (D.editId && s.reps !== "")).map(s => ({ kg: num(s.kg) ?? 0, reps: parseInt(s.reps) || 0, ...(isBW(e.name) && s.t !== "w" && (s.bw || bwOf(e.name)) ? { kg: r1((num(s.kg) || 0) + (s.bw || bwOf(e.name))), add: num(s.kg) || 0, bw: s.bw || bwOf(e.name) } : {}), ...(s.t ? { t: s.t } : {}), ...(s.sec ? { sec: s.sec } : {}), ...(s.rir != null ? { rir: s.rir } : {}) })).filter(s => s.reps) })).filter(e => e.sets.length);
   if (!exercises.length) { S.endAsk = true; render(); scrollTo({ top: 0 }); return; }
   const now = Date.now(), lastAt = Math.max(0, ...D.exercises.flatMap(e => e.log.map(s => s.done && s.at || 0)));
   let minutes = Math.round((now - (D.start || now)) / 60000); // forgot to tap "finish"? count until the last set (+2 min), not until now
@@ -1776,11 +1783,11 @@ async function finishWorkout1() {
   const volume = exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + st.kg * st.reps, 0), 0);
   const prevW = [...S.workouts].reverse().find(w => w.dayId === D.dayId);
   const prevVolume = prevW ? prevW.exercises.reduce((a, e) => a + e.sets.filter(work).reduce((b, st) => b + (st.kg||0) * (st.reps||0), 0), 0) : 0;
-  const restS = restStats(D);
+  const restS = restStats(D), setsSec = D.exercises.reduce((a, e) => a + (e.log || []).filter(x => x.done).reduce((b, x) => b + (x.sec || 35), 0), 0);
   const lvBefore = D.editId ? null : Math.floor(lifeVol() / STEP), recBefore = Math.max(0, ...S.workouts.filter(w => w.ts !== now).map(w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0)));
   const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, exercises, minutes, ...(restS ? { restAvg: restS.avg, restOver: restS.over } : {}), ts: now }));
   if (await (D.editId ? (x => save("workouts/" + D.editId, x)) : (x => addTo("workouts", x)))(doc)) {
-    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, rest: restS, recBefore, wow: !D.editId, ts: now, note: D.note || "", up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
+    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, rest: restS, dur: { wu: D.wuMin || 0, sets: Math.round(setsSec / 60), rest: restS?.total || 0, est: D.exercises.some(e => (e.log || []).some(x => x.done && !x.sec)) }, recBefore, wow: !D.editId, ts: now, note: D.note || "", up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
     if (COACH_ON && !D.editId) setTimeout(() => { const sets = S.summary?.sets ?? 0, wk = streak().cur;
       const t = (prs.length ? `${prs.length === 1 ? "שיא חדש" : prs.length + " שיאים חדשים"} היום, ` : "") + `סיימת ${esc(D.dayName || "אימון")}: ${sets === 1 ? "סט אחד" : sets + " סטים"}${minutes > 0 ? ` ב-${minutes} דקות` : ""}. ` + (wk >= 4 ? "היעד השבועי הושג, כל הכבוד על ההתמדה." : `זה אימון ${wk} מתוך 4 השבוע.`) + " איך הגוף מרגיש?";
       const msg = { role: "coach", text: t, ts: Date.now(), nudge: "w" + now }; S.chat.push(msg); S.coachUnread = true; store.set("coachUnread", true); addTo("chat", msg); render(); }, 1500);
@@ -1805,7 +1812,7 @@ function wuSteps(D) { // general warm-up adapted to the day's muscles: 5 min eas
 }
 function wuSets(ex, warmed) { // ramp-up sets from the working weight; a muscle already warmed by an earlier exercise gets one feeder set
   if (SEC.has(ex.name)) return [];
-  const kg = num(ex.sug?.kg) ?? num(ex.startKg); if (!(kg > 0)) return warmed ? [] : [{ kg: "", reps: String(CFG("noWtReps")), done: false, t: "w", wa: 1 }]; // no working weight yet: one light set, weight typed by feel
+  const kg = num(ex.sug?.kg) ?? num(ex.startKg); if (!(kg > 0)) return warmed || isBW(ex.name) ? [] : [{ kg: "", reps: String(CFG("noWtReps")), done: false, t: "w", wa: 1 }]; // no working weight yet: one light set, weight typed by feel
   const bar = ex.barbell || EX_INDEX[ex.name]?.b, step = bar || kg >= 20 ? 2.5 : 1, r = x => Math.round(x / step) * step;
   const pr = (x, reps) => ({ kg: r(x), reps });
   let L;
@@ -1845,14 +1852,16 @@ function bestBefore(name, beforeTs) {
   return { e, kg };
 }
 function prTarget(ex, kgPlan) { // the set that would be a new record today: planned weight × the reps that beat your best (estimated 1RM)
-  if (!ex?.name || SEC.has(ex.name)) return null; const before = S.draft?.start || Date.now(), kg = num(kgPlan ?? ex.sug?.kg) ?? num(ex.startKg);
+  if (!ex?.name || SEC.has(ex.name)) return null; const before = S.draft?.start || Date.now(), B = bwOf(ex.name);
+  if (B) { const add = num(kgPlan ?? ex.sug?.kg) || 0, b = bestBefore(ex.name, before); if (!b.e) return null; for (let r = 1; r <= (ex.amrap ? 30 : ex.repMax || 12); r++) if (e1rm(add + B, r) > b.e + 0.1) return { kg: add, reps: r, bw: 1 }; return null; }
+  const kg = num(kgPlan ?? ex.sug?.kg) ?? num(ex.startKg);
   if (!(kg > 0)) { let r = 0; /* bodyweight: one more rep than ever */ S.workouts.filter(w => (w.ts || 0) < before).forEach(w => (w.exercises || []).filter(x => x.name === ex.name).forEach(x => x.sets.filter(work).forEach(st => { if (!(st.kg > 0)) r = Math.max(r, st.reps || 0); }))); return r && (ex.amrap || r + 1 <= (ex.repMax || 12)) ? { reps: r + 1 } : null; }
   const b = bestBefore(ex.name, before); if (!b.e) return null;
   for (let r = 1; r <= (ex.amrap ? 30 : ex.repMax || 12); r++) if (e1rm(kg, r) > b.e + 0.1) return { kg, reps: r }; // only inside the planned rep range
   return null;
 }
 const prChip = ex => { const t = prTarget(ex); if (!t) return ""; const hit = ex.log?.some(s => s.done && s.pr);
-  return `<span class="prt">${hit ? "🏆 <b>שברת שיא!</b>" : `🏆 שיא: <b>${t.kg ? ltr(`${t.kg}×${t.reps}`) : `${t.reps} חזרות`}</b>`}</span>`; };
+  return `<span class="prt">${hit ? "🏆 <b>שברת שיא!</b>" : `🏆 שיא: <b>${t.bw ? (t.kg ? ltr(`+${t.kg}×${t.reps}`) : `${t.reps} חזרות`) : t.kg ? ltr(`${t.kg}×${t.reps}`) : `${t.reps} חזרות`}</b>`}</span>`; };
 function summaryCard() {
   const W = S.summary; if (!W) return "";
   const dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
@@ -1892,6 +1901,10 @@ function feelCard() { const F = feelStats(); if (!F) return `<div class="tcard">
     ${F.gv != null ? `<span class="small">באימונים שהרגשת חזק הרמת <b class="n">${F.gv >= 0 ? "+" : ""}${F.gv}%</b> מאשר כשהיית עייף.</span>` : ""}
     ${F.sleepHit ? `<span class="small">שינה: קושי ממוצע אחרי לילה קצר מול לילה טוב: <b class="n">${F.sleepHit}</b>.</span>` : ""}
     ${F.notes.length ? `<div class="small muted">${F.notes.map(w => `<div>${fmtDate(w.date)}: ${esc(w.note)}</div>`).join("")}</div>` : ""}</div>`; }
+const hm = m => m >= 60 ? `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")} שע׳` : `${m} דק׳`;
+function durHtml(W) { const d = W.dur || {}, other = Math.max(0, W.minutes - d.wu - d.sets - d.rest);
+  const parts = [d.wu ? ["חימום", d.wu] : null, ["סטים", d.sets], ["מנוחה", d.rest], other >= 2 ? ["מעברים", other] : null].filter(x => x && x[1] > 0);
+  return `<div class="wowd n"><span>⏱️ משך האימון</span><b>${hm(W.minutes)}</b>${parts.length > 1 ? `<div class="wowdb">${parts.map(([l, v]) => `<span><b>${v}</b> ${l}</span>`).join("")}</div>` : ""}</div>`; }
 function restStats(D) { // real rest: from tapping a set done until the next set really started (set timer start, or done time minus the set's length)
   const L = D.exercises.flatMap(e => (e.log || []).filter(x => x.done && x.at).map(x => ({ ...x, name: e.name }))).sort((a, b) => a.at - b.at), R = [];
   for (let k = 1; k < L.length; k++) { const a = L[k - 1], b = L[k]; if (b.t === "d") continue;
@@ -1913,11 +1926,11 @@ function wowHtml() { // full-screen "you did it" right after finishing. Static: 
   const rec = W.volume > 0 && W.volume > W.recBefore, dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
   const line = rec ? (W.recBefore ? `🏆 שיא אימון חדש! קודם: ${kg(W.recBefore)} ק״ג` : "🏆 האימון הראשון קבע את השיא שלך") : W.recBefore ? `עוד ${kg(W.recBefore - W.volume)} ק״ג לשיא שלך` : "";
   return `<div class="wowov" role="dialog" aria-label="אימון הושלם"><div class="wowin">
-    <div class="wowk">💪 אימון הושלם</div><h2>${esc(W.dayName || "אימון")}</h2>
+    <div class="wowk">💪 אימון הושלם</div><h2>${esc(W.dayName || "אימון")}</h2>${durHtml(W)}
     <div class="wowl">הרמת היום</div><div class="wown n">${kg(W.volume)}<small>ק״ג</small></div>
     ${eq ? `<div class="wowe">${eq[1]} כמו להרים ${eq[2]}${W.volume >= eq[0] * 2 ? ` × ${Math.floor(W.volume / eq[0])}` : ""}</div>` : ""}
     ${line ? `<div class="wowr${rec ? " on" : ""} n">${line}</div>` : ""}
-    <div class="wows n"><div><b>${W.minutes}</b><span>דקות</span></div><div><b>${W.sets}</b><span>סטים</span></div><div><b>${W.prs.length}</b><span>${W.prs.length === 1 ? "שיא בתרגיל" : "שיאים בתרגילים"}</span></div></div>${dv > 0 ? `<div class="wowe n" style="font-size:.95rem">📈 <bdi dir="ltr">+${dv}%</bdi> מול הפעם הקודמת ביום הזה</div>` : ""}
+    <div class="wows n"><div><b>${W.sets}</b><span>סטים</span></div><div><b>${W.prs.length}</b><span>${W.prs.length === 1 ? "שיא בתרגיל" : "שיאים בתרגילים"}</span></div><div><b>${(W.exercises || []).length}</b><span>תרגילים</span></div></div>${dv > 0 ? `<div class="wowe n" style="font-size:.95rem">📈 <bdi dir="ltr">+${dv}%</bdi> מול הפעם הקודמת ביום הזה</div>` : ""}
     ${W.prs.length ? `<div class="wowp"><b>${W.prs.length === 1 ? "שיא חדש בתרגיל" : W.prs.length + " שיאים חדשים בתרגילים"}</b>${W.prs.slice(0, 3).map(p => `<div class="row sb"><span>${esc(p.name)}</span><span class="n">${p.kind === "kg" ? `${p.kg} ק״ג` : `1RM ${r1(p.e)}`}</span></div>`).join("")}</div>` : ""}
     ${restHtml(W.rest, 1)}${checkinHtml(W)}<div class="wowa"><button class="btn primary" data-wowx="1">שמירה וסגירה</button><button class="btn" data-sumshare="1">📸 שיתוף תמונה</button></div></div></div>`;
 }
@@ -2671,7 +2684,7 @@ document.addEventListener("click", async ev => {
     const pd = S.plan?.days.find(d => d.id === w.dayId);
     S.draft = { date: w.date, start: Date.now() - (w.minutes || 0) * 60000, dayId: w.dayId, dayName: w.dayName, note: w.note || "", pain: w.pain ?? null, editId: w.id,
       exercises: w.exercises.map(e => { const pe = pd?.exercises.find(x => x.name === e.name) || {}, m = EX_INDEX[e.name] || {};
-        return { sets: e.sets.length, repMin: 8, repMax: 12, rest: 90, inc: 2.5, ...pe, name: e.name, barbell: pe.barbell ?? !!m.b, wrist: pe.wrist ?? !!(m.w || m.r), sug: { kg: "", reps: "", hint: "" }, log: e.sets.map(st => ({ kg: st.kg, reps: st.reps, done: true })) }; }) };
+        return { sets: e.sets.length, repMin: 8, repMax: 12, rest: 90, inc: 2.5, ...pe, name: e.name, barbell: pe.barbell ?? !!m.b, wrist: pe.wrist ?? !!(m.w || m.r), sug: { kg: "", reps: "", hint: "" }, log: e.sets.map(st => ({ kg: addOf(e.name, st), reps: st.reps, done: true, ...(st.bw ? { bw: st.bw } : {}) })) }; }) };
     store.set("draft", S.draft); render(); scrollTo({ top: 0 }); return; }
   if (ds.delw) { if (ds.sure) await remove("workouts/" + ds.delw); else { ds.sure = 1; t.textContent = "בטוח?"; } return; }
   if (ds.fd) { const n = addDays(S.foodDate, +ds.fd); if (n <= today()) { S.foodDate = n; render(); } return; }
