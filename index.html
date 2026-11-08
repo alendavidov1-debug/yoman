@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="ff77ee5941";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="bac5412993";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -915,6 +915,7 @@ function render() {
   if (S.noUser) { $("#view").innerHTML = `<div class="stack">${head("כניסה")}<div class="list pad" style="display:grid;gap:8px"><b>צריך להיות מחובר כדי לשמור נתונים</b><span class="small muted">התחבר בחלון הזה ורענן את הדף.</span></div></div>`; return; }
   if (S.live && S.loaded && !S.profile?.onboarded && !(S.profile?.age && S.profile?.heightCm)) { S.ob = S.ob || { step: 0, act: "1.55" }; document.body.classList.add("obOn"); $("#view").innerHTML = vOnboard(); return; }
   document.body.classList.remove("obOn");
+  const wowY = $(".wowov")?.scrollTop || 0;
   $("#view").innerHTML = ({ today: vToday, goals: vGoals, food: vFood, daily: () => vDaily(head("מטרות")), plan: vPlan, train: vTrainTab, settings: vSettings, track: () => (S.tab = "goals", S.goalSeg = "body", vGoals()), coach: vCoach })[S.tab]();
   const n = id && document.getElementById(id);
   if (n && /INPUT|TEXTAREA/.test(n.tagName)) { n.value = val; n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
@@ -923,7 +924,7 @@ function render() {
   if (S.tab === "coach") chatBottom();
   resumeBar(); document.body.classList.toggle("dk", !!CFG("darkMode")); if (S.lastTab !== S.tab) { S.lastTab = S.tab; const a = $("#app"); a.classList.remove("fadein"); void a.offsetWidth; a.classList.add("fadein"); } document.body.classList.toggle("focusOn", !!(S.draft && S.focus && S.tab === "train" && S.trainSeg !== "plan")); document.body.classList.toggle("wkOn", !!(S.draft && !S.focus && S.tab === "train" && S.trainSeg !== "plan"));
   if (S.sheet) $("#view").insertAdjacentHTML("beforeend", sheetHtml()); document.body.classList.toggle("sheetOn", !!S.sheet || !!S.summary?.wow);
-  if (S.summary?.wow) $("#view").insertAdjacentHTML("beforeend", wowHtml());
+  if (S.summary?.wow) { $("#view").insertAdjacentHTML("beforeend", wowHtml()); if (wowY) $(".wowov").scrollTop = wowY; } // a background save re-renders: keep the overlay exactly where it was
 }
 function resumeBar() { // a running workout stays one tap away from every tab
   const R = $("#resume"), d = S.draft, show = !!d && S.tab !== "train"; R.hidden = !show; document.body.classList.toggle("hasRes", show); document.body.classList.toggle("lightTop", S.tab !== "today"); if (!show) return;
@@ -1652,7 +1653,7 @@ function vTrain() {
         <div style="margin-top:8px;display:grid;gap:4px">${w.exercises.map(e => `<div class="row small" style="justify-content:space-between"><span>${esc(e.name)}${e.ss ? ` <span class="muted">· סופר סט</span>` : ""}</span><span class="n muted"><bdi dir="ltr">${e.sets.map(s => `${s.t === "w" ? "ח " : s.t === "d" ? "↓" : ""}${s.kg}×${s.reps}`).join("  ")}</bdi></span></div>`).join("")}
         ${w.note ? `<div class="small muted">${esc(w.note)}</div>` : ""}<div class="row"><button class="btn" data-wedit="${w.id}">עריכת האימון</button><button class="btn del" data-delw="${w.id}">מחיקה</button></div></div></details>`; }).join("")}</div>` : `<div class="list pad muted small">האימונים שתסיים יופיעו כאן.</div>`}
       ${painCard()}${strengthTable()}` : ""}
-    ${pd ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}">${IC.play}התחלת אימון ${esc(pd.name)}</button></div>` : ""}</div>`;
+    ${pd && !S.workouts.some(w => w.date === today()) ? `<div class="startbar"><button class="btn primary block big2" data-start="${esc(pd.id)}">${IC.play}התחלת אימון ${esc(pd.name)}</button></div>` : ""}</div>`;
 }
 function exHead(ex, i, tag = "") { return `        <div class="row exh" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;row-gap:4px"><button class="btn" style="padding:0;background:none" data-wprev="${esc(ex.name)}">${thumb(ex.name, "sm")}</button><div style="min-width:0;flex:1">${ex.muscle ? `<div class="mus">${esc(ex.muscle)}</div>` : ""}${S.renOpen === i ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;margin:4px 0"><input id="ren-${i}" value="${esc(ex.name)}" aria-label="שם חדש" enterkeyhint="done"><button class="btn small primary" data-rensave="${i}">שמירה</button><button class="btn small" data-rensave="x">ביטול</button></div>` : ""}<div class="name">${tag ? `<b class="sstl">${tag}</b> ` : ""}${esc(ex.name)}${ex.wrist && WR() ? `<span class="flag">יד שמאל</span>` : ""}</div>
         <div class="exmeta n"><span><b><bdi dir="ltr">${ex.sets} × ${repTxt(ex)}</bdi></b>${SEC.has(ex.name) ? " שניות" : ""}</span>${wtTxt(ex) ? `<span>משקל עבודה <b>${ltr(wtTxt(ex))}</b> ק״ג</span>` : ""}${isBW(ex.name) && bodyKg() ? (r => `<span>משקל גוף ${r[1] < 1 ? `${bodyKg()} × ${Math.round(r[1] * 100)}% = ` : ""}<b>${bwOf(ex.name)}</b> ק״ג נספר לבד${r[1] < 1 ? " (הערכה)" : ""} · רושמים רק תוספת</span>`)(bwRule(ex.name)) : ""}${S.draft && !S.draft.editId ? prChip(ex) : ""}</div>${ex.note ? `<div class="note">${esc(ex.note)}</div>` : ""}${S.profile?.exNotes?.[ex.name] || S.noteOpen === ex.name ? `<div class="row exact" style="flex-wrap:nowrap;gap:6px;align-items:center"><input class="exnote" data-exnote="${esc(ex.name)}" enterkeyhint="done" value="${esc(S.profile?.exNotes?.[ex.name] || "")}" placeholder="הערה קבועה, למשל: מושב 4">${S.noteOpen === ex.name ? `<button class="btn small" data-noteclose="1">סיום</button>` : ""}</div>` : ""}${ex.sug?.hint ? `<div class="hint${ex.sug.dn ? " dn" : ""}">${ex.sug.hint}</div>` : ex.sug?.first && CFG("tips") && S.draft && !S.draft.editId ? `<div class="hint">פעם ראשונה בתרגיל: עצור 2–3 חזרות לפני כישלון. מהפעם הבאה האפליקציה תציע משקל וחזרות.</div>` : ""}</div>
@@ -1865,7 +1866,7 @@ const prChip = ex => { const t = prTarget(ex); if (!t) return ""; const hit = ex
 function summaryCard() {
   const W = S.summary; if (!W) return "";
   const dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
-  return `<div class="sumhero"><div class="row sb"><span class="sumdone">הושלם · ${fmtDate(today())}</span><button class="bsx" data-sumclose="1" aria-label="סגירה">${IC.x}</button></div><h2>${esc(W.dayName)}</h2>
+  return `<div class="sumhero"><div class="row sb"><span class="sumdone">הושלם · ${fmtDate(today())}</span></div><h2>${esc(W.dayName)}</h2>
       <div class="sumchips n"><span>${W.sets} סטים</span><span>${W.minutes} דק׳</span>${W.prs.length ? `<span class="pr">${W.prs.length === 1 ? "שיא חדש" : W.prs.length + " שיאים חדשים"}</span>` : ""}${dv != null ? `<span><bdi dir="ltr">${dv >= 0 ? "+" : ""}${dv}%</bdi> נפח</span>` : ""}<span>${Math.round(W.volume).toLocaleString("he-IL")} ק״ג סה״כ</span></div><button class="sumshare" data-sumshare="1">${IC.up}תמונה לשיתוף</button></div>
     <div class="list">
     ${W.prs.map(p => `<div class="item"><div class="grow"><div class="t"><span style="color:var(--accent);font-weight:600">שיא חדש</span> · ${esc(p.name)}</div><div class="s n">${p.kind === "kg" ? `שיא משקל: ${p.kg} ק״ג` : `שיא 1RM משוער: ${r1(p.e)} ק״ג`} (קודם ${r1(p.prev)})</div></div></div>`).join("")}
@@ -2550,7 +2551,7 @@ document.addEventListener("click", async ev => {
   if (ds.fscanHome) { S.tab = "food"; S.foodSeg = "log"; S.foodDate = today(); render(); return scanFood("env"); }
   if (t.id === "ciApply") { if (await save("settings/profile", { ...(S.profile || {}), kcalOverride: +ds.kcal, lastCheckin: today() })) toast("היעד עודכן"); return; }
   if (ds.sumclose) { S.summary = null; render(); return; }
-  if (ds.ci) { const [k, v] = ds.ci.split(":"); const sy = $(".wowov")?.scrollTop; await ciSave({ [k]: +v }); render(); const o = $(".wowov"); if (o && sy) o.scrollTop = sy; return; }
+  if (ds.ci) { const [k, v] = ds.ci.split(":"); t.parentElement.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === t)); ciSave({ [k]: +v }); return; } // colour only: no re-render, nothing moves
   if (ds.wowx) { const W = S.summary, n = $("#wowNote")?.value.trim() ?? W.note; if (n !== (wDoc(W.ts)?.note || "")) await ciSave({ note: n }); W.wow = false; render(); scrollTo({ top: 0 }); return; }
   if (ds.sumshare) { t.disabled = true; try { await shareCard(); } finally { t.disabled = false; } return; }
   if (ds.mnav) { S.mOff = Math.min(0, (S.mOff || 0) + +ds.mnav); render(); return; }
