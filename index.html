@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="c662527678";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="65e5500833";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -572,6 +572,10 @@ body.wkOn .restbar .in{padding:6px 10px;border-radius:18px}body.wkOn .restbar .b
 .wowe{font-size:1.05rem;font-weight:700}.wowr{border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.08);font-weight:700;font-size:.92rem}.wowr.on{background:#e10600;color:#fff}
 .wows{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.wows>div{border-radius:14px;background:rgba(255,255,255,.07);padding:12px 4px;display:grid;gap:2px}.wows b{font-size:1.35rem;font-weight:800;direction:ltr}.wows span{font-size:.72rem;color:#c9b5b7}
 .wowp{border-radius:14px;background:rgba(255,255,255,.07);padding:12px 14px;display:grid;gap:8px;text-align:start;font-size:.9rem}.wowp>b{color:#ff8a84}
+.wowc{border-radius:14px;background:rgba(255,255,255,.07);padding:12px;display:grid;gap:6px;text-align:start}.cil{font-size:.8rem;color:#d9b9bb;margin-top:4px}
+.ciq{display:flex;gap:6px}.ciq button{flex:1;min-height:42px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;font:600 .78rem var(--font);padding:4px 2px;cursor:pointer;display:grid;place-items:center;line-height:1.15}.ciq button span{font-size:1.05rem}.ciq button.on{background:#e10600}
+.wowc textarea{width:100%;border-radius:10px;border:0;background:rgba(255,255,255,.1);color:#fff;font:500 .9rem var(--font);padding:8px 10px}.wowc textarea::placeholder{color:#b9a9ab}
+.fst{border-radius:12px;background:var(--card2,rgba(127,127,127,.1));padding:10px 4px;display:grid;gap:2px;text-align:center}.fst b{font-size:1.1rem}.fst span{font-size:.72rem;color:var(--muted)}
 .wowa{display:grid;gap:10px;margin-top:6px}.wowa .btn{min-height:50px;font-size:1rem}.wowa .btn:not(.primary){background:rgba(255,255,255,.1);color:#fff;border-color:transparent}
 .sumhero .bsx{background:rgba(255,255,255,.1);color:#fff}.sumdone{font-size:.78rem;font-weight:700;color:#8fe3ad}
 .sumchips{display:flex;flex-wrap:wrap;gap:8px}.sumchips span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px;font-size:.82rem;font-weight:600}.sumchips .pr{background:rgba(225,6,0,.3);border-color:rgba(255,120,110,.5)}
@@ -840,7 +844,9 @@ function suggest(ex) { // reads the last sessions: weight, reps, how many reps w
   const inc = ex.inc || 2.5, top = Math.max(...last.sets.map(s => s.kg || 0)), work = last.sets.filter(s => (s.kg || 0) === top);
   const rs = work.filter(s => s.rir != null), rir = rs.length ? rs.reduce((a, s) => a + s.rir, 0) / rs.length : null, easy = rir != null && rir >= 3, minR = Math.min(...work.map(s => s.reps));
   const lo = ex.repMin || 1, hi = ex.repMax || lo, down = H.length >= 3 && sessE(H[0]) < sessE(H[1]) * .98 && sessE(H[1]) < sessE(H[2]) * .98;
+  const tired = feelStats()?.tired;
   if (!SEC.has(ex.name) && top > 0) {
+    if (tired && !(minR < lo)) return { kg: top, reps: Math.min(hi, minR), hint: "= אותו משקל: 3 אימונים קשים ברצף. היום שומרים, לא מעלים" };
     if (work.length >= ex.sets && work.every(s => s.reps >= hi)) { const kg = r1(top + inc * (easy ? 2 : 1)); return { kg, reps: lo, hint: `↑ עלייה ל-${kg} ק״ג: בפעם הקודמת עשית ${hi} חזרות בכל הסטים${easy ? " והיה קל" : ""}` }; }
     if (easy && minR >= Math.ceil((lo + hi) / 2)) { const kg = r1(top + inc); return { kg, reps: lo, hint: `↑ עלייה ל-${kg} ק״ג: בפעם הקודמת נשארו לך ${Math.round(rir)}+ חזרות` }; }
     if (minR < lo && (rir == null || rir <= 1)) { const kg = r1(Math.max(inc, top - inc)); return { kg, reps: lo, hint: `↓ ירידה ל-${kg} ק״ג: בפעם הקודמת יצאו ${minR} חזרות, מתחת לטווח ${lo}–${hi}`, dn: 1 }; }
@@ -1522,7 +1528,7 @@ function monthCard() {
 function vTrainTab() {
   if (S.draft) return activeWorkout();
   return S.trainSeg === "plan" ? `<div class="stack">${head("עריכת התוכנית", `<button class="btn primary" data-seg="trainSeg:now">סיום</button>`)}${plansBlock()}<div class="small muted" style="padding-inline:4px">לחיצה על תרגיל: שינוי סטים, חזרות ומשקל, החלפה או מחיקה. ✎ ליד היום משנה את שמו.</div>${planWorkouts()}</div>` // one workouts screen: pick a day, start; editing is a side trip
-    : `<div class="stack">${head("אימון", S.trainSeg === "prog" ? "" : `<button class="btn link" data-seg="trainSeg:plan">עריכת תוכנית</button>`)}${seg("trainSeg", S.trainSeg, [["now","אימון"],["prog","התקדמות כוח"]])}${S.trainSeg === "prog" ? monthCard() + progressReport() + volumeCard() + strengthTable() : vTrain()}</div>`;
+    : `<div class="stack">${head("אימון", S.trainSeg === "prog" ? "" : `<button class="btn link" data-seg="trainSeg:plan">עריכת תוכנית</button>`)}${seg("trainSeg", S.trainSeg, [["now","אימון"],["prog","התקדמות כוח"]])}${S.trainSeg === "prog" ? feelCard() + monthCard() + progressReport() + volumeCard() + strengthTable() : vTrain()}</div>`;
 }
 function etaCard() { // time-to-goal, recomputed on every render: planned pace vs actual weekly-average pace
   const p = S.profile || {}, g = p.goalWeight, wa = weekAvgs(), w = S.weights.length ? avg7(S.weights[S.weights.length - 1].date) : null, pct = goalPct(p);
@@ -1765,7 +1771,7 @@ async function finishWorkout1() {
   const lvBefore = D.editId ? null : Math.floor(lifeVol() / STEP), recBefore = Math.max(0, ...S.workouts.filter(w => w.ts !== now).map(w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0)));
   const doc = JSON.parse(JSON.stringify({ date: D.date || today(), dayId: D.dayId ?? null, dayName: D.dayName || "אימון", note: D.note || "", pain: D.pain ?? null, exercises, minutes, ts: now }));
   if (await (D.editId ? (x => save("workouts/" + D.editId, x)) : (x => addTo("workouts", x)))(doc)) {
-    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, recBefore, wow: !D.editId, up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
+    S.summary = { date: doc.date, exercises, dayName: D.dayName, minutes, sets: exercises.reduce((a, e) => a + e.sets.filter(x => x.t !== "d").length, 0), volume, prevVolume, prs, pain: D.pain ?? null, recBefore, wow: !D.editId, ts: now, note: D.note || "", up: lvBefore == null ? 0 : Math.floor((lifeVol() + (S.workouts.some(w => w.ts === now) ? 0 : volume)) / STEP) - lvBefore };
     if (COACH_ON && !D.editId) setTimeout(() => { const sets = S.summary?.sets ?? 0, wk = streak().cur;
       const t = (prs.length ? `${prs.length === 1 ? "שיא חדש" : prs.length + " שיאים חדשים"} היום, ` : "") + `סיימת ${esc(D.dayName || "אימון")}: ${sets === 1 ? "סט אחד" : sets + " סטים"}${minutes > 0 ? ` ב-${minutes} דקות` : ""}. ` + (wk >= 4 ? "היעד השבועי הושג, כל הכבוד על ההתמדה." : `זה אימון ${wk} מתוך 4 השבוע.`) + " איך הגוף מרגיש?";
       const msg = { role: "coach", text: t, ts: Date.now(), nudge: "w" + now }; S.chat.push(msg); S.coachUnread = true; store.set("coachUnread", true); addTo("chat", msg); render(); }, 1500);
@@ -1847,6 +1853,36 @@ function summaryCard() {
     ${W.prs.map(p => `<div class="item"><div class="grow"><div class="t"><span style="color:var(--accent);font-weight:600">שיא חדש</span> · ${esc(p.name)}</div><div class="s n">${p.kind === "kg" ? `שיא משקל: ${p.kg} ק״ג` : `שיא 1RM משוער: ${r1(p.e)} ק״ג`} (קודם ${r1(p.prev)})</div></div></div>`).join("")}
     ${W.pain != null && W.pain >= 3 && WR() ? `<div class="item"><div class="grow s" style="color:var(--bad)">דיווחת על כאב ${W.pain}/10 בשורש כף היד.</div></div>` : ""}</div>`.replace(/<div class="list">\s*<\/div>/, "");
 }
+const RPE_L = ["קל", "בינוני", "קשה", "קשה מאוד", "עד הקצה"], FEEL_L = [["😴", "עייף"], ["😐", "רגיל"], ["💪", "חזק"], ["🔥", "מעולה"]];
+const SLEEP_L = ["פחות מ-6", "6–7", "7–8", "8 ומעלה"];
+const wDoc = ts => S.workouts.find(w => w.ts === ts);
+async function ciSave(patch) { const W = S.summary; Object.assign(W, patch); const w = wDoc(W.ts); if (w?.id) await upd("workouts/" + w.id, patch); }
+function checkinHtml(W) { // three taps + optional note, saved on the workout itself (rpe 1–5, feel 1–4, sleep 1–4, note)
+  const row = (k, L, cur) => `<div class="ciq n">${L.map((x, i) => `<button class="${cur === i + 1 ? "on" : ""}" data-ci="${k}:${i + 1}">${Array.isArray(x) ? `<span>${x[0]}</span>${x[1]}` : x}</button>`).join("")}</div>`;
+  return `<div class="wowc"><b>איך היה? (3 לחיצות)</b>
+    <span class="cil">כמה קשה היה האימון?</span>${row("rpe", RPE_L, W.rpe)}
+    <span class="cil">איך הרגשת?</span>${row("feel", FEEL_L, W.feel)}
+    <span class="cil">כמה שעות ישנת בלילה?</span>${row("sleep", SLEEP_L, W.sleep)}
+    <span class="cil">הערות (לא חובה)</span><textarea id="wowNote" rows="2" placeholder="כאב, אנרגיה, מה עבד, מה לשנות...">${esc(W.note || "")}</textarea></div>`;
+}
+function feelStats(n = 12) { const R = S.workouts.filter(w => w.rpe || w.feel).slice(-n); if (R.length < 3) return null;
+  const avg = (A, k) => { const v = A.map(w => w[k]).filter(Boolean); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const L3 = R.slice(-3), vol = w => (w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).reduce((b, x) => b + (x.kg || 0) * (x.reps || 0), 0), 0);
+  const tired = L3.length === 3 && avg(L3, "rpe") >= 4 && (avg(L3, "feel") ?? 2) <= 2, easy = L3.length === 3 && avg(L3, "rpe") <= 2;
+  const good = R.filter(w => w.feel >= 3), bad = R.filter(w => w.feel && w.feel <= 2), gv = good.length >= 2 && bad.length >= 2 ? Math.round((good.reduce((a, w) => a + vol(w), 0) / good.length) / (bad.reduce((a, w) => a + vol(w), 0) / bad.length) * 100 - 100) : null;
+  const sl = R.filter(w => w.sleep), lowS = sl.filter(w => w.sleep <= 1), okS = sl.filter(w => w.sleep >= 3);
+  const sleepHit = lowS.length >= 2 && okS.length >= 2 ? Math.round(avg(lowS, "rpe") * 10) / 10 + " מול " + Math.round(avg(okS, "rpe") * 10) / 10 : null;
+  return { n: R.length, rpe: avg(R, "rpe"), feel: avg(R, "feel"), tired, easy, gv, sleepHit, notes: R.filter(w => w.note).slice(-3).reverse() }; }
+function feelCard() { const F = feelStats(); if (!F) return `<div class="tcard"><b>איך האימונים מרגישים</b><span class="small muted">אחרי כל אימון יש 3 שאלות קצרות. אחרי 3 אימונים יופיע כאן ניתוח.</span></div>`;
+  const tip = F.tired ? "3 אימונים קשים ברצף עם אנרגיה נמוכה. זה סימן לעייפות מצטברת: שבוע קל (חצי סטים, אותו משקל) יחזיר אותך חזק יותר. עד אז המשקל לא יעלה אוטומטית."
+    : F.easy ? "3 אימונים ברצף הרגישו קלים. אפשר ללחוץ יותר: לסיים כל סט עם 1–2 חזרות ברזרבה, או להוסיף סט לתרגילים המרכזיים."
+    : "העומס מאוזן. ממשיכים להתקדם בהדרגה.";
+  return `<div class="tcard" style="gap:8px"><b>איך האימונים מרגישים <span class="small muted n">(${F.n} אחרונים)</span></b>
+    <div class="wows n" style="color:inherit;grid-template-columns:1fr 1fr">${F.rpe ? `<div class="fst"><b>${r1(F.rpe)}/5</b><span>קושי ממוצע</span></div>` : ""}${F.feel ? `<div class="fst"><b>${FEEL_L[Math.round(F.feel) - 1][0]} ${FEEL_L[Math.round(F.feel) - 1][1]}</b><span>הרגשה ממוצעת</span></div>` : ""}</div>
+    <div class="ctip" style="margin:0">💡 ${tip}</div>
+    ${F.gv != null ? `<span class="small">באימונים שהרגשת חזק הרמת <b class="n">${F.gv >= 0 ? "+" : ""}${F.gv}%</b> מאשר כשהיית עייף.</span>` : ""}
+    ${F.sleepHit ? `<span class="small">שינה: קושי ממוצע אחרי לילה קצר מול לילה טוב: <b class="n">${F.sleepHit}</b>.</span>` : ""}
+    ${F.notes.length ? `<div class="small muted">${F.notes.map(w => `<div>${fmtDate(w.date)}: ${esc(w.note)}</div>`).join("")}</div>` : ""}</div>`; }
 function wowHtml() { // full-screen "you did it" right after finishing. Static: no motion, nothing jumps.
   const W = S.summary; if (!W?.wow) return ""; const kg = v => Math.round(v).toLocaleString("he-IL"), eq = equiv(W.volume);
   const rec = W.volume > 0 && W.volume > W.recBefore, dv = W.prevVolume ? Math.round((W.volume / W.prevVolume - 1) * 100) : null;
@@ -1858,7 +1894,7 @@ function wowHtml() { // full-screen "you did it" right after finishing. Static: 
     ${line ? `<div class="wowr${rec ? " on" : ""} n">${line}</div>` : ""}
     <div class="wows n"><div><b>${W.minutes}</b><span>דקות</span></div><div><b>${W.sets}</b><span>סטים</span></div><div><b>${W.prs.length}</b><span>${W.prs.length === 1 ? "שיא בתרגיל" : "שיאים בתרגילים"}</span></div></div>${dv > 0 ? `<div class="wowe n" style="font-size:.95rem">📈 <bdi dir="ltr">+${dv}%</bdi> מול הפעם הקודמת ביום הזה</div>` : ""}
     ${W.prs.length ? `<div class="wowp"><b>${W.prs.length === 1 ? "שיא חדש בתרגיל" : W.prs.length + " שיאים חדשים בתרגילים"}</b>${W.prs.slice(0, 3).map(p => `<div class="row sb"><span>${esc(p.name)}</span><span class="n">${p.kind === "kg" ? `${p.kg} ק״ג` : `1RM ${r1(p.e)}`}</span></div>`).join("")}</div>` : ""}
-    <div class="wowa"><button class="btn primary" data-wowx="1">סגירה</button><button class="btn" data-sumshare="1">📸 שיתוף תמונה</button></div></div></div>`;
+    ${checkinHtml(W)}<div class="wowa"><button class="btn primary" data-wowx="1">שמירה וסגירה</button><button class="btn" data-sumshare="1">📸 שיתוף תמונה</button></div></div></div>`;
 }
 function painCard() {
   const P = S.workouts.filter(w => w.pain != null).slice(-12); if (!P.length || !WR()) return "";
@@ -2324,7 +2360,7 @@ function vCoach() {
 }
 function coachContext() {
   const p = S.profile || {}, T = targets(), tr = trendSeries();
-  const recentW = S.workouts.slice(-6).map(w => `${w.date} ${w.dayName}: ${w.exercises.map(e => `${e.name} ${e.sets.map(s => `${s.kg}x${s.reps}`).join(",")}`).join("; ")}${w.pain != null ? ` | כאב ${w.pain}/10` : ""}${w.note ? ` | הערה: ${w.note}` : ""}`).join("\n");
+  const recentW = S.workouts.slice(-6).map(w => `${w.date} ${w.dayName}: ${w.exercises.map(e => `${e.name} ${e.sets.map(s => `${s.kg}x${s.reps}`).join(",")}`).join("; ")}${w.pain != null ? ` | כאב ${w.pain}/10` : ""}${w.rpe ? ` | קושי ${w.rpe}/5` : ""}${w.feel ? ` | הרגשה ${FEEL_L[w.feel - 1][1]}` : ""}${w.sleep ? ` | שינה ${SLEEP_L[w.sleep - 1]} שעות` : ""}${w.note ? ` | הערה: ${w.note}` : ""}`).join("\n");
   const plan = (S.plan?.days || []).map(d => `${d.name}: ${d.exercises.map(e => `${e.name} ${e.sets}x${e.amrap ? "max" : `${e.repMin}-${e.repMax}`}${e.startKg ? ` @${e.startKg}ק"ג` : ""}`).join(", ")}`).join("\n");
   const st = p.state || {}, wa = weekAvgs().slice(-4).map(x => `שבוע ${x.wk}: ${r1(x.kg)} (${x.n} שקילות)`).join("; ");
   const menu = S.menu?.sections ? S.menu.sections.map(sc => `${sc.title}: ${sc.groups.map(g => `${g.title} (${g.target || ""}): ${g.items.join(" | ")}`).join(" ; ")}`).join("\n") : "אין";
@@ -2351,7 +2387,7 @@ ${S.draft ? `אימון פתוח עכשיו (${S.draft.dayName || ""}, התחי�
 function prList() { const b = {}; S.workouts.forEach(w => (w.exercises || []).forEach(x => x.sets.filter(work).forEach(st => { const e = e1rm(st.kg || 0, st.reps || 0); if (e && (!b[x.name] || e > b[x.name].e)) b[x.name] = { e, s: `${st.kg}x${st.reps}`, d: w.date }; })));
   return Object.entries(b).map(([n, v]) => `${n} ${v.s} (${v.d})`).join("; ") || "אין"; }
 const PLAN_Q = "תבקר את תוכנית האימונים שלי כמו מאמן מהשורה הראשונה: נפח שבועי לכל שריר (הנתונים למטה), תדירות, בחירת תרגילים, סדר, טווחי חזרות, התקדמות, והתאמה לחיטוב. תן ציון 1–10, את 3 הבעיות החשובות ביותר ומה בדיוק להחליף.";
-const COACH_RULES = `אתה מאמן כוח, היפרטרופיה ותזונה ברמה העולמית, מבוסס מחקר (Helms, Israetel, Nuckols, Schoenfeld, Aragon), ופיזיותרפיסט ספורט. המתאמן בחיטוב ורוצה להעלות משקלים.
+const COACH_RULES = `אתה מאמן הכושר הטוב בעולם: עשרות שנות ניסיון באימון כוח, היפרטרופיה ותזונה, ולמדת מהגדולים (Helms, Israetel, Nuckols, Schoenfeld, Aragon, Boyle, McGill). אתה גם פיזיותרפיסט ספורט. כל המלצה שלך מבוססת מחקר ועל הנתונים שלו, חדה ובטוחה, בלי מריחות. המתאמן בחיטוב ורוצה להעלות משקלים.
 עקרונות: 10–20 סטים קשים לשריר בשבוע, תדירות 2 בשבוע, 0–3 חזרות ברזרבה, התקדמות כפולה (מגיעים לראש טווח החזרות בכל הסטים ← מעלים משקל 2.5 ק"ג במוט / 1–2 ק"ג בדאמבל), שמירה על עצימות בחיטוב, ירידה של 0.5–1% ממשקל הגוף בשבוע לפי ממוצע שבועי ולא לפי שקילה בודדת, בשבועיים הראשונים חלק מהירידה הוא מים ולא משנים קלוריות, 1.6–2.2 גרם חלבון לק"ג, שינוי קלוריות בצעדים של 100–200, דילואוד כשהביצועים יורדים שבועיים.
 יחס: אכפת לך ממנו באמת, כמו מאמן אישי שמכיר אותו חודשים. שים לב לנתונים שלו (שינה, אימונים שהוחמצו, שיאים, משקל, כאב) והתייחס אליהם ביוזמתך כשזה רלוונטי. כשהוא מצליח, פרגן בקצרה ובאופן ספציפי ("85 ק"ג על 8, זה שיא"). כשקשה לו או שהוא מפספס, בלי שיפוטיות ובלי נאום: הבנה קצרה ואז צעד אחד קטן להמשך. זכור מה הוא סיפר קודם בשיחה וחזור אליו. אל תהיה מתקתק, בלי קלישאות ("אתה תותח", "המשך כך").
 סגנון: עברית, גוף שני, כמו מאמן אמיתי בווטסאפ. התאם את האורך לשאלה: שאלה פשוטה = 1–2 משפטים. שאלה של "למה", "איך", ניתוח, השוואה, תוכנית או בעיה = תשובה מלאה ומדויקת (עד כ-200 מילים), עם המספרים שלו ונקודות קצרות אם זה עוזר. בלי עצות נוספות שלא ביקשו. בלי הקדמות, בלי לחזור על השאלה, בלי סיכום. שאלה בסוף רק כשבאמת חשוב לך לדעת איך הוא מרגיש או מה קרה, ואז שאלה אחת קצרה. בלי כותרות, בלי רשימות ארוכות, בלי אימוג'י. מספרים עם יחידות ("120 גרם", "72.5 ק"ג"). אם שואלים שאלה עובדתית, תשובה ישירה קודם.
@@ -2362,6 +2398,7 @@ const COACH_RULES = `אתה מאמן כוח, היפרטרופיה ותזונה �
 - התבסס על הנתונים האמיתיים למטה וצטט מהם מספרים כשזה רלוונטי. אם חסר מידע כדי לענות טוב, שאל שאלה אחת.
 - כאב: שאל איפה, מתי ועוצמה 0–10. סימני אזהרה (נימול, נפיחות, כאב לילי, כאב חד, החמרה) = להפסיק ולהיבדק פנים אל פנים. אל תאבחן בוודאות.
 - אם המתאמן טועה, תגיד את זה בפשטות ובכבוד.
+- אחרי כל אימון הוא מדרג קושי (1–5), הרגשה, שעות שינה והערות. קרא את המגמה: קושי גבוה + אנרגיה נמוכה כמה אימונים ברצף = עייפות מצטברת, הצע שבוע דילואד. קל מדי כמה פעמים = הצע להגביר. קשר בין שינה/אוכל לביצועים כשהנתונים מראים את זה.
 - אתה יודע לענות על כל שאלה, גם מחוץ לכושר (מדע, בריאות, בישול, כל נושא אחר). ענה עליה כמו מומחה, בלי להפנות למקום אחר.
 - לפני שאתה עונה על שאלה על הנתונים שלו (היסטוריה של תרגיל, אימון מסוים, אוכל ביום מסוים, מגמת משקל), השתמש בכלי הקריאה (get_exercise_history, get_workouts, get_food_log, get_weights) כדי לראות את הנתונים המלאים ולא רק את התקציר. אל תנחש מספרים.
 - חשוב צעד אחר צעד בשקט לפני שאתה עונה על שאלה מורכבת, ובדוק שהחישוב נכון (קלוריות, נפח, אחוזים, 1RM לפי אפלי: משקל × (1 + חזרות/30)).`;
@@ -2475,7 +2512,8 @@ document.addEventListener("click", async ev => {
   if (ds.fscanHome) { S.tab = "food"; S.foodSeg = "log"; S.foodDate = today(); render(); return scanFood("env"); }
   if (t.id === "ciApply") { if (await save("settings/profile", { ...(S.profile || {}), kcalOverride: +ds.kcal, lastCheckin: today() })) toast("היעד עודכן"); return; }
   if (ds.sumclose) { S.summary = null; render(); return; }
-  if (ds.wowx) { S.summary.wow = false; render(); scrollTo({ top: 0 }); return; }
+  if (ds.ci) { const [k, v] = ds.ci.split(":"); const sy = $(".wowov")?.scrollTop; await ciSave({ [k]: +v }); render(); const o = $(".wowov"); if (o && sy) o.scrollTop = sy; return; }
+  if (ds.wowx) { const W = S.summary, n = $("#wowNote")?.value.trim() ?? W.note; if (n !== (wDoc(W.ts)?.note || "")) await ciSave({ note: n }); W.wow = false; render(); scrollTo({ top: 0 }); return; }
   if (ds.sumshare) { t.disabled = true; try { await shareCard(); } finally { t.disabled = false; } return; }
   if (ds.mnav) { S.mOff = Math.min(0, (S.mOff || 0) + +ds.mnav); render(); return; }
   if (ds.weekly) { S.tab = "coach"; render(); return ask(WEEKLY_Q); }
@@ -2699,6 +2737,7 @@ document.addEventListener("change", ev => {
 });
 document.addEventListener("input", ev => {
   const el = ev.target, ds = el.dataset;
+  if (el.id === "wowNote" && S.summary) { S.summary.note = el.value; return; }
   if (el.id === "pkQ" && S.picker) { S.picker.q = el.value; const pos = el.selectionStart; renderSheet(); const n = $("#pkQ"); n.focus(); n.setSelectionRange(pos, pos); return; }
   if (ds.mf != null && S.menu?.sections) { const k = ds.mf.split("-"), sec = S.menu.sections[+k[0]];
     if (k.length === 1) sec.title = el.value; else { const g = sec.groups[+k[1]]; if (k[2] === "t") g.title = el.value; else if (k[2] === "g") g.target = el.value; else g.items[+k[2]] = el.value; }
