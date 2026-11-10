@@ -1080,10 +1080,18 @@ const PB_SPLIT = { 2: ["fbA", "fbB"], 3: ["fbA", "fbB", "fbC"], 4: ["upA", "loA"
 const PB_SPLIT_T = { 2: "גוף מלא פעמיים בשבוע", 3: "גוף מלא שלוש פעמים בשבוע", 4: "עליון / תחתון", 5: "עליון / תחתון + דחיפה / משיכה / רגליים", 6: "דחיפה / משיכה / רגליים פעמיים" };
 const PB_MUS = [["chest", "חזה", ["fly", "ipush"]], ["back", "גב", ["hpull2", "vpull"]], ["shoulders", "כתפיים", ["lat", "rear"]], ["arms", "ידיים", ["bi", "tri"]], ["legs", "רגליים", ["quad", "lunge"]], ["glutes", "ישבן", ["glute", "ham"]], ["abs", "בטן", ["abs"]]];
 const PB_GRP = { chest: "chest", back: "back", shoulders: "shoulders", quads: "legs", glutes: "glutes", calves: "legs", biceps: "bi", triceps: "tri", core: "abs", forearms: "bi" };
+const PB_AVOID = [ // free-text injuries from the profile → movements the coach leaves out
+  [/ברך|ברכיים|מניסקוס|רצועה צולבת/, ["סקוואט אחורי (מוט גבוה)", "בולגרי ספליט סקוואט", "סיסי סקוואט", "מכרע אחורי בדאמבלים", "פשיטת ברך במכונה", "מכרעים בהליכה"], "ברך"],
+  [/גב תחתון|גב|פריצת דיסק|דיסק|עמוד שדרה/, ["סקוואט אחורי (מוט גבוה)", "דדליפט רומני", "דדליפט (מוט רגיל או טראפ-בר)", "חתירה במוט", "גוד מורנינג"], "גב"],
+  [/כתף|כתפיים|שרוול/, ["לחיצת כתפיים בדאמבלים, אחיזה ניטרלית", "לחיצת כתפיים במכונה", "לחיצת חזה במוט", "מקבילים על ספסל", "מקבילים לחזה"], "כתף"],
+  [/שורש|פרק כף|כף יד|מפרק יד/, ["לחיצת חזה במוט", "סקוואט אחורי (מוט גבוה)", "שכיבות סמיכה", "שכיבות סמיכה צרות", "שכיבות סמיכה רגליים מוגבהות"], "שורש כף יד"],
+  [/מרפק/, ["פשיטת מרפק מעל הראש בכבל", "פשיטת מרפק מעל הראש בדאמבל", "מקבילים על ספסל", "שכיבות סמיכה צרות"], "מרפק"],
+];
+const pbAvoid = () => { const t = S.profile?.limits || "", hit = PB_AVOID.filter(([re]) => re.test(t)); return { set: new Set(hit.flatMap(h => h[1])), why: hit.map(h => h[2]) }; };
 function pbDefaults() { const n = S.workouts.filter(w => !w.deload).length, pw = S.plan?.perWeek;
   return { days: pw >= 2 && pw <= 6 ? pw : 3, min: 60, lvl: n >= 40 ? 2 : n >= 8 ? 1 : 0, eq: 0, pri: [], car: goalOf(S.profile) === "cut" ? 10 : 0 }; }
 function buildPlan(o) { // research-based defaults: each muscle about twice a week, 10-20 hard sets a week, priority muscles first and more sets
-  const split = PB_SPLIT[o.days] || PB_SPLIT[3], eqi = o.eq === 0 ? (o.lvl ? 1 : 0) : o.eq + 1;
+  const AV = pbAvoid(), split = PB_SPLIT[o.days] || PB_SPLIT[3], eqi = o.eq === 0 ? (o.lvl ? 1 : 0) : o.eq + 1;
   const prSlots = new Set(o.pri.flatMap(k => PB_MUS.find(m => m[0] === k)?.[2] || []));
   const days = split.map((key, di) => {
     const [name, slots] = PB_DAYS[key]; let order = [...slots];
@@ -1094,7 +1102,7 @@ function buildPlan(o) { // research-based defaults: each muscle about twice a we
       adds.forEach(add => { if (add && !order.includes(add) && PB_SLOTS[add][eqi]) order.splice(2, 0, add); }); });
     const ex = [], used = new Set(); let mins = 6 + (o.car || 0); // warm-up + cardio finisher
     for (const sl of order) {
-      const n = PB_SLOTS[sl]?.[eqi]; if (!n || used.has(n) || !EX_INDEX[n]) continue;
+      const opts = PB_SLOTS[sl] || [], n = [opts[eqi], ...(eqi < 2 ? opts.slice(0, 2) : eqi === 2 ? [opts[2], opts[3]] : [opts[3]])].find(x => x && !AV.set.has(x) && !used.has(x) && EX_INDEX[x]); if (!n) continue; // an injury swaps to a safer option for the same equipment, or drops the slot
       const comp = !!PB_KIND[sl], main = comp && ex.filter(e => e.key).length < 1 && !["lunge"].includes(sl), x = EX_INDEX[n], isPr = prSlots.has(sl) || o.pri.includes(PB_GRP[x.cat]) || (o.pri.includes("arms") && ["bi", "tri"].includes(PB_GRP[x.cat]));
       let sets = comp ? (o.lvl === 2 && main ? 4 : 3) : (o.lvl === 0 ? 2 : 3); if (isPr) sets++;
       const [rMin, rMax] = main ? (o.lvl === 0 ? [8, 12] : o.lvl === 1 ? [6, 10] : [5, 8]) : comp ? [8, 12] : ["lat", "calf", "rear", "abs"].includes(sl) ? [12, 20] : [10, 15];
@@ -1114,6 +1122,7 @@ function buildPlan(o) { // research-based defaults: each muscle about twice a we
   const notes = [`${PB_SPLIT_T[o.days]}: כל שריר מקבל גירוי בערך פעמיים בשבוע, וזה מה שהמחקר מראה שעובד הכי טוב לבניית שריר.`,
     `כל סט עבודה עד 1-3 חזרות לפני כשל. כשמגיעים לראש טווח החזרות בכל הסטים, מעלים משקל (האפליקציה תציע לבד).`,
     o.pri.length ? `עדיפות: ${o.pri.map(k => PB_MUS.find(m => m[0] === k)[1]).join(", ")}. התרגילים שלהם מוקדם באימון, כשאתה רענן, ועם סט נוסף.` : "",
+    AV.why.length ? `מגבלות (${AV.why.join(", ")}): תרגילים שמעמיסים שם הוחלפו בחלופות בטוחות יותר. כאב חד = עוצרים את התרגיל.` : "",
     o.lvl === 0 ? "מתחיל: בחודש הראשון תתמקד בטכניקה ובטווח תנועה מלא. המשקל יעלה מהר לבד." : "",
     o.car ? `${o.car} דקות אירובי בסוף כל אימון: הליכה בשיפוע בדופק בינוני. שורף קלוריות בלי לפגוע בהתאוששות של הרגליים.` : "",
     "כל 6-8 שבועות, או כשהכוח יורד והגוף עייף, האפליקציה תציע שבוע דילואד."].filter(Boolean);
@@ -1130,6 +1139,7 @@ function builderHtml() {
     ${lbl("ניסיון")}${seg("lvl", [[0, "מתחיל"], [1, "ביניים"], [2, "מתקדם"]])}
     ${lbl("איפה מתאמנים?")}${seg("eq", [[0, "חדר כושר"], [1, "דאמבלים בבית"], [2, "משקל גוף"]])}
     ${lbl("אירובי בסוף כל אימון")}${seg("car", [[0, "בלי"], [10, "10 דק׳"], [20, "20 דק׳"]])}
+    ${S.profile?.limits ? `<span class="small" style="color:var(--carb)">מתחשב במגבלות שרשמת: ${esc(S.profile.limits)}</span>` : ""}
     ${lbl("שרירים שחשובים לך במיוחד (עד 3)")}<div class="dchips" role="group" style="flex-wrap:wrap;overflow:visible">${PB_MUS.map(([k, t]) => `<button data-pbpri="${k}" aria-pressed="${o.pri.includes(k)}">${t}</button>`).join("")}</div>
     <div class="pbprev">${P.days.map((d, i) => `<div class="pbday"><div class="row sb"><b>${esc(d.name)}</b><span class="small muted n">~${P.mins[i]} דק׳</span></div>${d.exercises.map(e => `<div class="row sb small"><span>${e.key ? "⭐ " : ""}${esc(e.name)}</span><span class="n muted" dir="ltr">${e.sets}×${e.repMin}-${e.repMax}</span></div>`).join("")}${d.cardio ? `<div class="row sb small"><span>🔥 ${(CARDIO.find(c => c[0] === d.cardio.type) || [])[2] || "אירובי"}</span><span class="n muted">${d.cardio.min} דק׳</span></div>` : ""}</div>`).join("")}</div>
     <div>${lbl("סטים בשבוע לכל שריר (יעד: 10-20)")}<div class="pbwk">${wkRow}</div></div>
