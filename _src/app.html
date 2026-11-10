@@ -1081,7 +1081,7 @@ const PB_SPLIT_T = { 2: "גוף מלא פעמיים בשבוע", 3: "גוף מל
 const PB_MUS = [["chest", "חזה", ["fly", "ipush"]], ["back", "גב", ["hpull2", "vpull"]], ["shoulders", "כתפיים", ["lat", "rear"]], ["arms", "ידיים", ["bi", "tri"]], ["legs", "רגליים", ["quad", "lunge"]], ["glutes", "ישבן", ["glute", "ham"]], ["abs", "בטן", ["abs"]]];
 const PB_GRP = { chest: "chest", back: "back", shoulders: "shoulders", quads: "legs", glutes: "glutes", calves: "legs", biceps: "bi", triceps: "tri", core: "abs", forearms: "bi" };
 function pbDefaults() { const n = S.workouts.filter(w => !w.deload).length, pw = S.plan?.perWeek;
-  return { days: pw >= 2 && pw <= 6 ? pw : 3, min: 60, lvl: n >= 40 ? 2 : n >= 8 ? 1 : 0, eq: 0, pri: [] }; }
+  return { days: pw >= 2 && pw <= 6 ? pw : 3, min: 60, lvl: n >= 40 ? 2 : n >= 8 ? 1 : 0, eq: 0, pri: [], car: goalOf(S.profile) === "cut" ? 10 : 0 }; }
 function buildPlan(o) { // research-based defaults: each muscle about twice a week, 10-20 hard sets a week, priority muscles first and more sets
   const split = PB_SPLIT[o.days] || PB_SPLIT[3], eqi = o.eq === 0 ? (o.lvl ? 1 : 0) : o.eq + 1;
   const prSlots = new Set(o.pri.flatMap(k => PB_MUS.find(m => m[0] === k)?.[2] || []));
@@ -1092,7 +1092,7 @@ function buildPlan(o) { // research-based defaults: each muscle about twice a we
     const own = { chest: ["fb", "up", "push"], shoulders: ["fb", "up", "push"], back: ["fb", "up", "pull"], legs: ["fb", "lo", "legs"], glutes: ["fb", "lo", "legs"], abs: ["fb", "lo", "legs", "pull"] }; // a priority muscle gets its extra exercise only on the days that own it
     o.pri.forEach(k => { const adds = k === "arms" ? (key === "push" ? ["tri"] : key === "pull" ? ["bi"] : up && !key.startsWith("lo") ? ["bi", "tri"] : []) : own[k]?.some(t => key.startsWith(t)) ? [(PB_MUS.find(m => m[0] === k)?.[2] || [])[0]] : [];
       adds.forEach(add => { if (add && !order.includes(add) && PB_SLOTS[add][eqi]) order.splice(2, 0, add); }); });
-    const ex = [], used = new Set(); let mins = 6; // warm-up
+    const ex = [], used = new Set(); let mins = 6 + (o.car || 0); // warm-up + cardio finisher
     for (const sl of order) {
       const n = PB_SLOTS[sl]?.[eqi]; if (!n || used.has(n) || !EX_INDEX[n]) continue;
       const comp = !!PB_KIND[sl], main = comp && ex.filter(e => e.key).length < 1 && !["lunge"].includes(sl), x = EX_INDEX[n], isPr = prSlots.has(sl) || o.pri.includes(PB_GRP[x.cat]) || (o.pri.includes("arms") && ["bi", "tri"].includes(PB_GRP[x.cat]));
@@ -1103,7 +1103,7 @@ function buildPlan(o) { // research-based defaults: each muscle about twice a we
       mins += m; used.add(n);
       ex.push({ name: n, muscle: x.catT, sets, repMin: rMin, repMax: rMax, rest, inc: x.b ? 2.5 : 2, key: main, barbell: !!x.b, wrist: false, note: "", ...(isBW(n) && eqi === 3 ? { amrap: rMax >= 15 } : {}) });
     }
-    return { id: "d" + Date.now() + di, name, exercises: ex, mins: Math.round(mins) };
+    return { id: "d" + Date.now() + di, name, exercises: ex, mins: Math.round(mins), ...(o.car ? { cardio: { type: o.eq === 2 ? "walk" : "incline", lv: 1, min: o.car } } : {}) };
   });
   const wkOf = () => { const w = {}; days.forEach(d => d.exercises.forEach(e => { const x = EX_INDEX[e.name]; [x.cat, ...[...new Set((x.s || []).map(k => MUSCLES[k]?.[1]))].filter(c => c && c !== x.cat)].forEach((c, i) => { const g = PB_GRP[c]; if (g) w[g] = (w[g] || 0) + (i ? e.sets / 2 : e.sets); }); })); return w; };
   for (let it = 0; it < 6; it++) { const w = wkOf(); let ch = false; // balance: big muscles at least ~10 sets a week, nothing far over 22 unless it is a priority
@@ -1115,8 +1115,9 @@ function buildPlan(o) { // research-based defaults: each muscle about twice a we
     `כל סט עבודה עד 1-3 חזרות לפני כשל. כשמגיעים לראש טווח החזרות בכל הסטים, מעלים משקל (האפליקציה תציע לבד).`,
     o.pri.length ? `עדיפות: ${o.pri.map(k => PB_MUS.find(m => m[0] === k)[1]).join(", ")}. התרגילים שלהם מוקדם באימון, כשאתה רענן, ועם סט נוסף.` : "",
     o.lvl === 0 ? "מתחיל: בחודש הראשון תתמקד בטכניקה ובטווח תנועה מלא. המשקל יעלה מהר לבד." : "",
+    o.car ? `${o.car} דקות אירובי בסוף כל אימון: הליכה בשיפוע בדופק בינוני. שורף קלוריות בלי לפגוע בהתאוששות של הרגליים.` : "",
     "כל 6-8 שבועות, או כשהכוח יורד והגוף עייף, האפליקציה תציע שבוע דילואד."].filter(Boolean);
-  return { title: `תוכנית המאמן · ${o.days} ימים`, perWeek: o.days, days: days.map(({ mins, ...d }) => d), notes, built: { ...o, at: Date.now() }, mins: days.map(d => Math.round(6 + d.exercises.reduce((a, e) => a + e.sets * (e.rest + 35) / 60 + 1, 0))), wk };
+  return { title: `תוכנית המאמן · ${o.days} ימים`, perWeek: o.days, days: days.map(({ mins, ...d }) => d), notes, built: { ...o, at: Date.now() }, mins: days.map(d => Math.round(6 + (o.car || 0) + d.exercises.reduce((a, e) => a + e.sets * (e.rest + 35) / 60 + 1, 0))), wk };
 }
 function builderHtml() {
   const o = S.pb, seg = (k, opts) => `<div class="segm full" role="group">${opts.map(([v, t]) => `<button data-pbset="${k}:${v}" aria-pressed="${o[k] === v}">${t}</button>`).join("")}</div>`;
@@ -1128,8 +1129,9 @@ function builderHtml() {
     ${lbl("כמה זמן יש לך לאימון?")}${seg("min", [[45, "45 דק׳"], [60, "שעה"], [75, "75 דק׳"], [90, "שעה וחצי"]])}
     ${lbl("ניסיון")}${seg("lvl", [[0, "מתחיל"], [1, "ביניים"], [2, "מתקדם"]])}
     ${lbl("איפה מתאמנים?")}${seg("eq", [[0, "חדר כושר"], [1, "דאמבלים בבית"], [2, "משקל גוף"]])}
+    ${lbl("אירובי בסוף כל אימון")}${seg("car", [[0, "בלי"], [10, "10 דק׳"], [20, "20 דק׳"]])}
     ${lbl("שרירים שחשובים לך במיוחד (עד 3)")}<div class="dchips" role="group" style="flex-wrap:wrap;overflow:visible">${PB_MUS.map(([k, t]) => `<button data-pbpri="${k}" aria-pressed="${o.pri.includes(k)}">${t}</button>`).join("")}</div>
-    <div class="pbprev">${P.days.map((d, i) => `<div class="pbday"><div class="row sb"><b>${esc(d.name)}</b><span class="small muted n">~${P.mins[i]} דק׳</span></div>${d.exercises.map(e => `<div class="row sb small"><span>${e.key ? "⭐ " : ""}${esc(e.name)}</span><span class="n muted" dir="ltr">${e.sets}×${e.repMin}-${e.repMax}</span></div>`).join("")}</div>`).join("")}</div>
+    <div class="pbprev">${P.days.map((d, i) => `<div class="pbday"><div class="row sb"><b>${esc(d.name)}</b><span class="small muted n">~${P.mins[i]} דק׳</span></div>${d.exercises.map(e => `<div class="row sb small"><span>${e.key ? "⭐ " : ""}${esc(e.name)}</span><span class="n muted" dir="ltr">${e.sets}×${e.repMin}-${e.repMax}</span></div>`).join("")}${d.cardio ? `<div class="row sb small"><span>🔥 ${(CARDIO.find(c => c[0] === d.cardio.type) || [])[2] || "אירובי"}</span><span class="n muted">${d.cardio.min} דק׳</span></div>` : ""}</div>`).join("")}</div>
     <div>${lbl("סטים בשבוע לכל שריר (יעד: 10-20)")}<div class="pbwk">${wkRow}</div></div>
     <div class="small" style="display:grid;gap:4px">${P.notes.map(n => `<span>• ${esc(n)}</span>`).join("")}</div>
     <button class="btn primary block big2" data-pbgo="1">הפעלת התוכנית</button><span class="small muted" style="text-align:center">התוכנית הנוכחית נשמרת ברשימה ואפשר לחזור אליה.</span></div>`;
