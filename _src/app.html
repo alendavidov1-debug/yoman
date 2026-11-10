@@ -2575,6 +2575,7 @@ function coachContext() {
 היום: ${today()} (${"ראשון שני שלישי רביעי חמישי שישי שבת".split(" ")[new Date(today()).getDay()]}).
 מטרה: ${GOALS[goalOf(p)][0]} (${GOALS[goalOf(p)][1]}), קצב ${goalPct(p)}% בשבוע. מצב נוכחי שסומן${st.date ? ` ב-${st.date}` : ""}: משקל ${st.kg ?? "?"}, טבור ${st.waist ?? "?"}. מצב רצוי: משקל ${p.goalWeight ?? "לא צוין"}, טבור ${p.goalWaist ?? "לא צוין"}.
 מגבלות/פציעות: ${p.limits || "לא צוינו"}.
+תרגילים תקועים (3 אימונים בלי שיא): ${stalls().map(x => x.n).join(", ") || "אין"}.${S.plan?.built ? ` התוכנית נבנתה בבונה: ${S.plan.built.days} ימים, ${S.plan.built.min} דק׳, רמה ${["מתחיל", "ביניים", "מתקדם"][S.plan.built.lvl]}.` : ""}
 אירובי ב-14 הימים האחרונים: ${S.cardio.filter(c => c.date >= addDays(today(), -14)).map(c => `${c.date} ${cType(c.type)[2]} ${c.min} דק׳ ${CLV[c.lv ?? 1][0]}${c.after ? " (אחרי כוח)" : ""}`).join("; ") || "אין"}.
 משקל אחרון: ${latestWeight() ?? "אין"}; ממוצעים שבועיים (ראשון–שבת): ${wa || "אין"}; קצב שבועי: ${weeklyRate() == null ? "אין מספיק נתונים" : r1(weeklyRate()) + " ק\"ג"}. השקילה הראשונה: ${S.weights[0]?.date || "אין"}.
 יעדים יומיים: ${T ? `${T.kcal} קק"ל, ${T.protein} ג' חלבון, ${T.carbs} פחמימה, ${T.fat} שומן` : "טרם חושבו"}.
