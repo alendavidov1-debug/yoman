@@ -370,6 +370,7 @@ body.hasRes .startbar{bottom:calc(var(--tabbar) + 80px)}
 @keyframes bsUp{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
 .bshandle{align-self:center;width:40px;height:5px;border-radius:3px;background:#d5d8dc}
 .bsx{width:44px;height:44px;border-radius:22px;border:0;background:#f2f3f5;color:var(--ink);display:grid;place-items:center;cursor:pointer}
+textarea.addin{resize:none;overflow:hidden;scrollbar-width:none}textarea.addin::-webkit-scrollbar{display:none}
 .addin{min-height:52px;border:2px solid #e10600!important;background:#fff!important;border-radius:12px!important}
 .okline{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--ok);font-weight:600}
 .prts{display:flex;flex-direction:column;border:1px solid #eceef0;border-radius:14px;overflow:hidden;margin-top:8px}
@@ -2113,7 +2114,7 @@ const NUMW = { "חצי": 0.5, "אחד": 1, "אחת": 1, "שתי": 2, "שני": 2
 const NV_W = { kcal: String.raw`(?:קלוריות|קלוריה|קק["״]?ל|קל(?=\s|$))`, p: String.raw`(?:חלבונים|חלבון)`, c: String.raw`(?:פחמימות|פחמימה|פחמ['׳]?)`, f: String.raw`(?:שומנים|שומן)` }, NV_N = String.raw`(\d+(?:\.\d+)?)`, NV_G = String.raw`\s*(?:גרם|גר['׳]?|ג['׳])?\s*`;
 const NV_PER = /(?:^|\s)(?:לכל|בכל|ל|ב)?\s*[-־]?\s*100\s*(?:גרם|גר['׳]?|ג['׳]?|מ["״]?ל)(?=\s|$)|(?:^|\s)(?:לכל|בכל|ל|ב)\s*[-־]?\s*100(?=\s|$)/;
 function nutOwn(txt) { // values the person wrote themselves, per serving or per 100 g: "גרנולה 40 גרם, ל-100 גרם 450 קלוריות 10 חלבון"
-  let t = " " + String(txt).replace(/[():;,]/g, " ").replace(/\s+/g, " ") + " "; const v = {};
+  let t = " " + String(txt).replace(/[():;,.]/g, " ").replace(/\s+/g, " ").replace(/(קלוריות|קלוריה|קק["״]?ל|חלבון|פחמימות|שומן)\s+מ(?=[א-ת]{3,})/g, "$1 ") + " "; const v = {}; // "160 קלוריות ממטבוחה" → מטבוחה
   if (!Object.values(NV_W).some(w => new RegExp(w).test(t))) return null;
   const cnt = f => Object.values(NV_W).filter(w => new RegExp(f(w)).test(t)).length, after = cnt(w => `${w}\\s*[-:]?\\s*\\d`) > cnt(w => `\\d${NV_G}${w}`); // "חלבון 20" vs "20 חלבון": whichever style the person used more
   for (const [k, w] of Object.entries(NV_W)) { const re = new RegExp(after ? `${w}\\s*[-:]?\\s*${NV_N}(?:\\s*(?:גרם|גר['׳]?|ג['׳]))?` : `${NV_N}${NV_G}${w}`); const m = t.match(re); if (m) { v[k] = +m[1]; t = t.replace(m[0], " "); } }
@@ -2121,9 +2122,11 @@ function nutOwn(txt) { // values the person wrote themselves, per serving or per
   if (v.kcal == null) v.kcal = 4 * v.p + 4 * v.c + 9 * v.f;
   const per = NV_PER.test(t); t = t.replace(NV_PER, " ");
   const gm = t.match(/(\d+(?:\.\d+)?)\s*(?:גרם|גר['׳]?|ג['׳]|מ["״]?ל)(?=\s|$)/); if (gm) t = t.replace(gm[0], " ");
-  const g = gm ? +gm[1] : per ? 100 : 0, k = per ? g / 100 : 1;
+  const EA = /(?:^|\s)(?:כל\s+(?:אחד|אחת|יחידה|מנה|אחד\s+מהם|אחת\s+מהן)|ליחידה|ליח['׳]?|לאחד|לאחת|ליחידה\s+אחת)(?=\s|$)/, ea = EA.test(t); t = t.replace(EA, " ");
+  let nU = 1; if (ea && !per) { for (const [w, x] of Object.entries(NUMW)) t = t.replace(new RegExp(`(\\s)${w}(?=\\s)`), `$1${x}`); const cm = t.match(/^\s*(\d+(?:\.\d+)?)\s+(?!גרם|גר|ג['׳])/); if (cm) { nU = +cm[1]; t = t.replace(cm[0], " "); } } // "2 מעדני חלבון, כל אחד 110 קלוריות"
+  const g = gm ? +gm[1] : per ? 100 : 0, k = (per ? g / 100 : 1) * nU;
   const n = t.replace(/(?:^|\s)(?:ערכים|תזונתיים|יש|בו|בה|מכיל|מכילה|למנה|מנה|של|עם|ו|-|־)(?=\s|$)/g, " ").replace(/\s+/g, " ").trim() || "מנה";
-  return { kcal: v.kcal * k, p: (v.p || 0) * k, c: (v.c || 0) * k, f: (v.f || 0) * k, n, g, per, label: `${n}${g ? ` ${g} גרם` : ""} (ערכים שלך${per ? " ל-100 גרם" : ""})`, own: 1 };
+  return { kcal: v.kcal * k, p: (v.p || 0) * k, c: (v.c || 0) * k, f: (v.f || 0) * k, n, g, per, label: `${nU > 1 ? `${nU} × ` : ""}${n}${g ? ` ${g} גרם` : ""} (ערכים שלך${per ? " ל-100 גרם" : nU > 1 ? " ליחידה" : ""})`, own: 1 };
 }
 function nutPart(txt) { // one food phrase → {kcal,p,c,f,label} or null
   const o = nutOwn(txt); if (o) return o; // the person wrote the values: trust them
@@ -2148,7 +2151,7 @@ function nutPart(txt) { // one food phrase → {kcal,p,c,f,label} or null
   return { kcal: kcal * k + oil * 9, p: p * k, c: c * k, f: f * k + oil, n, g, raw: isRaw, fry, sz, label: `${n} ${Math.round(g * 10) / 10} גרם${tags.length ? ` (${tags.join(", ")})` : ""}` };
 }
 const NV_STRONG = /קלוריות|קלוריה|קק["״]?ל|פחמימ|שומן|שומנים|(?:^|\s)(?:לכל|בכל|ל|ב)\s*[-־]?\s*100(?!\d)/;
-const nvOnly = x => /\d/.test(x) && x.replace(/\d+(?:\.\d+)?|קלוריות|קלוריה|קק["״]?ל|חלבונים|חלבון|פחמימות|פחמימה|שומנים|שומן|גרם|ערכים|תזונתיים|לכל|בכל|למנה|מנה|גר['׳]?|ג['׳]|מ["״]?ל|[לבו:%.\-־\s]/g, "").length < 2;
+const nvOnly = x => /\d/.test(x) && x.replace(/\d+(?:\.\d+)?|קלוריות|קלוריה|קק["״]?ל|חלבונים|חלבון|פחמימות|פחמימה|שומנים|שומן|גרם|ערכים|תזונתיים|ליחידה|יחידה|לאחד|לאחת|אחד|אחת|לכל|בכל|כל|למנה|מנה|גר['׳]?|ג['׳]|מ["״]?ל|[לבו:%.\-־\s]/g, "").length < 2;
 const nutSplit = name => { const out = []; for (const big of String(name || "").split(/\s*\+\s*|\n+/)) { let open = false; // "+" and new lines always split; ", ו עם" split unless the piece is only values of the food before it
   for (const x of big.split(/\s*(?:,|\s(?:ועם|עם)\s|\sו(?=\d|[א-ת]{2,}\s*\d)|\sוגם\s)\s*/).map(x => x.trim()).filter(Boolean)) {
     if (open && nvOnly(x) && (NV_STRONG.test(out[out.length - 1]) || NV_STRONG.test(x))) out[out.length - 1] += ", " + x; else out.push(x); open = true; } }
@@ -2224,7 +2227,8 @@ function sheetHtml() { // bottom sheets: menu, add food, weigh-in
       <button class="btn primary block big2" id="wAdd">${cur ? "עדכון" : "שמירה"}</button></div></div>`; }
   return "";
 }
-const addParts = A => { const r = nutParts(A.txt); return A.free ? (r && r.every(x => x.own) ? r : null) : r; }; // free text: only values the person wrote; the rest goes to AI
+const addParts = A => nutParts(A.free ? freeClean(A.txt) : A.txt); // the app analyses on its own; AI is only a fallback for foods it does not know
+const freeClean = t => String(t || "").replace(/(?:^|\s)(?:אכלתי|שתיתי|היום|בערך|בסביבות|כ-?(?=\d))(?=\s|\d|$)/g, " ").replace(/\s+\.(?=\s|$)/g, " ").trim();
 function manTot(A) { // manual values, per serving or per 100 g
   const [k, p, c, f] = ["kcal", "p", "c", "f"].map(x => num(A[x])), m = A.per100 ? (num(A.g) || 0) / 100 : 1, kc = k ?? (p != null && c != null && f != null ? 4 * p + 4 * c + 9 * f : null);
   return { kcal: kc == null ? null : kc * m, p: p == null ? null : p * m, c: (c || 0) * m, f: (f || 0) * m }; }
@@ -2838,7 +2842,7 @@ document.addEventListener("input", ev => {
   if (ds.mf != null && S.menu?.sections) { const k = ds.mf.split("-"), sec = S.menu.sections[+k[0]];
     if (k.length === 1) sec.title = el.value; else { const g = sec.groups[+k[1]]; if (k[2] === "t") g.title = el.value; else if (k[2] === "g") g.target = el.value; else g.items[+k[2]] = el.value; }
     menuSave(); return; }
-  if (ds.nutin === "f" && S.sheet === "food") { S.add.txt = el.value; const fp = $("#fParts"); S.add.ai = null; if (fp && !S.add.manual) fp.innerHTML = partsHtml(addParts(S.add), el.value, S.add.free); const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); }
+  if (ds.nutin === "f" && S.sheet === "food") { S.add.txt = el.value; if (el.tagName === "TEXTAREA" && el.scrollHeight > el.clientHeight) el.style.height = el.scrollHeight + 2 + "px"; const fp = $("#fParts"); S.add.ai = null; if (fp && !S.add.manual) fp.innerHTML = partsHtml(addParts(S.add), el.value, S.add.free); const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); }
   if (ds.cin && S.cAdd) { S.cAdd[ds.cin] = el.value; cKcUpd(); return; }
   if (ds.fpi) { clearTimeout(S.nutT); S.nutT = setTimeout(partsSync, 200); return; }
   if (ds.addk && S.add) { S.add[ds.addk] = el.value; const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); return; }
