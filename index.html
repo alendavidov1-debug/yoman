@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="6697356c66";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="caba4ed863";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -452,6 +452,7 @@ body.hasRes .startbar{bottom:calc(var(--tabbar) + 80px)}
 .addbar{min-height:54px;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;background:#fff;border:1.5px solid #d5d8dc;border-radius:14px;color:var(--muted);font:400 .95rem var(--font);cursor:pointer;text-align:start;width:100%}
 .addbar i{width:38px;height:38px;border-radius:19px;background:#e10600;color:#fff;display:grid;place-items:center}.addbar .ic{width:20px;height:20px}
 .favs{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none}
+.pbprev{display:grid;gap:8px}.pbday{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:5px}.pbwk{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:6px}.pbw{display:grid;justify-items:center;font-size:.7rem;color:var(--muted)}.pbw b{font-size:1.05rem}
 .favc{flex:0 0 auto;min-height:56px;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:0;border-radius:12px;background:#fff;color:inherit;text-align:start;box-shadow:0 1px 2px rgba(20,21,24,.06);cursor:pointer;font:inherit}
 .favc>span{display:flex;flex-direction:column}.favc .t{font-size:.88rem;font-weight:500;white-space:nowrap}.favc .s{font-size:.75rem;color:var(--muted)}
 .favc i{width:28px;height:28px;border-radius:14px;background:#f2f3f5;display:grid;place-items:center}.favc.on i{background:var(--ok);color:#fff}.favc .ic{width:16px;height:16px}
@@ -1129,10 +1130,106 @@ async function pickExercise(name) {
   if (P.mode === "wadd") { const ex = { name, sets: 3, repMin: 8, repMax: 12, inc: 2.5, rest: 90, ...flags }; ex.sug = suggest(ex); ex.log = [0,1,2].map(() => ({ kg: "", reps: "", done: false })); S.draft.exercises.push(ex); store.set("draft", S.draft); closePicker(); render(); }
 }
 const exLibList = `<datalist id="exlib">${EX_LIB.map(n => `<option value="${esc(n)}">`).join("")}</datalist>`;
+/* ---------- plan builder: the coach writes a plan from days, time, level, equipment and priority muscles ---------- */
+// each movement slot: [gym beginner, gym intermediate/advanced, dumbbells at home, body weight only]; "" = skip with that equipment
+const PB_SLOTS = {
+  squat:  ["לחיצת רגליים", "סקוואט אחורי (מוט גבוה)", "סקוואט גביע", "בולגרי ספליט סקוואט"],
+  hinge:  ["דדליפט רומני", "דדליפט רומני", "דדליפט רומני", "גשר עכוז"],
+  hpush:  ["לחיצת חזה במכונה", "לחיצת חזה במוט", "לחיצת חזה בדאמבלים", "שכיבות סמיכה"],
+  ipush:  ["לחיצת חזה בדאמבלים בשיפוע", "לחיצת חזה בדאמבלים בשיפוע", "לחיצת חזה בדאמבלים בשיפוע", "שכיבות סמיכה רגליים מוגבהות"],
+  vpull:  ["פולי עליון באחיזה רחבה", "מתח", "פולאובר בדאמבל", "מתח"],
+  hpull:  ["חתירה בכבל בישיבה, ידית ניטרלית", "חתירה במוט", "חתירה חד-ידית בדאמבל (שמאל קודם)", "חתירה בגוף (אינברטד רואו)"],
+  hpull2: ["חתירה במכונה עם תמיכת חזה", "חתירה במכונה עם תמיכת חזה", "חתירה חד-ידית בדאמבל (שמאל קודם)", "חתירה בגוף (אינברטד רואו)"],
+  vpush:  ["לחיצת כתפיים במכונה", "לחיצת כתפיים בדאמבלים, אחיזה ניטרלית", "לחיצת כתפיים בדאמבלים, אחיזה ניטרלית", "שכיבות סמיכה רגליים מוגבהות"],
+  lat:    ["הרחקת כתפיים בדאמבלים", "הרחקת כתפיים בכבל", "הרחקת כתפיים בדאמבלים", ""],
+  rear:   ["פרפר אחורי במכונה", "פייס פול בחבל", "פרפר אחורי", ""],
+  fly:    ["פרפר במכונה", "קרוס אובר בכבל (מלמעלה למטה)", "פרפר בדאמבלים", ""],
+  bi:     ["כפיפת מרפק עם דאמבלים", "כפיפת מרפק בשיפוע", "כפיפת מרפק עם דאמבלים", "מתח באחיזה הפוכה (צ'ין-אפ)"],
+  bi2:    ["כפיפת מרפק פטישים", "כפיפת מרפק בכבל", "כפיפת מרפק פטישים", ""],
+  tri:    ["פשיטת מרפק בכבל עם חבל", "פשיטת מרפק מעל הראש בכבל", "פשיטת מרפק מעל הראש בדאמבל", "שכיבות סמיכה צרות"],
+  tri2:   ["פשיטת מרפק מעל הראש בכבל", "פשיטת מרפק בכבל עם חבל", "פשיטת מרפק מעל הראש בדאמבל", "מקבילים על ספסל"],
+  quad:   ["פשיטת ברך במכונה", "פשיטת ברך במכונה", "מכרע אחורי בדאמבלים", "סיסי סקוואט"],
+  lunge:  ["בולגרי ספליט סקוואט", "בולגרי ספליט סקוואט", "בולגרי ספליט סקוואט", "בולגרי ספליט סקוואט"],
+  ham:    ["כפיפת ברך במכונה", "כפיפת ברך בשכיבה", "דדליפט רומני", "גשר עכוז"],
+  glute:  ["היפ ת'ראסט", "היפ ת'ראסט", "גשר עכוז", "גשר עכוז"],
+  calf:   ["תאומים בעמידה", "תאומים בעמידה", "תאומים בעמידה", "תאומים בעמידה"],
+  abs:    ["כפיפות בטן בכבל", "הרמות רגליים בתלייה", "כפיפות בטן הפוכות", "כפיפות בטן הפוכות"],
+};
+const PB_KIND = { squat: "c", hinge: "c", hpush: "c", ipush: "c", vpull: "c", hpull: "c", hpull2: "c", vpush: "c", lunge: "c" }; // compounds; the rest are isolation
+const PB_DAYS = { // the order inside a day is the priority: what comes first is kept when time is short
+  fbA: ["גוף מלא A", ["squat", "hpush", "hpull", "ham", "lat", "bi", "tri", "abs", "calf"]],
+  fbB: ["גוף מלא B", ["hinge", "vpull", "vpush", "quad", "fly", "tri", "bi2", "rear", "abs"]],
+  fbC: ["גוף מלא C", ["lunge", "ipush", "hpull2", "glute", "lat", "bi", "tri2", "calf", "abs"]],
+  upA: ["עליון A", ["hpush", "hpull", "vpush", "vpull", "lat", "tri", "bi", "rear"]],
+  upB: ["עליון B", ["ipush", "vpull", "hpull2", "fly", "lat", "bi2", "tri2", "rear"]],
+  loA: ["תחתון A", ["squat", "hinge", "ham", "quad", "calf", "abs", "glute"]],
+  loB: ["תחתון B", ["hinge", "lunge", "glute", "ham", "quad", "calf", "abs"]],
+  push: ["דחיפה", ["hpush", "ipush", "vpush", "lat", "fly", "tri", "tri2"]],
+  pull: ["משיכה", ["vpull", "hpull", "hpull2", "rear", "bi", "bi2", "abs"]],
+  legs: ["רגליים", ["squat", "hinge", "lunge", "ham", "quad", "calf", "abs"]],
+};
+const PB_SPLIT = { 2: ["fbA", "fbB"], 3: ["fbA", "fbB", "fbC"], 4: ["upA", "loA", "upB", "loB"], 5: ["upA", "loA", "push", "pull", "legs"], 6: ["push", "pull", "legs", "push", "pull", "legs"] };
+const PB_SPLIT_T = { 2: "גוף מלא פעמיים בשבוע", 3: "גוף מלא שלוש פעמים בשבוע", 4: "עליון / תחתון", 5: "עליון / תחתון + דחיפה / משיכה / רגליים", 6: "דחיפה / משיכה / רגליים פעמיים" };
+const PB_MUS = [["chest", "חזה", ["fly", "ipush"]], ["back", "גב", ["hpull2", "vpull"]], ["shoulders", "כתפיים", ["lat", "rear"]], ["arms", "ידיים", ["bi", "tri"]], ["legs", "רגליים", ["quad", "lunge"]], ["glutes", "ישבן", ["glute", "ham"]], ["abs", "בטן", ["abs"]]];
+const PB_GRP = { chest: "chest", back: "back", shoulders: "shoulders", quads: "legs", glutes: "glutes", calves: "legs", biceps: "bi", triceps: "tri", core: "abs", forearms: "bi" };
+function pbDefaults() { const n = S.workouts.filter(w => !w.deload).length, pw = S.plan?.perWeek;
+  return { days: pw >= 2 && pw <= 6 ? pw : 3, min: 60, lvl: n >= 40 ? 2 : n >= 8 ? 1 : 0, eq: 0, pri: [] }; }
+function buildPlan(o) { // research-based defaults: each muscle about twice a week, 10-20 hard sets a week, priority muscles first and more sets
+  const split = PB_SPLIT[o.days] || PB_SPLIT[3], eqi = o.eq === 0 ? (o.lvl ? 1 : 0) : o.eq + 1;
+  const prSlots = new Set(o.pri.flatMap(k => PB_MUS.find(m => m[0] === k)?.[2] || []));
+  const days = split.map((key, di) => {
+    const [name, slots] = PB_DAYS[key]; let order = [...slots];
+    const pr = order.filter(x => prSlots.has(x) && !PB_KIND[x]); order = [...order.slice(0, 2), ...pr.filter(x => order.indexOf(x) >= 2), ...order.slice(2).filter(x => !pr.includes(x))]; // priority isolation moves up, after the two big lifts
+    const up = key.startsWith("fb") || key.startsWith("up") || key === "push" || key === "pull", lo = key.startsWith("fb") || key.startsWith("lo") || key === "legs";
+    const own = { chest: ["fb", "up", "push"], shoulders: ["fb", "up", "push"], back: ["fb", "up", "pull"], legs: ["fb", "lo", "legs"], glutes: ["fb", "lo", "legs"], abs: ["fb", "lo", "legs", "pull"] }; // a priority muscle gets its extra exercise only on the days that own it
+    o.pri.forEach(k => { const adds = k === "arms" ? (key === "push" ? ["tri"] : key === "pull" ? ["bi"] : up && !key.startsWith("lo") ? ["bi", "tri"] : []) : own[k]?.some(t => key.startsWith(t)) ? [(PB_MUS.find(m => m[0] === k)?.[2] || [])[0]] : [];
+      adds.forEach(add => { if (add && !order.includes(add) && PB_SLOTS[add][eqi]) order.splice(2, 0, add); }); });
+    const ex = [], used = new Set(); let mins = 6; // warm-up
+    for (const sl of order) {
+      const n = PB_SLOTS[sl]?.[eqi]; if (!n || used.has(n) || !EX_INDEX[n]) continue;
+      const comp = !!PB_KIND[sl], main = comp && ex.filter(e => e.key).length < 1 && !["lunge"].includes(sl), x = EX_INDEX[n], isPr = prSlots.has(sl) || o.pri.includes(PB_GRP[x.cat]) || (o.pri.includes("arms") && ["bi", "tri"].includes(PB_GRP[x.cat]));
+      let sets = comp ? (o.lvl === 2 && main ? 4 : 3) : (o.lvl === 0 ? 2 : 3); if (isPr) sets++;
+      const [rMin, rMax] = main ? (o.lvl === 0 ? [8, 12] : o.lvl === 1 ? [6, 10] : [5, 8]) : comp ? [8, 12] : ["lat", "calf", "rear", "abs"].includes(sl) ? [12, 20] : [10, 15];
+      const rest = main ? [120, 150, 180][o.lvl] : comp ? 105 : 60, m = sets * (rest + 35) / 60 + 1; // rest + about 35 s of work per set, 1 min to set up
+      if (mins + m > o.min && ex.length >= 4) break; // stop when the session would run over the time you have
+      mins += m; used.add(n);
+      ex.push({ name: n, muscle: x.catT, sets, repMin: rMin, repMax: rMax, rest, inc: x.b ? 2.5 : 2, key: main, barbell: !!x.b, wrist: false, note: "", ...(isBW(n) && eqi === 3 ? { amrap: rMax >= 15 } : {}) });
+    }
+    return { id: "d" + Date.now() + di, name, exercises: ex, mins: Math.round(mins) };
+  });
+  const wkOf = () => { const w = {}; days.forEach(d => d.exercises.forEach(e => { const x = EX_INDEX[e.name]; [x.cat, ...[...new Set((x.s || []).map(k => MUSCLES[k]?.[1]))].filter(c => c && c !== x.cat)].forEach((c, i) => { const g = PB_GRP[c]; if (g) w[g] = (w[g] || 0) + (i ? e.sets / 2 : e.sets); }); })); return w; };
+  for (let it = 0; it < 6; it++) { const w = wkOf(); let ch = false; // balance: big muscles at least ~10 sets a week, nothing far over 22 unless it is a priority
+    for (const g of ["chest", "back", "legs", "glutes", "shoulders"]) if ((w[g] || 0) < 9.5) days.forEach(d => { const e = d.exercises.find(e => PB_GRP[EX_INDEX[e.name].cat] === g && e.sets < 5); if (e && (w[g] || 0) < 9.5) { e.sets++; w[g] = (w[g] || 0) + 1; ch = true; } });
+    for (const [g, v] of Object.entries(w)) if (v > (o.pri.includes(g) || (o.pri.includes("arms") && (g === "bi" || g === "tri")) ? 26 : 22)) days.forEach(d => d.exercises.filter(e => !e.key && PB_GRP[EX_INDEX[e.name].cat] === g && e.sets > 2).slice(0, 1).forEach(e => { e.sets--; ch = true; }));
+    if (!ch) break; }
+  const wk = wkOf();
+  const notes = [`${PB_SPLIT_T[o.days]}: כל שריר מקבל גירוי בערך פעמיים בשבוע, וזה מה שהמחקר מראה שעובד הכי טוב לבניית שריר.`,
+    `כל סט עבודה עד 1-3 חזרות לפני כשל. כשמגיעים לראש טווח החזרות בכל הסטים, מעלים משקל (האפליקציה תציע לבד).`,
+    o.pri.length ? `עדיפות: ${o.pri.map(k => PB_MUS.find(m => m[0] === k)[1]).join(", ")}. התרגילים שלהם מוקדם באימון, כשאתה רענן, ועם סט נוסף.` : "",
+    o.lvl === 0 ? "מתחיל: בחודש הראשון תתמקד בטכניקה ובטווח תנועה מלא. המשקל יעלה מהר לבד." : "",
+    "כל 6-8 שבועות, או כשהכוח יורד והגוף עייף, האפליקציה תציע שבוע דילואד."].filter(Boolean);
+  return { title: `תוכנית המאמן · ${o.days} ימים`, perWeek: o.days, days: days.map(({ mins, ...d }) => d), notes, built: { ...o, at: Date.now() }, mins: days.map(d => Math.round(6 + d.exercises.reduce((a, e) => a + e.sets * (e.rest + 35) / 60 + 1, 0))), wk };
+}
+function builderHtml() {
+  const o = S.pb, seg = (k, opts) => `<div class="segm full" role="group">${opts.map(([v, t]) => `<button data-pbset="${k}:${v}" aria-pressed="${o[k] === v}">${t}</button>`).join("")}</div>`;
+  const P = buildPlan(o), lbl = t => `<span class="small muted">${t}</span>`;
+  const wkRow = Object.entries({ chest: "חזה", back: "גב", shoulders: "כתפיים", bi: "יד קד׳", tri: "יד אח׳", legs: "רגליים", glutes: "ישבן", abs: "בטן" }).map(([k, t]) => { const v = Math.round(P.wk[k] || 0), cap = o.pri.includes(k) || (o.pri.includes("arms") && (k === "bi" || k === "tri")) ? 26 : 22, c = v >= 10 && v <= cap ? "var(--ok)" : v > cap ? "var(--accent)" : "var(--muted)";
+    return `<div class="pbw"><b class="n" style="color:${c}">${v}</b><span>${t}</span></div>`; }).join("");
+  return `<div class="tcard pbuild" style="gap:12px"><div class="row sb"><b style="font-size:1.05rem">🧠 המאמן בונה לך תוכנית</b><button class="bsx" data-pbuild="0" aria-label="סגירה">${IC.x}</button></div>
+    ${lbl("כמה פעמים בשבוע אתה יכול להתאמן?")}${seg("days", [[2, "2"], [3, "3"], [4, "4"], [5, "5"], [6, "6"]])}
+    ${lbl("כמה זמן יש לך לאימון?")}${seg("min", [[45, "45 דק׳"], [60, "שעה"], [75, "75 דק׳"], [90, "שעה וחצי"]])}
+    ${lbl("ניסיון")}${seg("lvl", [[0, "מתחיל"], [1, "ביניים"], [2, "מתקדם"]])}
+    ${lbl("איפה מתאמנים?")}${seg("eq", [[0, "חדר כושר"], [1, "דאמבלים בבית"], [2, "משקל גוף"]])}
+    ${lbl("שרירים שחשובים לך במיוחד (עד 3)")}<div class="dchips" role="group" style="flex-wrap:wrap;overflow:visible">${PB_MUS.map(([k, t]) => `<button data-pbpri="${k}" aria-pressed="${o.pri.includes(k)}">${t}</button>`).join("")}</div>
+    <div class="pbprev">${P.days.map((d, i) => `<div class="pbday"><div class="row sb"><b>${esc(d.name)}</b><span class="small muted n">~${P.mins[i]} דק׳</span></div>${d.exercises.map(e => `<div class="row sb small"><span>${e.key ? "⭐ " : ""}${esc(e.name)}</span><span class="n muted" dir="ltr">${e.sets}×${e.repMin}-${e.repMax}</span></div>`).join("")}</div>`).join("")}</div>
+    <div>${lbl("סטים בשבוע לכל שריר (יעד: 10-20)")}<div class="pbwk">${wkRow}</div></div>
+    <div class="small" style="display:grid;gap:4px">${P.notes.map(n => `<span>• ${esc(n)}</span>`).join("")}</div>
+    <button class="btn primary block big2" data-pbgo="1">הפעלת התוכנית</button><span class="small muted" style="text-align:center">התוכנית הנוכחית נשמרת ברשימה ואפשר לחזור אליה.</span></div>`;
+}
 function plansBlock() { // all plans in one place: the active one on top, then saved ones. Delete = undo from the toast.
   const P = S.plan || {}, t = P.title || "התוכנית שלי", PW = planWeek(P), nEx = p => (p.days || []).reduce((a, d) => a + (d.exercises || []).filter(e => e.name).length, 0);
   const sub = p => `${(p.days || []).length} ${(p.days || []).length === 1 ? "יום" : "ימים"} · ${nEx(p)} תרגילים`;
-  return `<div class="tcard plansb" style="gap:10px"><div class="row sb"><b style="font-size:1.05rem">התוכניות שלי</b><button class="btn primary small" data-pnew="empty">+ תוכנית חדשה</button></div>
+  return `${S.pb ? builderHtml() : ""}<div class="tcard plansb" style="gap:10px"><div class="row sb"><b style="font-size:1.05rem">התוכניות שלי</b><span class="row" style="gap:6px"><button class="btn primary small" data-pbuild="1">🧠 המאמן יבנה</button><button class="btn small" data-pnew="empty">+ ריקה</button></span></div>
     <div class="pcard on"><div class="row" style="flex-wrap:nowrap;gap:8px"><input id="pTitle" value="${esc(t)}" aria-label="שם התוכנית" style="flex:1;min-width:0;font-weight:700"><button class="btn small" data-pname="1">שמירת שם</button></div>
       <div class="row sb" style="gap:8px"><span class="small muted n"><b class="pbadge">פעילה</b> ${sub(P)}${PW ? ` · ${PW.done ? "הושלמה" : `שבוע ${PW.n} מתוך ${PW.of}`}` : ""}</span>
       <span class="row" style="gap:6px"><button class="btn small" data-pnew="copy">שכפול</button><button class="btn small del" data-pdelact="1">מחיקה</button></span></div></div>
@@ -1676,7 +1773,8 @@ function vTrain() {
   const dw = S.workouts.filter(w => w.date === today()), done = dw.map(w => `<div class="tcard" style="gap:10px"><div class="row sb"><span class="tl">בוצע היום</span><span class="row" style="gap:8px"><span class="small muted n">${(w.exercises || []).reduce((a, e) => a + (e.sets || []).filter(work).length, 0)} סטים</span><button class="wdots" data-wdm="${esc(w.id)}" aria-label="אפשרויות" aria-expanded="${S.wdMenu === w.id}">•••</button></span></div><h2 class="th2">${esc(w.dayName || "אימון")}</h2>
       ${S.wdMenu === w.id ? `<div class="row small" style="gap:14px"><button class="btn link small" data-wedit="${esc(w.id)}">עריכה</button><button class="btn link small" data-wdl="${esc(w.id)}">${w.deload ? "ביטול סימון דילואד" : "סימון כדילואד"}</button><button class="btn link small" style="color:#c40500" data-delw="${esc(w.id)}">ביטול אימון</button></div>` : ""}</div>`).join("");
   const RC = recovery();
-  return `<div class="stack">${summaryCard()}${deloadAdvice()}${pl}${done}${cardioToday()}${recoveryCard(days)}
+  return `<div class="stack">${summaryCard()}${deloadAdvice()}${!S.workouts.length && !S.plan?.built && !S.draft ? `<div class="tcard" style="gap:8px"><b>🧠 שהמאמן יבנה לך תוכנית?</b><span class="small muted">תגיד כמה פעמים בשבוע אתה יכול, כמה זמן יש לך ואילו שרירים חשובים לך. התוכנית מוכנה תוך דקה.</span><button class="btn primary" data-pbuild="1">בניית תוכנית</button></div>` : ""}${pl}${done}${cardioToday()}${recoveryCard(days)}
+    ${S.plan?.notes?.length ? `<details class="tcard pnotes"><summary class="small"><b>📋 דגשי המאמן לתוכנית</b></summary><div class="small" style="display:grid;gap:6px;margin-top:8px">${S.plan.notes.map(n => `<span>• ${esc(n)}</span>`).join("")}</div></details>` : ""}
     ${days.length ? `<div class="dchips" role="group" aria-label="בחירת יום">${days.map(d => `<button aria-pressed="${pd && pd.id === d.id}" data-pickday="${esc(d.id)}">${esc(d.name)}${RC._any && dayReady(d, RC) != null ? ` <small class="n rdy">${dayReady(d, RC)}%</small>` : ""}</button>`).join("")}</div>` : ""}
     ${pd ? `<div class="tcard dayhero" style="gap:14px"><div class="row sb"><span class="tl">${pd.id === nx?.id ? "הבא בתור" : "היום הנבחר"}</span><span class="hchip n">כ־${estMin(ex)} דק׳</span></div><h2 class="th">${esc(pd.name)}</h2>
       <div class="stat3"><div><b class="n">${ex.length}</b><span>תרגילים</span></div><div><b class="n">${ex.reduce((a, e) => a + (+e.sets || 0), 0)}</b><span>סטים</span></div><div><b class="n">${new Set(ex.map(e => (e.muscle || EX_INDEX[e.name]?.p?.map(mLabel)?.[0] || "").split(" ")[0]).filter(Boolean)).size}</b><span>קבוצות שריר</span></div></div>
@@ -1684,7 +1782,7 @@ function vTrain() {
       <div class="list">${ex.map(e => { const sg = suggest(e), l = lastSessionFor(e.name), ls = l?.sets[0];
         return `<button class="item exrow" data-wprev="${esc(e.name)}">${thumb(e.name, "sm")}<div class="grow"><div class="t">${esc(e.name)}</div>${e.muscle || EX_INDEX[e.name] ? `<div class="s">${esc(e.muscle || EX_INDEX[e.name].p.map(mLabel).join(" · "))}</div>` : ""}</div>
           <div class="exr"><b class="n"><bdi dir="ltr">${e.sets} × ${repTxt(e)}</bdi></b>${sg.hint && !sg.dn ? `<span class="up n">${IC.up}${sg.kg} ק״ג</span>` : ls ? `<span class="n muted">קודם <bdi dir="ltr">${ls.kg}×${ls.reps}</bdi></span>` : ""}</div></button>`; }).join("")}</div>` : ""}
-    ${!days.length ? `<div class="list pad muted small">${S.loaded ? "אין עדיין ימי אימון. מוסיפים אותם ב\"עריכת תוכנית\"." : "טוען…"}</div>` : ""}
+    ${!days.length ? `<div class="list pad muted small">${S.loaded ? `אין עדיין ימי אימון. <button class="btn link small" data-pbuild="1">🧠 המאמן יבנה לך תוכנית</button>` : "טוען…"}</div>` : ""}
     <div class="list"><button class="item" data-hist="1"><div class="grow">אימונים קודמים ושיאים</div><span class="small muted n">${S.workouts.length}</span>${S.histOpen ? "" : IC.chev}</button></div>
     ${S.histOpen ? `${S.workouts.length ? `<div class="list">${[...S.workouts].reverse().slice(0, 15).map(w => { const vol = w.exercises.reduce((a, e) => a + e.sets.reduce((b, s) => b + (s.kg||0) * (s.reps||0), 0), 0);
         return `<details class="item" style="display:block"><summary class="row" style="justify-content:space-between"><span><b style="font-weight:500">${esc(w.dayName)}</b><br><span class="small muted">${fmtDay(w.date)}</span></span><span class="small muted n">${Math.round(vol).toLocaleString("he-IL")} ק״ג נפח</span></summary>
@@ -2738,6 +2836,11 @@ document.addEventListener("click", async ev => {
   if (ds.stype) { S.stMenu = S.stMenu === ds.stype ? null : ds.stype; render(); return; }
   if (ds.stset != null && S.draft) { const [i, j, k] = ds.stset.split("-"), x = S.draft.exercises[+i]?.log[+j]; if (x) { if (k) x.t = k; else delete x.t; delete x.wa; } S.stMenu = null; store.set("draft", S.draft); render(); return; }
   if (ds.pname) { const v = $("#pTitle").value.trim(); if (v) await savePlan({ ...S.plan, title: v }, "השם נשמר"); return; }
+  if (ds.pbuild) { S.pb = ds.pbuild === "1" ? (S.pb || pbDefaults()) : null; if (S.pb) S.trainSeg = "plan"; render(); if (S.pb) setTimeout(() => document.querySelector(".pbuild")?.scrollIntoView({ block: "start" }), 30); return; }
+  if (ds.pbset) { const [k, v] = ds.pbset.split(":"); S.pb[k] = +v; render(); return; }
+  if (ds.pbpri) { const l = S.pb.pri, k = ds.pbpri; S.pb.pri = l.includes(k) ? l.filter(x => x !== k) : l.length >= 3 ? (toast("עד 3 שרירים בעדיפות. יותר מזה זה כבר לא עדיפות"), l) : [...l, k]; render(); return; }
+  if (ds.pbgo) { if (S.draft) { toast("יש אימון פתוח. סיים או בטל אותו קודם"); return; } if (!(await archivePlan())) return;
+    const { mins: _m, wk: _w, ...np } = buildPlan(S.pb); np.created = Date.now(); np.pid = "p" + np.created; S.pickDay = null; S.pb = null; await savePlan(np, "התוכנית מוכנה. הקודמת שמורה ברשימה"); S.trainSeg = "now"; render(); scrollTo(0, 0); return; }
   if (ds.pnew) { if (S.draft) { toast("יש אימון פתוח. סיים או בטל אותו קודם"); return; } if (!(await archivePlan())) return;
     const np = ds.pnew === "copy" ? { ...S.plan, title: (S.plan?.title || "התוכנית שלי") + " (עותק)" } : { title: "תוכנית חדשה", perWeek: S.plan?.perWeek ?? 4, days: [{ id: "d" + Date.now(), name: "יום 1", exercises: [] }] };
     delete np.id; np.created = Date.now(); np.pid = "p" + np.created; S.pickDay = null; await savePlan(np, "נוצרה תוכנית חדשה. הקודמת שמורה"); render(); return; }
