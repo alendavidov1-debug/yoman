@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="caba4ed863";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="104632b650";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -1679,7 +1679,7 @@ function monthCard() {
 function vTrainTab() {
   if (S.draft) return activeWorkout();
   return S.trainSeg === "plan" ? `<div class="stack">${head("עריכת התוכנית", `<button class="btn primary" data-seg="trainSeg:now">סיום</button>`)}${plansBlock()}<div class="small muted" style="padding-inline:4px">לחיצה על תרגיל: שינוי סטים, חזרות ומשקל, החלפה או מחיקה. ✎ ליד היום משנה את שמו.</div>${planWorkouts()}</div>` // one workouts screen: pick a day, start; editing is a side trip
-    : `<div class="stack">${head("אימון", S.trainSeg === "prog" ? "" : `<button class="btn link" data-seg="trainSeg:plan">עריכת תוכנית</button>`)}${seg("trainSeg", S.trainSeg, [["now","אימון"],["prog","התקדמות כוח"]])}${S.trainSeg === "prog" ? feelCard() + monthCard() + progressReport() + volumeCard() + strengthTable() : vTrain()}</div>`;
+    : `<div class="stack">${head("אימון", S.trainSeg === "prog" ? "" : `<button class="btn link" data-seg="trainSeg:plan">עריכת תוכנית</button>`)}${seg("trainSeg", S.trainSeg, [["now","אימון"],["prog","התקדמות כוח"]])}${S.trainSeg === "prog" ? feelCard() + stallCard() + monthCard() + progressReport() + volumeCard() + strengthTable() : vTrain()}</div>`;
 }
 function etaCard() { // time-to-goal, recomputed on every render: planned pace vs actual weekly-average pace
   const p = S.profile || {}, g = p.goalWeight, wa = weekAvgs(), w = S.weights.length ? avg7(S.weights[S.weights.length - 1].date) : null, pct = goalPct(p);
@@ -2141,6 +2141,20 @@ function deloadAdvice() {
   return `<div class="list" style="border-inline-start:3px solid var(--carb)"><div class="item"><div class="grow"><div class="t">המאמן: הגיע הזמן לשבוע דילואד</div><div class="s">${D.why.map(esc).join(" · ")}. שבוע עם חצי מהסטים ו-~12% פחות משקל מוריד עייפות, ואחריו הכוח קופץ.</div></div><button class="btn primary" data-deload="on">שבוע דילואד</button></div></div>`;
 }
 function topSet(sets) { return sets.reduce((a, s) => !a || (s.kg || 0) > (a.kg || 0) || ((s.kg || 0) === (a.kg || 0) && (s.reps || 0) > (a.reps || 0)) ? s : a, null); }
+const isComp = n => /^(לחיצת|חתירה|חתירת|סקוואט|דדליפט|מתח|פולי|מקבילים|מכרע|בולגרי|היפ|גשר|שכיבות|האק|עליות|גוד|רק פול)/.test(n);
+function stalls() { // plan lifts with no new estimated max for 3 sessions over a week+: the classic plateau
+  const pl = (S.plan?.days || []).flatMap(d => d.exercises), names = [...new Set(pl.map(e => e.name))], inPlan = new Set(names);
+  return names.map(n => { const h = exHistory(n); if (h.length < 5 || daysBetween(h[h.length - 3].date, h[h.length - 1].date) < 7) return null;
+    const before = Math.max(...h.slice(0, -3).map(x => x.v)), recent = Math.max(...h.slice(-3).map(x => x.v)); if (recent > before * 1.005) return null;
+    const x = EX_INDEX[n], e = pl.find(z => z.name === n), comp = isComp(n), w = t => t.split(" "), same = (a, b) => w(a)[0].slice(0, 4) === w(b)[0].slice(0, 4) && w(a).at(-1).replace(/^[בו]/, "") === w(b).at(-1).replace(/^[בו]/, "");
+    const alt = x ? Object.values(EX_INDEX).filter(y => y.cat === x.cat && y.n !== n && !inPlan.has(y.n) && ALIAS[n] !== y.n && isComp(y.n) === comp && !same(y.n, n) && y.p.some(k => x.p.includes(k))).sort((a, b) => (b.img ? 1 : 0) - (a.img ? 1 : 0)).slice(0, 2).map(y => y.n) : [];
+    return { n, best: r1(before), alt, comp, low: (e?.repMax || 12) <= 8 }; }).filter(Boolean);
+}
+function stallCard() { const L = stalls(); if (!L.length) return ""; const tired = feelStats()?.tired;
+  return `<div class="tcard" style="gap:10px;border-inline-start:3px solid var(--carb)"><b>🧱 המאמן: ${L.length === 1 ? "תרגיל אחד נתקע" : `${L.length} תרגילים נתקעו`}</b><span class="small muted">3 אימונים אחרונים בלי שיא חדש. זה נורמלי, ומה שעושים עכשיו קובע.</span>
+    ${L.map(x => `<div style="display:grid;gap:3px"><b class="small">${esc(x.n)}</b><span class="small">• ${!x.comp ? "בתרגיל בידוד: מעלים חזרות לפני משקל (עד ראש הטווח בכל הסטים), ואפשר להוסיף סט אחד לשבועיים" : x.low ? "3 שבועות בטווח 8-12 חזרות עם משקל קצת יותר קל, ואז חוזרים לכבד" : "3 שבועות כבד יותר בטווח 5-8 חזרות"}${x.alt.length ? `<br>• או החלפה לווריאציה: ${x.alt.map(esc).join(" / ")}` : ""}</span></div>`).join("")}
+    ${tired ? `<span class="small" style="color:var(--bad)">שים לב: האימונים האחרונים סומנו כקשים ועם אנרגיה נמוכה. לפעמים התשובה היא שינה, אוכל או דילואד, לא שינוי תרגיל.</span>` : ""}
+    <span class="small muted">מחליפים תרגיל בעריכת תוכנית.</span></div>`; }
 function progressReport() { // per exercise: heaviest set each session, last vs previous and vs first, best ever
   const by = {}; S.workouts.forEach(w => (w.exercises || []).forEach(x => { const sets = (x.sets || []).filter(work).filter(st => st.reps); if (!sets.length) return; (by[x.name] = by[x.name] || []).push({ date: w.date, sets, top: topSet(sets), ss: x.ss }); }));
   const order = [...new Set((S.plan?.days || []).flatMap(d => d.exercises.map(e => e.name)))], names = Object.keys(by).sort((a, b) => ((order.indexOf(a) + 1) || 999) - ((order.indexOf(b) + 1) || 999));
