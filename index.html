@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="daaebd3e78";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="06cda24800";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -2454,6 +2454,12 @@ function partsHtml(r, txt, free) {
   if (!r) return `<span class="small" style="color:var(--bad)">לא מצאתי חלק מהמאכלים במאגר. ${S.sample ? `<button class="btn link small" data-nutai="f">חישוב עם AI</button> או ` : ""}הזנה ידנית למטה.</span><div class="small muted" id="fHint"></div>`;
   return `<span class="okline">${IC.check}${r.every(x => x.own) ? "חישבתי לפי הערכים שכתבת" : `זוהו ${r.length} רכיבים${r.some(x => x.own) ? "" : " במאגר · גרמים אחרי בישול"}`}</span><div class="prts">${r.map((x, k) => `<div class="prt"><div class="grow"><b>${esc(x.n)}${x.sz || x.fry ? `<span class="small muted" style="font-weight:400"> · ${[x.sz, x.fry && "מטוגן"].filter(Boolean).join(", ")}</span>` : ""}</b><span class="small muted n"><b style="color:var(--ink)">${Math.round(x.kcal)}</b> קק״ל · ח ${Math.round(x.p)} · פ ${Math.round(x.c)} · ש ${Math.round(x.f)}</span></div>${x.own ? `<span class="small muted">ערכים שלך${x.per ? " · ל-100 ג׳" : ""}</span>` : `<div class="gstep"><button data-pg="${k}:25" aria-label="הוספת 25 גרם">+</button><span class="n">${Math.round(x.g)} ג׳</span><button data-pg="${k}:-25" aria-label="הורדת 25 גרם">−</button></div>`}</div>`).join("")}</div><div id="fHint" hidden></div>`;
 }
+function protTip(d, T, tot) { // the coach closes the protein gap with real food, not a lecture
+  if (!T || d !== today() || new Date().getHours() < 13) return ""; const left = Math.round(T.protein - tot.p), kLeft = T.kcal - tot.kcal; if (left < 20) return "";
+  const row = n => NUT.find(r => r[0][0] === n), opt = [["חזה עוף", "גרם"], ["יוגורט חלבון", "גביעים"], ["קוטג׳ 5%", "גביעים"]].map(([n, u]) => { const r = row(n); if (!r) return null; const g = left / r[2] * 100;
+    if (u === "גרם") return { t: `${n} ${Math.round(g / 10) * 10} גרם`, k: g * r[1] / 100 }; const c = Math.max(1, Math.round(g / r[5])); return c > 3 ? null : { t: c === 1 ? (n === "יוגורט חלבון" ? "יוגורט חלבון אחד" : "קוטג׳ 5% אחד") : `${c} ${n === "יוגורט חלבון" ? "יוגורטי חלבון" : "קוטג׳ 5%"}`, k: c * r[5] * r[1] / 100 }; }).filter(Boolean).filter(o => o.k <= Math.max(kLeft, 150));
+  const tip = left > 60 ? `. כדאי בערך ${Math.min(50, Math.round(left / Math.max(1, Math.ceil((22 - new Date().getHours()) / 4))))} ג׳ בכל ארוחה שנשארה` : opt.length ? `. למשל: ${opt.map(o => `${o.t} (${Math.round(o.k)} קק״ל)`).join(" או ")}` : "";
+  return `<div class="small" style="padding:8px 10px 0;color:#d6d8dc">💪 חסרים ${left} ג׳ חלבון להיום${tip}</div>`; }
 function tFood() {
   const d = S.foodDate, T = targets(), tot = dayTotals(d), items = S.food.filter(f => f.date === d), left = T ? Math.round(T.kcal - tot.kcal) : null;
   const mac = (l, v, g, c) => `<div><span class="fmut">${l}</span><span class="n"><b>${Math.round(v)}</b> / ${g ?? "—"}</span><div class="ftr"><i style="width:${g ? Math.min(100, v / g * 100) : 0}%;background:${c}"></i></div></div>`;
@@ -2461,7 +2467,7 @@ function tFood() {
   return `<div class="fhero"><div class="row sb"><button class="fnav" data-fd="-1" aria-label="יום קודם">${IC.prev}</button><b>${title}</b><button class="fnav" data-fd="1" aria-label="יום הבא" ${d >= today() ? "disabled" : ""}>${IC.next}</button></div>
       <div class="row sb" style="padding:0 10px;align-items:baseline"><span><b class="n" style="font-size:2.6rem;font-weight:800;line-height:1">${left == null ? "—" : Math.abs(left).toLocaleString("he-IL")}</b> <span class="fmut">קק״ל ${left != null && left < 0 ? "מעל היעד" : "נותרו"}</span></span><span class="fmut n"><bdi dir="ltr">${Math.round(tot.kcal).toLocaleString("he-IL")} / ${T ? T.kcal.toLocaleString("he-IL") : "—"}</bdi></span></div>
       <div class="ftr big"><i style="width:${T ? Math.min(100, tot.kcal / T.kcal * 100) : 0}%;background:#e10600"></i></div>
-      <div class="fmac">${mac("חלבון", tot.p, T?.protein, "#fff")}${mac("פחמימה", tot.c, T?.carbs, "#9aa0a8")}${mac("שומן", tot.f, T?.fat, "#ff6b63")}</div></div>
+      <div class="fmac">${mac("חלבון", tot.p, T?.protein, "#fff")}${mac("פחמימה", tot.c, T?.carbs, "#9aa0a8")}${mac("שומן", tot.f, T?.fat, "#ff6b63")}</div>${protTip(d, T, tot)}</div>
     <button class="addbar" data-addfood="">${IC.search}<span class="grow">מה אכלת? למשל: חזה עוף 200 גרם</span><i>${IC.plus}</i></button>
     ${favBlock(d, items)}
     ${MEALS.map(m => { const l = items.filter(f => f.meal === m); if (!l.length && m === "נשנוש") return "";
