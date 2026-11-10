@@ -2074,9 +2074,9 @@ function stalls() { // plan lifts with no new estimated max for 3 sessions over 
 function stallOf(n) { const k = S.workouts.length + ":" + (S.plan?.pid || ""); if (S._stK !== k) { S._stK = k; S._st = Object.fromEntries(stalls().map(x => [x.n, x])); } return S._st[n] || null; }
 function stallCard() { const L = stalls(); if (!L.length) return ""; const tired = feelStats()?.tired;
   return `<div class="tcard" style="gap:10px;border-inline-start:3px solid var(--carb)"><b>🧱 המאמן: ${L.length === 1 ? "תרגיל אחד נתקע" : `${L.length} תרגילים נתקעו`}</b><span class="small muted">3 אימונים אחרונים בלי שיא חדש. זה נורמלי, ומה שעושים עכשיו קובע.</span>
-    ${L.map(x => `<div style="display:grid;gap:3px"><b class="small">${esc(x.n)}</b><span class="small">• ${!x.comp ? "בתרגיל בידוד: מעלים חזרות לפני משקל (עד ראש הטווח בכל הסטים), ואפשר להוסיף סט אחד לשבועיים" : x.low ? "3 שבועות בטווח 8-12 חזרות עם משקל קצת יותר קל, ואז חוזרים לכבד" : "3 שבועות כבד יותר בטווח 5-8 חזרות"}${x.alt.length ? `<br>• או החלפה לווריאציה: ${x.alt.map(esc).join(" / ")}` : ""}</span></div>`).join("")}
+    ${L.map(x => `<div style="display:grid;gap:3px"><b class="small">${esc(x.n)}</b><span class="small">• ${!x.comp ? "בתרגיל בידוד: מעלים חזרות לפני משקל (עד ראש הטווח בכל הסטים), ואפשר להוסיף סט אחד לשבועיים" : x.low ? "3 שבועות בטווח 8-12 חזרות עם משקל קצת יותר קל, ואז חוזרים לכבד" : "3 שבועות כבד יותר בטווח 5-8 חזרות"}</span>${x.alt.length ? `<div class="row" style="gap:6px;flex-wrap:wrap"><span class="small muted">או להחליף בתוכנית ל:</span>${x.alt.map(a => `<button class="btn small" data-stswap="${esc(x.n)}|${esc(a)}">${esc(a)}</button>`).join("")}</div>` : ""}</div>`).join("")}
     ${tired ? `<span class="small" style="color:var(--bad)">שים לב: האימונים האחרונים סומנו כקשים ועם אנרגיה נמוכה. לפעמים התשובה היא שינה, אוכל או דילואד, לא שינוי תרגיל.</span>` : ""}
-    <span class="small muted">מחליפים תרגיל בעריכת תוכנית.</span></div>`; }
+    <span class="small muted">ההחלפה משנה רק את התוכנית. ההיסטוריה של התרגיל הישן נשמרת.</span></div>`; }
 function progressReport() { // per exercise: heaviest set each session, last vs previous and vs first, best ever
   const by = {}; S.workouts.forEach(w => (w.exercises || []).forEach(x => { const sets = (x.sets || []).filter(work).filter(st => st.reps); if (!sets.length) return; (by[x.name] = by[x.name] || []).push({ date: w.date, sets, top: topSet(sets), ss: x.ss }); }));
   const order = [...new Set((S.plan?.days || []).flatMap(d => d.exercises.map(e => e.name)))], names = Object.keys(by).sort((a, b) => ((order.indexOf(a) + 1) || 999) - ((order.indexOf(b) + 1) || 999));
@@ -2779,6 +2779,9 @@ document.addEventListener("click", async ev => {
   if (ds.stype) { S.stMenu = S.stMenu === ds.stype ? null : ds.stype; render(); return; }
   if (ds.stset != null && S.draft) { const [i, j, k] = ds.stset.split("-"), x = S.draft.exercises[+i]?.log[+j]; if (x) { if (k) x.t = k; else delete x.t; delete x.wa; } S.stMenu = null; store.set("draft", S.draft); render(); return; }
   if (ds.pname) { const v = $("#pTitle").value.trim(); if (v) await savePlan({ ...S.plan, title: v }, "השם נשמר"); return; }
+  if (ds.stswap) { if (!S.plan?.days) return; const [o, n] = ds.stswap.split("|"), x = EX_INDEX[n], { id: _i, ...old } = S.plan;
+    const np = { ...old, days: old.days.map(d => ({ ...d, exercises: d.exercises.map(e => e.name === o ? { ...e, name: n, barbell: !!x?.b, inc: x?.b ? 2.5 : 2, muscle: x?.catT || e.muscle } : e) })) };
+    if (await save("plan/main", np)) { S.plan = np; render(); toast(`${o} הוחלף ב${n}`, async () => { if (await save("plan/main", old)) { S.plan = old; render(); } }); } return; }
   if (ds.pbuild) { S.pb = ds.pbuild === "1" ? (S.pb || pbDefaults()) : null; if (S.pb) S.trainSeg = "plan"; render(); if (S.pb) setTimeout(() => document.querySelector(".pbuild")?.scrollIntoView({ block: "start" }), 30); return; }
   if (ds.pbset) { const [k, v] = ds.pbset.split(":"); S.pb[k] = +v; render(); return; }
   if (ds.pbpri) { const l = S.pb.pri, k = ds.pbpri; S.pb.pri = l.includes(k) ? l.filter(x => x !== k) : l.length >= 3 ? (toast("עד 3 שרירים בעדיפות. יותר מזה זה כבר לא עדיפות"), l) : [...l, k]; render(); return; }
