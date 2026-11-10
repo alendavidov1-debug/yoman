@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preload" href="fonts/rubik-hebrew.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;overscroll-behavior-y:none}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<script>window.__APPVER="2c7b2c1946";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+<script>window.__APPVER="2b65038e2d";if("serviceWorker"in navigator&&isSecureContext)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <style>@font-face {
   font-family: 'Rubik';
@@ -1181,7 +1181,7 @@ const PB_AVOID = [ // free-text injuries from the profile → movements the coac
 ];
 const pbAvoid = () => { const t = S.profile?.limits || "", hit = PB_AVOID.filter(([re]) => re.test(t)); return { set: new Set(hit.flatMap(h => h[1])), why: hit.map(h => h[2]) }; };
 function pbDefaults() { const n = S.workouts.filter(w => !w.deload).length, pw = S.plan?.perWeek;
-  return { days: pw >= 2 && pw <= 6 ? pw : 3, min: 60, lvl: n >= 40 ? 2 : n >= 8 ? 1 : 0, eq: 0, pri: [], car: goalOf(S.profile) === "cut" ? 10 : 0 }; }
+  return { days: pw >= 2 && pw <= 6 ? pw : 3, min: 60, lvl: n >= 40 ? 2 : n >= 8 ? 1 : 0, eq: 0, pri: [], car: goalOf(S.profile) === "cut" ? 10 : 0, ss: 1 }; }
 function buildPlan(o) { // research-based defaults: each muscle about twice a week, 10-20 hard sets a week, priority muscles first and more sets
   const AV = pbAvoid(), split = PB_SPLIT[o.days] || PB_SPLIT[3], eqi = o.eq === 0 ? (o.lvl ? 1 : 0) : o.eq + 1;
   const prSlots = new Set(o.pri.flatMap(k => PB_MUS.find(m => m[0] === k)?.[2] || []));
@@ -1198,11 +1198,13 @@ function buildPlan(o) { // research-based defaults: each muscle about twice a we
       const comp = !!PB_KIND[sl], main = comp && ex.filter(e => e.key).length < 1 && !["lunge"].includes(sl), x = EX_INDEX[n], isPr = prSlots.has(sl) || o.pri.includes(PB_GRP[x.cat]) || (o.pri.includes("arms") && ["bi", "tri"].includes(PB_GRP[x.cat]));
       let sets = comp ? (o.lvl === 2 && main ? 4 : 3) : (o.lvl === 0 ? 2 : 3); if (isPr) sets++;
       const [rMin, rMax] = main ? (o.lvl === 0 ? [8, 12] : o.lvl === 1 ? [6, 10] : [5, 8]) : comp ? [8, 12] : ["lat", "calf", "rear", "abs"].includes(sl) ? [12, 20] : [10, 15];
-      const rest = main ? [120, 150, 180][o.lvl] : comp ? 105 : 60, m = sets * (rest + 35) / 60 + 1; // rest + about 35 s of work per set, 1 min to set up
+      const rest = main ? [120, 150, 180][o.lvl] : comp ? 105 : 60, m = !comp && o.ss ? sets * (rest / 2 + 35) / 60 + .5 : sets * (rest + 35) / 60 + 1; // rest + about 35 s of work per set, 1 min to set up
       if (mins + m > o.min && ex.length >= 4) break; // stop when the session would run over the time you have
       mins += m; used.add(n);
-      ex.push({ name: n, muscle: x.catT, sets, repMin: rMin, repMax: rMax, rest, inc: x.b ? 2.5 : 2, key: main, barbell: !!x.b, wrist: false, note: "", ...(isBW(n) && eqi === 3 ? { amrap: rMax >= 15 } : {}) });
+      ex.push({ name: n, muscle: x.catT, sets, repMin: rMin, repMax: rMax, rest, inc: x.b ? 2.5 : 2, key: main, barbell: !!x.b, wrist: false, note: "", ...(isBW(n) && eqi === 3 ? { amrap: rMax >= 15 } : {}), ...(comp ? {} : { _iso: 1 }) });
     }
+    if (o.ss) for (let k = 0; k < ex.length - 1; k++) if (ex[k]._iso && ex[k + 1]._iso && !ex[k].ss) { ex[k].ss = ex[k + 1].ss = "s" + di + k; k++; } // two isolation lifts back to back, one rest: same work in less time
+    ex.forEach(e => delete e._iso);
     return { id: "d" + Date.now() + di, name, exercises: ex, mins: Math.round(mins), ...(o.car ? { cardio: { type: o.eq === 2 ? "walk" : "incline", lv: 1, min: o.car } } : {}) };
   });
   const wkOf = () => { const w = {}; days.forEach(d => d.exercises.forEach(e => { const x = EX_INDEX[e.name]; [x.cat, ...[...new Set((x.s || []).map(k => MUSCLES[k]?.[1]))].filter(c => c && c !== x.cat)].forEach((c, i) => { const g = PB_GRP[c]; if (g) w[g] = (w[g] || 0) + (i ? e.sets / 2 : e.sets); }); })); return w; };
@@ -1216,9 +1218,10 @@ function buildPlan(o) { // research-based defaults: each muscle about twice a we
     o.pri.length ? `עדיפות: ${o.pri.map(k => PB_MUS.find(m => m[0] === k)[1]).join(", ")}. התרגילים שלהם מוקדם באימון, כשאתה רענן, ועם סט נוסף.` : "",
     AV.why.length ? `מגבלות (${AV.why.join(", ")}): תרגילים שמעמיסים שם הוחלפו בחלופות בטוחות יותר. כאב חד = עוצרים את התרגיל.` : "",
     o.lvl === 0 ? "מתחיל: בחודש הראשון תתמקד בטכניקה ובטווח תנועה מלא. המשקל יעלה מהר לבד." : "",
+    o.ss ? "🔗 = סופרסט: שני תרגילי בידוד ברצף ומנוחה אחת. אותה עבודה בפחות זמן." : "",
     o.car ? `${o.car} דקות אירובי בסוף כל אימון: הליכה בשיפוע בדופק בינוני. שורף קלוריות בלי לפגוע בהתאוששות של הרגליים.` : "",
     "כל 6-8 שבועות, או כשהכוח יורד והגוף עייף, האפליקציה תציע שבוע דילואד."].filter(Boolean);
-  return { title: `תוכנית המאמן · ${o.days} ימים`, perWeek: o.days, days: days.map(({ mins, ...d }) => d), notes, built: { ...o, at: Date.now() }, mins: days.map(d => Math.round(6 + (o.car || 0) + d.exercises.reduce((a, e) => a + e.sets * (e.rest + 35) / 60 + 1, 0))), wk };
+  return { title: `תוכנית המאמן · ${o.days} ימים`, perWeek: o.days, days: days.map(({ mins, ...d }) => d), notes, built: { ...o, at: Date.now() }, mins: days.map(d => Math.round(6 + (o.car || 0) + d.exercises.reduce((a, e) => a + (e.ss ? e.sets * (e.rest / 2 + 35) / 60 + .5 : e.sets * (e.rest + 35) / 60 + 1), 0))), wk };
 }
 function builderHtml() {
   const o = S.pb, seg = (k, opts) => `<div class="segm full" role="group">${opts.map(([v, t]) => `<button data-pbset="${k}:${v}" aria-pressed="${o[k] === v}">${t}</button>`).join("")}</div>`;
@@ -1230,10 +1233,11 @@ function builderHtml() {
     ${lbl("כמה זמן יש לך לאימון?")}${seg("min", [[45, "45 דק׳"], [60, "שעה"], [75, "75 דק׳"], [90, "שעה וחצי"]])}
     ${lbl("ניסיון")}${seg("lvl", [[0, "מתחיל"], [1, "ביניים"], [2, "מתקדם"]])}
     ${lbl("איפה מתאמנים?")}${seg("eq", [[0, "חדר כושר"], [1, "דאמבלים בבית"], [2, "משקל גוף"]])}
+    ${lbl("סופרסטים לתרגילי בידוד (חוסך זמן)")}${seg("ss", [[1, "כן"], [0, "לא"]])}
     ${lbl("אירובי בסוף כל אימון")}${seg("car", [[0, "בלי"], [10, "10 דק׳"], [20, "20 דק׳"]])}
     ${S.profile?.limits ? `<span class="small" style="color:var(--carb)">מתחשב במגבלות שרשמת: ${esc(S.profile.limits)}</span>` : ""}
     ${lbl("שרירים שחשובים לך במיוחד (עד 3)")}<div class="dchips" role="group" style="flex-wrap:wrap;overflow:visible">${PB_MUS.map(([k, t]) => `<button data-pbpri="${k}" aria-pressed="${o.pri.includes(k)}">${t}</button>`).join("")}</div>
-    <div class="pbprev">${P.days.map((d, i) => `<div class="pbday"><div class="row sb"><b>${esc(d.name)}</b><span class="small muted n">~${P.mins[i]} דק׳</span></div>${d.exercises.map(e => `<div class="row sb small"><span>${e.key ? "⭐ " : ""}${esc(e.name)}</span><span class="n muted" dir="ltr">${e.sets}×${e.repMin}-${e.repMax}</span></div>`).join("")}${d.cardio ? `<div class="row sb small"><span>🔥 ${(CARDIO.find(c => c[0] === d.cardio.type) || [])[2] || "אירובי"}</span><span class="n muted">${d.cardio.min} דק׳</span></div>` : ""}</div>`).join("")}</div>
+    <div class="pbprev">${P.days.map((d, i) => `<div class="pbday"><div class="row sb"><b>${esc(d.name)}</b><span class="small muted n">~${P.mins[i]} דק׳</span></div>${d.exercises.map(e => `<div class="row sb small"><span>${e.key ? "⭐ " : e.ss ? `🔗${[...new Set(d.exercises.filter(z => z.ss).map(z => z.ss))].indexOf(e.ss) + 1} ` : ""}${esc(e.name)}</span><span class="n muted" dir="ltr">${e.sets}×${e.repMin}-${e.repMax}</span></div>`).join("")}${d.cardio ? `<div class="row sb small"><span>🔥 ${(CARDIO.find(c => c[0] === d.cardio.type) || [])[2] || "אירובי"}</span><span class="n muted">${d.cardio.min} דק׳</span></div>` : ""}</div>`).join("")}</div>
     <div>${lbl("סטים בשבוע לכל שריר (יעד: 10-20)")}<div class="pbwk">${wkRow}</div></div>
     <div class="small" style="display:grid;gap:4px">${P.notes.map(n => `<span>• ${esc(n)}</span>`).join("")}</div>
     <button class="btn primary block big2" data-pbgo="1">הפעלת התוכנית</button><span class="small muted" style="text-align:center">התוכנית הנוכחית נשמרת ברשימה ואפשר לחזור אליה.</span></div>`;
