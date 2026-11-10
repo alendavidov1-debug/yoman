@@ -1136,7 +1136,7 @@ function builderHtml() {
   const P = buildPlan(o), lbl = t => `<span class="small muted">${t}</span>`;
   const wkRow = Object.entries({ chest: "חזה", back: "גב", shoulders: "כתפיים", bi: "יד קד׳", tri: "יד אח׳", legs: "רגליים", glutes: "ישבן", abs: "בטן" }).map(([k, t]) => { const v = Math.round(P.wk[k] || 0), cap = o.pri.includes(k) || (o.pri.includes("arms") && (k === "bi" || k === "tri")) ? 26 : 22, c = v >= 10 && v <= cap ? "var(--ok)" : v > cap ? "var(--accent)" : "var(--muted)";
     return `<div class="pbw"><b class="n" style="color:${c}">${v}</b><span>${t}</span></div>`; }).join("");
-  return `<div class="tcard pbuild" style="gap:12px"><div class="row sb"><b style="font-size:1.05rem">🧠 המאמן בונה לך תוכנית</b><button class="bsx" data-pbuild="0" aria-label="סגירה">${IC.x}</button></div>
+  return `<div class="tcard pbuild" style="gap:12px"><div class="row sb"><b style="font-size:1.05rem">🧠 המאמן בונה לך תוכנית</b><button class="wrepx" data-pbuild="0" aria-label="סגירה">${IC.x}</button></div>
     ${lbl("כמה פעמים בשבוע אתה יכול להתאמן?")}${seg("days", [[2, "2"], [3, "3"], [4, "4"], [5, "5"], [6, "6"]])}
     ${lbl("כמה זמן יש לך לאימון?")}${seg("min", [[45, "45 דק׳"], [60, "שעה"], [75, "75 דק׳"], [90, "שעה וחצי"]])}
     ${lbl("ניסיון")}${seg("lvl", [[0, "מתחיל"], [1, "ביניים"], [2, "מתקדם"]])}
