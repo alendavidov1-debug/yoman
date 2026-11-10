@@ -2110,10 +2110,23 @@ const NUT = [ // per 100 g AFTER cooking: [names], kcal, protein, carbs, fat, gr
 const NUT_IDX = NUT.flatMap(([names, ...v]) => names.map(n => [n, v])).sort((a, b) => b[0].length - a[0].length);
 const UNIT = { "כפית": 5, "כפיות": 5, "כף": 15, "כפות": 15 };
 const NUMW = { "חצי": 0.5, "אחד": 1, "אחת": 1, "שתי": 2, "שני": 2, "שניים": 2, "שתיים": 2, "שלוש": 3, "שלושה": 3, "ארבע": 4, "ארבעה": 4, "חמש": 5, "חמישה": 5, "שש": 6, "שבע": 7, "שמונה": 8, "עשר": 10 };
+const NV_W = { kcal: String.raw`(?:קלוריות|קלוריה|קק["״]?ל|קל(?=\s|$))`, p: String.raw`(?:חלבונים|חלבון)`, c: String.raw`(?:פחמימות|פחמימה|פחמ['׳]?)`, f: String.raw`(?:שומנים|שומן)` }, NV_N = String.raw`(\d+(?:\.\d+)?)`, NV_G = String.raw`\s*(?:גרם|גר['׳]?|ג['׳])?\s*`;
+const NV_PER = /(?:^|\s)(?:לכל|בכל|ל|ב)?\s*[-־]?\s*100\s*(?:גרם|גר['׳]?|ג['׳]?|מ["״]?ל)(?=\s|$)|(?:^|\s)(?:לכל|בכל|ל|ב)\s*[-־]?\s*100(?=\s|$)/;
+function nutOwn(txt) { // values the person wrote themselves, per serving or per 100 g: "גרנולה 40 גרם, ל-100 גרם 450 קלוריות 10 חלבון"
+  let t = " " + String(txt).replace(/[():;,]/g, " ").replace(/\s+/g, " ") + " "; const v = {};
+  if (!Object.values(NV_W).some(w => new RegExp(w).test(t))) return null;
+  const cnt = f => Object.values(NV_W).filter(w => new RegExp(f(w)).test(t)).length, after = cnt(w => `${w}\\s*[-:]?\\s*\\d`) > cnt(w => `\\d${NV_G}${w}`); // "חלבון 20" vs "20 חלבון": whichever style the person used more
+  for (const [k, w] of Object.entries(NV_W)) { const re = new RegExp(after ? `${w}\\s*[-:]?\\s*${NV_N}(?:\\s*(?:גרם|גר['׳]?|ג['׳]))?` : `${NV_N}${NV_G}${w}`); const m = t.match(re); if (m) { v[k] = +m[1]; t = t.replace(m[0], " "); } }
+  if (v.kcal == null && (v.p == null || v.c == null || v.f == null)) return null; // need calories, or all three macros
+  if (v.kcal == null) v.kcal = 4 * v.p + 4 * v.c + 9 * v.f;
+  const per = NV_PER.test(t); t = t.replace(NV_PER, " ");
+  const gm = t.match(/(\d+(?:\.\d+)?)\s*(?:גרם|גר['׳]?|ג['׳]|מ["״]?ל)(?=\s|$)/); if (gm) t = t.replace(gm[0], " ");
+  const g = gm ? +gm[1] : per ? 100 : 0, k = per ? g / 100 : 1;
+  const n = t.replace(/(?:^|\s)(?:ערכים|תזונתיים|יש|בו|בה|מכיל|מכילה|למנה|מנה|של|עם|ו|-|־)(?=\s|$)/g, " ").replace(/\s+/g, " ").trim() || "מנה";
+  return { kcal: v.kcal * k, p: (v.p || 0) * k, c: (v.c || 0) * k, f: (v.f || 0) * k, n, g, per, label: `${n}${g ? ` ${g} גרם` : ""} (ערכים שלך${per ? " ל-100 גרם" : ""})`, own: 1 };
+}
 function nutPart(txt) { // one food phrase → {kcal,p,c,f,label} or null
-  const ek = String(txt).match(/(\d+(?:\.\d+)?)\s*(?:קלוריות|קק["״]?ל)/); if (ek) { // the person wrote the calories: trust them
-    const ep = String(txt).match(/(\d+(?:\.\d+)?)\s*(?:ג['׳]?|גרם)?\s*חלבון/), n = String(txt).replace(/[()]/g, " ").replace(/\d+(?:\.\d+)?\s*(?:קלוריות|קק["״]?ל)/, "").replace(/(\d+(?:\.\d+)?)\s*(?:ג['׳]?|גרם)?\s*חלבון/, "").replace(/\s+/g, " ").trim();
-    return { kcal: +ek[1], p: ep ? +ep[1] : 0, c: 0, f: 0, n, g: 0, label: `${n} (${ek[1]} קק״ל)`, own: 1 }; }
+  const o = nutOwn(txt); if (o) return o; // the person wrote the values: trust them
   let t = " " + txt.replace(/[()]/g, " ").replace(/(^|\s)ו(?=\d)/g, "$1") + " "; for (const [w, v] of Object.entries(NUMW)) t = t.replace(new RegExp(`(\\s)${w}(?=\\s)`, "g"), `$1${v}`);
   t = t.replace(/^(\s\d+(?:\.\d+)?\s+)חלבון(?=\s*$)/, "$1חלבונים"); // "3 חלבון" = 3 egg whites
   const hit = NUT_IDX.find(([n]) => t.includes(n)); if (!hit) return null;
@@ -2134,7 +2147,12 @@ function nutPart(txt) { // one food phrase → {kcal,p,c,f,label} or null
   const k = g / 100, tags = [sz, fry && "מטוגן", isRaw && "לפני בישול"].filter(Boolean);
   return { kcal: kcal * k + oil * 9, p: p * k, c: c * k, f: f * k + oil, n, g, raw: isRaw, fry, sz, label: `${n} ${Math.round(g * 10) / 10} גרם${tags.length ? ` (${tags.join(", ")})` : ""}` };
 }
-const nutSplit = name => String(name || "").split(/\s*(?:\+|,|\s(?:ועם|עם)\s|\sו(?=\d|[א-ת]{2,}\s*\d)|\sוגם\s)\s*/).map(x => x.trim()).filter(Boolean);
+const NV_STRONG = /קלוריות|קלוריה|קק["״]?ל|פחמימ|שומן|שומנים|(?:^|\s)(?:לכל|בכל|ל|ב)\s*[-־]?\s*100(?!\d)/;
+const nvOnly = x => /\d/.test(x) && x.replace(/\d+(?:\.\d+)?|קלוריות|קלוריה|קק["״]?ל|חלבונים|חלבון|פחמימות|פחמימה|שומנים|שומן|גרם|ערכים|תזונתיים|לכל|בכל|למנה|מנה|גר['׳]?|ג['׳]|מ["״]?ל|[לבו:%.\-־\s]/g, "").length < 2;
+const nutSplit = name => { const out = []; for (const big of String(name || "").split(/\s*\+\s*|\n+/)) { let open = false; // "+" and new lines always split; ", ו עם" split unless the piece is only values of the food before it
+  for (const x of big.split(/\s*(?:,|\s(?:ועם|עם)\s|\sו(?=\d|[א-ת]{2,}\s*\d)|\sוגם\s)\s*/).map(x => x.trim()).filter(Boolean)) {
+    if (open && nvOnly(x) && (NV_STRONG.test(out[out.length - 1]) || NV_STRONG.test(x))) out[out.length - 1] += ", " + x; else out.push(x); open = true; } }
+  return out; };
 function nutLookup(name) { // "3 ביצים עם 2 גבינות 9% ו2 משולשי נעמה" → totals, or null when any part is unknown
   const parts = nutSplit(name); if (!parts.length) return null;
   const rs = parts.map(nutPart); if (rs.some(r => !r)) return null;
@@ -2163,6 +2181,7 @@ function autoMenu(T) { // exchange-list menu built from the trainee's own target
   return { auto: true, kcal: Math.round(b.kcal), sections: b.sections, notes: ["בוחרים פריט אחד מכל מנה. כל הפריטים במנה שווים בערך.", "ירקות וסלט בלי הגבלה.", "הכמויות הן משקל אחרי בישול."] };
 }
 function nutFill(pre, name) { // fill kcal/macros inputs from the name; returns the hint text
+  if (pre === "f" && S.add && (S.add.manual || S.add.free)) return null; // manual values stay; free text is read by addParts / AI
   const r = nutLookup(name), ids = ["Kcal", "P", "C", "F"], keys = ["kcal", "p", "c", "f"];
   if (r) ids.forEach((k, i) => { const el = document.getElementById(pre + k); if (el) el.value = r[keys[i]]; });
   const h = document.getElementById(pre + "Hint"); if (h) h.innerHTML = r ? `חושב אוטומטית: ${esc(r.parts.join(" + "))}` : name.trim().length > 2 ? `לא מצאתי במאגר. ${S.sample ? `<button class="btn link small" data-nutai="${pre}">חישוב עם AI</button>` : "אפשר למלא ידנית."}` : "";
@@ -2183,17 +2202,20 @@ function sheetHtml() { // bottom sheets: menu, add food, weigh-in
       <div class="row sb"><h2 style="font-size:1.25rem;font-weight:800">תפריט</h2><button class="bsx" data-sheet="0" aria-label="סגירה">${IC.x}</button></div>
       <div class="mitems">${M.map(([g, l]) => `<button data-go="${g}">${l}${IC.chev}</button>`).join("")}</div></div></div>`; }
   if (S.sheet === "cardio") return cardioSheet();
-  if (S.sheet === "food") { const A = S.add, r = nutParts(A.txt);
+  if (S.sheet === "food") { const A = S.add, r = addParts(A);
     return `<div class="bsheet" role="dialog" aria-label="הוספת אוכל"><button class="bsback" data-sheet="0" aria-label="סגירה"></button><div class="bsin"><span class="bshandle"></span>
       <div class="row sb"><h2 style="font-size:1.25rem;font-weight:800">הוספת אוכל</h2><button class="bsx" data-sheet="0" aria-label="סגירה">${IC.x}</button></div>
-      <label class="f" style="font-size:.82rem">מה אכלת? מאכל וכמות, אפשר כמה עם +<input id="fName" class="addin" data-nutin="f" value="${esc(A.txt)}" placeholder="למשל: חזה עוף 200 גרם + אורז 150 גרם" enterkeyhint="done"></label>
-      <div id="fParts">${partsHtml(r, A.txt)}</div>
+      <div class="segm full" role="group" aria-label="איך לרשום">${[["db","מהמאגר"],["free","טקסט חופשי"],["man","ערכים ידנית"]].map(([v, t]) => `<button data-fmode="${v}" aria-pressed="${(A.manual ? "man" : A.free ? "free" : "db") === v}">${t}</button>`).join("")}</div>
+      ${A.free ? `<label class="f" style="font-size:.82rem">תכתוב במילים שלך. אם יש לך ערכים מהתווית, תוסיף אותם (למנה או ל-100 גרם)<textarea id="fName" class="addin" data-nutin="f" rows="3" placeholder="למשל: צלחת פסטה ברוטב שמנת עם פרמזן. או: גרנולה 40 גרם, ל-100 גרם 450 קלוריות 10 חלבון">${esc(A.txt)}</textarea></label>`
+        : `<label class="f" style="font-size:.82rem">${A.manual ? "שם המאכל" : "מה אכלת? מאכל וכמות, אפשר כמה עם +"}<input id="fName" class="addin" data-nutin="f" value="${esc(A.txt)}" placeholder="${A.manual ? "למשל: חטיף חלבון" : "למשל: חזה עוף 200 גרם + אורז 150 גרם"}" enterkeyhint="done"></label>`}
+      <div id="fParts">${A.manual ? "" : partsHtml(r, A.txt, A.free)}</div>
       <div><span class="small muted">ארוחה</span><div class="segm full" role="group" aria-label="ארוחה">${MEALS.map(m => `<button data-am="${m}" aria-pressed="${A.meal === m}">${m}</button>`).join("")}</div></div>
-      <input id="fMeal" type="hidden" value="${A.meal}"><input id="fC" type="hidden"><input id="fF" type="hidden">
-      <div class="fields" ${A.manual ? "" : "hidden"}><label class="f">קלוריות<input id="fKcal" class="n" inputmode="numeric" value="${A.manual ? esc(A.kcal || "") : ""}" data-addk="kcal"></label><label class="f">חלבון<input id="fP" class="n" inputmode="decimal" value="${A.manual ? esc(A.p || "") : ""}" data-addk="p"></label></div>
+      <input id="fMeal" type="hidden" value="${A.meal}">
+      <div ${A.manual ? `style="display:grid;gap:8px"` : "hidden"}><div class="segm full" role="group" aria-label="הערכים הם"><button data-fper="0" aria-pressed="${!A.per100}">למנה שאכלתי</button><button data-fper="1" aria-pressed="${!!A.per100}">ל-100 גרם</button></div>
+        <div class="fields" style="grid-template-columns:repeat(${A.per100 ? 5 : 4},1fr)">${[["kcal","Kcal","קלוריות"],["p","P","חלבון"],["c","C","פחמימה"],["f","F","שומן"], ...(A.per100 ? [["g","G","כמה גרם"]] : [])].map(([k, id, l]) => `<label class="f">${l}<input id="f${id}" class="n" inputmode="decimal" value="${A.manual ? esc(A[k] || "") : ""}" data-addk="${k}"></label>`).join("")}</div>
+        <span class="small muted">אפשר רק קלוריות, או חלבון + פחמימה + שומן והקלוריות יחושבו.</span></div>
       <div class="sumbox" id="fTot">${sumHtml(A)}</div>
-      <button class="btn primary block big2" id="fAdd">הוספה ל${A.meal}</button>
-      <button class="btn link" data-manual="1">${A.manual ? "חישוב אוטומטי מהמאגר" : "לא נמצא? הזנה ידנית של קלוריות וחלבון"}</button></div></div>`; }
+      <button class="btn primary block big2" id="fAdd">הוספה ל${A.meal}</button></div></div>`; }
   if (S.sheet === "w") { const cur = S.weights.find(y => y.date === today()), w = latestWeight();
     return `<div class="bsheet" role="dialog" aria-label="שקילה"><button class="bsback" data-sheet="0" aria-label="סגירה"></button><div class="bsin"><span class="bshandle"></span>
       <div class="row sb"><h2 style="font-size:1.25rem;font-weight:800">שקילת בוקר · היום</h2><button class="bsx" data-sheet="0" aria-label="סגירה">${IC.x}</button></div>
@@ -2202,7 +2224,11 @@ function sheetHtml() { // bottom sheets: menu, add food, weigh-in
       <button class="btn primary block big2" id="wAdd">${cur ? "עדכון" : "שמירה"}</button></div></div>`; }
   return "";
 }
-function sumHtml(A) { const T = targets(), r = A.manual ? null : nutParts(A.txt), tot = r ? r.reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p }), { kcal: 0, p: 0 }) : { kcal: num(A.kcal), p: num(A.p) };
+const addParts = A => { const r = nutParts(A.txt); return A.free ? (r && r.every(x => x.own) ? r : null) : r; }; // free text: only values the person wrote; the rest goes to AI
+function manTot(A) { // manual values, per serving or per 100 g
+  const [k, p, c, f] = ["kcal", "p", "c", "f"].map(x => num(A[x])), m = A.per100 ? (num(A.g) || 0) / 100 : 1, kc = k ?? (p != null && c != null && f != null ? 4 * p + 4 * c + 9 * f : null);
+  return { kcal: kc == null ? null : kc * m, p: p == null ? null : p * m, c: (c || 0) * m, f: (f || 0) * m }; }
+function sumHtml(A) { const T = targets(), r = A.manual ? null : addParts(A), tot = r ? r.reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p }), { kcal: 0, p: 0 }) : A.manual ? manTot(A) : { kcal: A.ai?.kcal ?? null, p: A.ai?.p ?? null };
   const left = T ? Math.round(T.kcal - dayTotals(S.foodDate).kcal - (tot.kcal || 0)) : null;
   return `<div><span class="small muted">סה״כ</span><span class="n" style="font-size:1.1rem"><b>${tot.kcal == null ? "—" : Math.round(tot.kcal)}</b> קק״ל · <b>${tot.p == null ? "—" : Math.round(tot.p)}</b> ג׳ חלבון</span></div><span class="small muted n" style="text-align:end">יישארו<br><b style="color:var(--ink)">${left ?? "—"}</b> קק״ל</span>`; }
 function foodParts(f, any) { const ps = nutSplit(f.name); if (ps.length < 2 && !any) return null; if (!ps.length) return null; return ps.length < 2 && any ? null : ps.map(txt => ({ txt, r: nutPart(txt) })); }
@@ -2212,10 +2238,11 @@ function partsSync() { // rows → name → totals (when every part is known; ot
   rows.forEach(r => { const v = r.querySelector("input").value.trim(), x = v && nutPart(v); r.querySelector("span").textContent = x ? `${Math.round(x.kcal)} קק״ל · ח ${Math.round(x.p)}` : "לא במאגר"; });
   nutFill("e", name); }
 function nutParts(txt) { const ps = nutSplit(txt); if (!ps.length) return null; const rs = ps.map(nutPart); return rs.some(x => !x) ? null : rs; }
-function partsHtml(r, txt) {
-  if (!String(txt || "").trim()) return `<span class="small muted">גרמים אחרי בישול. כמה מאכלים מחברים עם +</span>`;
+function partsHtml(r, txt, free) {
+  if (!String(txt || "").trim()) return `<span class="small muted">${free ? "מאכלים, כמויות, אופן הכנה, מה שבא לך. אני אנתח." : "גרמים אחרי בישול. כמה מאכלים מחברים עם +"}</span>`;
+  if (!r && free) return S.sample ? `<span class="small muted">ינותח כשתלחץ הוספה. <button class="btn link small" data-nutai="f">חישוב עכשיו</button></span><div class="small muted" id="fHint"></div>` : `<span class="small" style="color:var(--bad)">בלי מאמן AI מחובר אני מחשב רק ערכים שכתבת, למשל "200 קלוריות 20 חלבון" או "ל-100 גרם ...".</span><div class="small muted" id="fHint"></div>`;
   if (!r) return `<span class="small" style="color:var(--bad)">לא מצאתי חלק מהמאכלים במאגר. ${S.sample ? `<button class="btn link small" data-nutai="f">חישוב עם AI</button> או ` : ""}הזנה ידנית למטה.</span><div class="small muted" id="fHint"></div>`;
-  return `<span class="okline">${IC.check}זוהו ${r.length} רכיבים במאגר · גרמים אחרי בישול</span><div class="prts">${r.map((x, k) => `<div class="prt"><div class="grow"><b>${esc(x.n)}${x.sz || x.fry ? `<span class="small muted" style="font-weight:400"> · ${[x.sz, x.fry && "מטוגן"].filter(Boolean).join(", ")}</span>` : ""}</b><span class="small muted n"><b style="color:var(--ink)">${Math.round(x.kcal)}</b> קק״ל · ח ${Math.round(x.p)} · פ ${Math.round(x.c)} · ש ${Math.round(x.f)}</span></div><div class="gstep"><button data-pg="${k}:25" aria-label="הוספת 25 גרם">+</button><span class="n">${Math.round(x.g)} ג׳</span><button data-pg="${k}:-25" aria-label="הורדת 25 גרם">−</button></div></div>`).join("")}</div><div id="fHint" hidden></div>`;
+  return `<span class="okline">${IC.check}${r.every(x => x.own) ? "חישבתי לפי הערכים שכתבת" : `זוהו ${r.length} רכיבים${r.some(x => x.own) ? "" : " במאגר · גרמים אחרי בישול"}`}</span><div class="prts">${r.map((x, k) => `<div class="prt"><div class="grow"><b>${esc(x.n)}${x.sz || x.fry ? `<span class="small muted" style="font-weight:400"> · ${[x.sz, x.fry && "מטוגן"].filter(Boolean).join(", ")}</span>` : ""}</b><span class="small muted n"><b style="color:var(--ink)">${Math.round(x.kcal)}</b> קק״ל · ח ${Math.round(x.p)} · פ ${Math.round(x.c)} · ש ${Math.round(x.f)}</span></div>${x.own ? `<span class="small muted">ערכים שלך${x.per ? " · ל-100 ג׳" : ""}</span>` : `<div class="gstep"><button data-pg="${k}:25" aria-label="הוספת 25 גרם">+</button><span class="n">${Math.round(x.g)} ג׳</span><button data-pg="${k}:-25" aria-label="הורדת 25 גרם">−</button></div>`}</div>`).join("")}</div><div id="fHint" hidden></div>`;
 }
 function tFood() {
   const d = S.foodDate, T = targets(), tot = dayTotals(d), items = S.food.filter(f => f.date === d), left = T ? Math.round(T.kcal - tot.kcal) : null;
@@ -2726,7 +2753,9 @@ document.addEventListener("click", async ev => {
   if (ds.sheet === "menu") { S.sheet = "menu"; render(); return; }
   if (ds.addfood != null) { S.sheet = "food"; S.add = { txt: "", meal: ds.addfood || guessMeal(), manual: false }; render(); setTimeout(() => $("#fName")?.focus(), 50); return; }
   if (ds.am) { S.add.txt = $("#fName")?.value ?? S.add.txt; S.add.meal = ds.am; render(); return; }
-  if (ds.manual) { S.add.txt = $("#fName")?.value ?? S.add.txt; S.add.manual = !S.add.manual; render(); return; }
+  if (ds.manual) { S.add.txt = $("#fName")?.value ?? S.add.txt; S.add.manual = !S.add.manual; S.add.free = false; render(); return; }
+  if (ds.fmode) { S.add.txt = $("#fName")?.value ?? S.add.txt; S.add.manual = ds.fmode === "man"; S.add.free = ds.fmode === "free"; S.add.ai = null; render(); return; }
+  if (ds.fper) { S.add.per100 = ds.fper === "1"; render(); return; }
   if (ds.pg) { const [k, d] = ds.pg.split(":").map(Number), ps = nutSplit(S.add.txt), r = nutParts(S.add.txt); if (!r) return; const x = r[k];
     ps[k] = `${x.n} ${Math.max(5, Math.round(x.g + d))} גרם${x.fry ? " מטוגן" : ""}${x.raw ? " לפני בישול" : ""}`; S.add.txt = ps.join(" + "); render(); return; }
   if (ds.hist) { S.histOpen = !S.histOpen; render(); return; }
@@ -2809,7 +2838,7 @@ document.addEventListener("input", ev => {
   if (ds.mf != null && S.menu?.sections) { const k = ds.mf.split("-"), sec = S.menu.sections[+k[0]];
     if (k.length === 1) sec.title = el.value; else { const g = sec.groups[+k[1]]; if (k[2] === "t") g.title = el.value; else if (k[2] === "g") g.target = el.value; else g.items[+k[2]] = el.value; }
     menuSave(); return; }
-  if (ds.nutin === "f" && S.sheet === "food") { S.add.txt = el.value; const fp = $("#fParts"); if (fp) fp.innerHTML = partsHtml(nutParts(el.value), el.value); const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); }
+  if (ds.nutin === "f" && S.sheet === "food") { S.add.txt = el.value; const fp = $("#fParts"); S.add.ai = null; if (fp && !S.add.manual) fp.innerHTML = partsHtml(addParts(S.add), el.value, S.add.free); const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); }
   if (ds.cin && S.cAdd) { S.cAdd[ds.cin] = el.value; cKcUpd(); return; }
   if (ds.fpi) { clearTimeout(S.nutT); S.nutT = setTimeout(partsSync, 200); return; }
   if (ds.addk && S.add) { S.add[ds.addk] = el.value; const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); return; }
@@ -2827,16 +2856,20 @@ document.addEventListener("input", ev => {
   if (ds.pe && S.planDraft) { const [d, e, k] = ds.pe.split("-"); const ex = S.planDraft.days[+d].exercises[+e]; ex[k] = ["name","note"].includes(k) ? el.value : (num(el.value) ?? ex[k]); }
 });
 async function nutAI(pre) { const name = $("#" + pre + "Name")?.value.trim(), h = $("#" + pre + "Hint"); if (!name || !S.sample) return; h.textContent = "מחשב…";
-    try { const r = await S.sample.json(`חשב ערכים תזונתיים למנה הבאה לפי ערכים סטנדרטיים. הגרמים הם משקל אחרי בישול, אלא אם כתוב "לפני בישול". התחשב בכל מילות התיאור: גודל (קטן, גדול, גדול מאוד, ענק) משנה את משקל היחידה, ואופן ההכנה (מטוגן, בציפוי, ברוטב, אפוי) משנה את הקלוריות והשומן. אם יש שמן או רוטב, כלול אותם. אם אין כמות, הנח מנה רגילה וכתוב אותה ב-assumed. המנה: "${name}". החזר JSON בלבד: {"kcal":number,"p":number,"c":number,"f":number,"assumed":"string"}`, { modelTier: "quick" });
-      ["Kcal", "P", "C", "F"].forEach((k, i) => { const el = $("#" + pre + k); const v = +r[["kcal", "p", "c", "f"][i]]; if (el && Number.isFinite(v)) el.value = Math.round(v); }); h.textContent = `הערכת AI${r.assumed ? `: ${r.assumed}` : ""}`; } catch { h.textContent = "החישוב נכשל, מלא ידנית"; } }
+    try { const r = await S.sample.json(`חשב ערכים תזונתיים למנה הבאה לפי ערכים סטנדרטיים. הטקסט יכול להיות חופשי ולכלול כמה מאכלים: סכם את כולם. אם המשתמש כתב ערכים (קלוריות, חלבון, פחמימה, שומן) למנה או ל-100 גרם, השתמש בהם בדיוק והכפל לפי הכמות שאכל. הגרמים הם משקל אחרי בישול, אלא אם כתוב "לפני בישול". התחשב בכל מילות התיאור: גודל (קטן, גדול, גדול מאוד, ענק) משנה את משקל היחידה, ואופן ההכנה (מטוגן, בציפוי, ברוטב, אפוי) משנה את הקלוריות והשומן. אם יש שמן או רוטב, כלול אותם. אם אין כמות, הנח מנה רגילה וכתוב אותה ב-assumed. המנה: "${name}". החזר JSON בלבד: {"kcal":number,"p":number,"c":number,"f":number,"assumed":"string"}`, { modelTier: "quick" });
+      ["Kcal", "P", "C", "F"].forEach((k, i) => { const el = $("#" + pre + k); const v = +r[["kcal", "p", "c", "f"][i]]; if (el && Number.isFinite(v)) el.value = Math.round(v); }); if (pre === "f" && S.add) { S.add.ai = { kcal: +r.kcal, p: +r.p }; const ft = $("#fTot"); if (ft) ft.innerHTML = sumHtml(S.add); } h.textContent = `הערכת AI: ${Math.round(+r.kcal)} קק״ל · ח ${Math.round(+r.p)}${r.assumed ? ` · ${r.assumed}` : ""}`; } catch { h.textContent = "החישוב נכשל, מלא ידנית"; } }
 async function addFood() {
-  const name = $("#fName").value.trim(); if (!name) { toast("כתוב מה אכלת"); return; }
-  if (num($("#fKcal").value) == null && !nutFill("f", name)) { if (!S.sample) { toast("לא מצאתי במאגר. מלא קלוריות ידנית"); return; } await nutAI("f"); }
-  const kcal = num($("#fKcal").value); if (kcal == null) { toast("לא הצלחתי לחשב. מלא קלוריות ידנית"); return; }
-  const item = { name, kcal: Math.round(kcal), p: num($("#fP").value) ?? 0, c: num($("#fC").value) ?? 0, f: num($("#fF").value) ?? 0, photoId: S.pendingPhoto || null };
+  const A = S.add, name = $("#fName").value.trim(); A.txt = name; let item;
+  if (A.manual) { const m = manTot(A); if (A.per100 && !num(A.g)) { toast("כמה גרם אכלת?"); return; } if (m.kcal == null) { toast("מלא קלוריות, או חלבון + פחמימה + שומן"); return; }
+    item = { name: (name || "מנה") + (A.per100 ? ` ${num(A.g)} גרם` : ""), kcal: Math.round(m.kcal), p: r1(m.p ?? 0), c: r1(m.c), f: r1(m.f) }; }
+  else { if (!name) { toast("כתוב מה אכלת"); return; } const r = addParts(A);
+    if (r) { const t = r.reduce((a, x) => ({ kcal: a.kcal + x.kcal, p: a.p + x.p, c: a.c + x.c, f: a.f + x.f }), { kcal: 0, p: 0, c: 0, f: 0 }); item = { name, kcal: Math.round(t.kcal), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f) }; }
+    else { if (!S.sample) { toast(A.free ? "כתוב ערכים (קלוריות/חלבון) או עבור לערכים ידנית" : "לא מצאתי במאגר. נסה טקסט חופשי או ערכים ידנית"); return; }
+      if (!A.ai || A.aiFor !== name) { await nutAI("f"); A.aiFor = name; } if (!A.ai || !Number.isFinite(A.ai.kcal)) { toast("לא הצלחתי לחשב. נסה ערכים ידנית"); return; }
+      item = { name, kcal: Math.round(num($("#fKcal").value) ?? A.ai.kcal), p: num($("#fP").value) ?? 0, c: num($("#fC").value) ?? 0, f: num($("#fF").value) ?? 0 }; } }
+  item.photoId = S.pendingPhoto || null;
   if (item.kcal < 0 || item.kcal > 5000 || item.p < 0 || item.p > 400) { toast("המספרים נראים לא נכונים. בדוק קלוריות וחלבון"); return; }
-  const keep = false;
-  if (await addTo("food", { ...item, date: S.foodDate, meal: $("#fMeal").value, ts: Date.now() })) { if (keep) await addTo("meals", { ...item, ts: Date.now() }); S.pendingPhoto = null; S.sheet = null; render(); toast("נוסף"); }
+  if (await addTo("food", { ...item, date: S.foodDate, meal: $("#fMeal").value, ts: Date.now() })) { S.pendingPhoto = null; S.sheet = null; render(); toast("נוסף"); }
 }
 async function addWeight() {
   const kg = num($("#wKg").value), date = $("#wDate").value || today(), waist = num($("#wWaist").value);
